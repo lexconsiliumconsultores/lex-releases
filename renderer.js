@@ -2,6 +2,42 @@ const { ipcRenderer } = require('electron');
 
 let currentSection = 'dashboard';
 let currentUser = null;
+let updateBannerDismissed = false;
+
+// ==================== AVISOS DE ACTUALIZACIÓN ====================
+function showUpdateBanner(message, btnText, btnAction) {
+  if (updateBannerDismissed) return;
+  let banner = document.getElementById('updateBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'updateBanner';
+    document.body.appendChild(banner);
+  }
+  banner.innerHTML = `
+    <div class="update-banner-icon">🚀</div>
+    <div class="update-banner-msg">${message}</div>
+    <button class="update-banner-btn" id="updateBannerBtn">${btnText}</button>
+    <button class="update-banner-close" id="updateBannerClose">✕</button>
+  `;
+  banner.classList.add('active');
+  const closeBtn = document.getElementById('updateBannerClose');
+  if (closeBtn) closeBtn.onclick = () => { updateBannerDismissed = true; banner.classList.remove('active'); };
+  const btn = document.getElementById('updateBannerBtn');
+  if (btn && btnAction) btn.onclick = btnAction;
+}
+
+ipcRenderer.on('update-available', (e, version) => {
+  showUpdateBanner(`Nueva versión ${version} disponible. Descargando...`, '', null);
+});
+
+ipcRenderer.on('update-downloaded', (e, version) => {
+  updateBannerDismissed = false;
+  showUpdateBanner(`Versión ${version} descargada. Reinicia LEX para aplicar la actualización.`, 'Reiniciar', () => ipcRenderer.invoke('restartApp'));
+});
+
+ipcRenderer.on('update-error', (e, err) => {
+  console.warn('Update check error:', err);
+});
 
 // ==================== AUTENTICACIÓN ====================
 async function checkAuth() {

@@ -2216,3 +2216,72 @@ body::before {
   opacity: 1;
   transform: translateX(5px);
 }
+
+/* ==================== BANNER DE ACTUALIZACIÓN ==================== */
+#updateBanner {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 420px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(10, 14, 26, 0.95), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5), 0 0 25px rgba(212, 175, 55, 0.15);
+  backdrop-filter: blur(18px);
+  opacity: 0;
+  transform: translateX(40px);
+  pointer-events: none;
+  transition: all 0.35s ease;
+}
+
+#updateBanner.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.update-banner-icon {
+  font-size: 26px;
+}
+
+.update-banner-msg {
+  flex: 1;
+  font-size: 13px;
+  color: #e2e8f0;
+  line-height: 1.4;
+}
+
+.update-banner-btn {
+  background: linear-gradient(135deg, #d4af37, #a67c00);
+  color: #0f0d05;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.2s;
+}
+
+.update-banner-btn:hover {
+  transform: scale(1.05);
+}
+
+.update-banner-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.update-banner-close:hover {
+  color: #f87171;
+}

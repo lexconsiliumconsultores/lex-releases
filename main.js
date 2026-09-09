@@ -1,9 +1,10 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, Notification } = require('electron');
 const path = require('path');
 const initSqlJs = require('sql.js');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { autoUpdater } = require('electron-updater');
 
 let mainWindow;
 let db;
@@ -1415,13 +1416,68 @@ ipcMain.handle('chatIA', async (event, mensaje, historial) => {
   }
 });
 
+// ==================== AUTO-ACTUALIZACIONES ====================
+function setupAutoUpdater() {
+  if (!app.isPackaged) return;
+
+  const token = process.env.GH_TOKEN || getConfig('github_token');
+  if (token) process.env.GH_TOKEN = token;
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-available', (info) => {
+    if (Notification.isSupported()) {
+      new Notification({
+        title: 'Nueva versión disponible',
+        body: `LEX ${info.version} está disponible. Se descargará en segundo plano.`
+      }).show();
+    }
+    if (mainWindow) mainWindow.webContents.send('update-available', info.version);
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    if (mainWindow) mainWindow.webContents.send('update-downloaded', info.version);
+    const choice = dialog.showMessageBoxSync(mainWindow, {
+      type: 'info',
+      title: 'Actualización lista',
+      message: `LEX ${info.version} se descargó correctamente.`,
+      detail: '¿Desea reiniciar la aplicación para aplicar la actualización?',
+      buttons: ['Reiniciar ahora', 'Más tarde'],
+      defaultId: 0,
+      cancelId: 1
+    });
+    if (choice === 0) {
+      autoUpdater.quitAndInstall();
+    }
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    if (mainWindow) mainWindow.webContents.send('update-not-available');
+  });
+
+  autoUpdater.on('error', (err) => {
+    if (mainWindow) mainWindow.webContents.send('update-error', String((err && err.message) || err));
+  });
+
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch(() => {});
+  }, 12000);
+}
+
 app.whenReady().then(async () => {
   await initDatabase();
   createWindow();
+  setupAutoUpdater();
 });
 
 app.on('window-all-closed', () => {
   saveDb();
   if (db) db.close();
   if (process.platform !== 'darwin') app.quit();
+});
+
+ipcMain.handle('restartApp', () => {
+  app.relaunch();
+  app.exit(0);
 });

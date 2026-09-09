@@ -1,10 +1,10 @@
 {
   "name": "lex",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Sistema de Gestión de Casos Jurídicos - CMR",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "node_modules/.bin/electron .",
     "dist": "node node_modules/electron-builder/out/cli/cli.js --win",
     "dist:portable": "node node_modules/electron-builder/out/cli/cli.js --win portable"
   },
@@ -23,6 +23,13 @@
       "styles.css",
       "node_modules/**/*"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "lexconsiliumconsultores",
+      "repo": "lex",
+      "private": true,
+      "releaseType": "release"
+    },
     "win": {
       "target": [
         {
@@ -47,6 +54,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "electron-updater": "^6.3.9",
     "nodemailer": "^9.0.6",
     "sql.js": "^1.10.0"
   },
