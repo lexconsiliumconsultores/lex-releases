@@ -1,6 +1,6 @@
 {
   "name": "lex",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Sistema de Gestión de Casos Jurídicos - CMR",
   "main": "main.js",
   "scripts": {
@@ -45,12 +45,12 @@
           ]
         }
       ],
-      "icon": null
+      "icon": "app_icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "installerHeaderIcon": null,
+      "installerHeaderIcon": "app_icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "LEX"

@@ -2,7 +2,7 @@
 
 Aplicación de escritorio (Electron) para estudios de abogados. Gestión de casos, clientes, plazos, facturas, seguimiento, documentación legal, notificaciones por correo (Outlook) y actualizaciones automáticas vía GitHub.
 
-**Versión actual:** 1.6.0
+**Versión actual:** 1.6.1
 
 ---
 
@@ -11,7 +11,7 @@ Aplicación de escritorio (Electron) para estudios de abogados. Gestión de caso
 | Aspecto | Estado |
 |---------|--------|
 | Código fuente | Subido a GitHub (repo privado) |
-| Control de versiones | Git + tags semánticos (v1.6.0) |
+| Control de versiones | Git + tags semánticos (v1.6.1) |
 | Instalador Windows | ✅ Generado (NSIS + portable) |
 | Actualizaciones automáticas | ✅ electron-updater + GitHub Releases |
 | Repositorio | `https://github.com/lexconsiliumconsultores/lex` |
@@ -203,6 +203,7 @@ Salida en `dist_instalador/`. Para versionado correcto: subir la versión en `pa
 
 | Versión | Fecha | Contenido |
 |---------|-------|-----------|
+| 1.6.1 | 2026-09-09 | **Icono del estudio** (`app_icon.ico`) en instalador, acceso directo de escritorio y barra de tareas |
 | 1.6.0 | 2026-09-09 | **Correcciones**: script start compatible Windows, arranque de la app vía npm, Plazos Legales (lista vacía por doble indexación), Configuración sin banners SMTP/Outlook, gestión de usuarios restaurada |
 | 1.5.0 | 2026-09-09 | **Actualizaciones automáticas** (electron-updater), banner de aviso de nueva versión, token GitHub privado, DB con `github_token`. Repo creado en GitHub, Release v1.5.0 publicada |
 | 1.4.0 | 2026-09-09 | Empaquetado .exe inicial. **Dashboard Glass/Lujo** (esmeralda + dorado). **Calendario visual mensual** sincronizado con Outlook, **notificación automática al agendar** (tipo Agendamiento), moneda CLP, tablas con scroll horizontal, modal de notificación compacto, README |
