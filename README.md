@@ -13,6 +13,7 @@ Aplicación de escritorio (Electron) para estudios de abogados. Gestión de caso
 | Código fuente | Subido a GitHub (repo privado) |
 | Control de versiones | Git + tags semánticos (v1.6.3) |
 | Instalador Windows | ✅ Generado (NSIS + portable) |
+| Última release | ✅ v1.6.3 publicada (2026-09-09) |
 | Actualizaciones automáticas | ✅ electron-updater + GitHub Releases |
 | Repositorio | `https://github.com/lexconsiliumconsultores/lex` |
 
@@ -61,9 +62,14 @@ LEX usa **electron-updater** conectado al repo de GitHub (privado). Al abrir la 
 
 ### Token privado
 
-Por ser repo **privado**, la app necesita un token para descargar la actualización. Está guardado en la BD local:
-`config.clave = 'github_token'` (ubicación: `%APPDATA%\LEX\lex.db`).
-`main.js` lo lee al iniciar y lo asigna a `process.env.GH_TOKEN`.
+Por ser repo **privado**, la app necesita un token de GitHub (scope `repo` o fine-grained con lectura de Releases) para **comprobar y descargar** actualizaciones:
+
+- Origen del token: variable de entorno `GH_TOKEN` o la clave `github_token` de la BD local.
+- Ruta de la BD según el entorno:
+  - **App instalada (empaquetada):** `%APPDATA%\LEX - Gestión Jurídica\lex.db`
+  - **Desarrollo (`npm start`):** `%APPDATA%\lex\lex.db`
+- `main.js` lo lee al iniciar y lo asigna a `process.env.GH_TOKEN`.
+- ⚠️ Si la app instalada no tiene token válido, el banner queda en **"Descargando..."** y la actualización nunca avanza (repo privado sin autorización).
 
 ---
 
@@ -83,7 +89,8 @@ npm install
 
 ## Ejecución (desarrollo)
 
-**IMPORTANTE:** No usar `npm start` — usar directamente el ejecutable de Electron:
+- **`npm start`** (script corregido en v1.6.0 para Windows) — ejecuta `electron .`
+- Alternativa directa:
 
 ```powershell
 Start-Process "C:\Users\CASA\Desktop\TODOS LOS PROYECTOS\PROYECTO 5\LEX\node_modules\electron\dist\electron.exe" -WorkingDirectory "C:\Users\CASA\Desktop\TODOS LOS PROYECTOS\PROYECTO 5\LEX"
@@ -224,8 +231,9 @@ Salida en `dist_instalador/`. Para versionado correcto: subir la versión en `pa
 | Problema | Solución |
 |----------|----------|
 | `electron-builder` no se ejecuta | Usar `node node_modules/electron-builder/out/cli/cli.js --win` |
-| App no se abre en desarrollo | Usar `electron.exe .` directamente (nada de `npm start`) |
+| App no se abre con `npm start` | En 1.6.0+ funciona el script `electron .`; si fallara, usar `electron.exe .` directamente |
 | No aparecen los avisos de actualización | Verificar que es la versión instalada (no portable) y que la Release está publicada (no borrador) |
+| El banner dice "Descargando..." y no avanza | Repo privado: revisar que `github_token`/`GH_TOKEN` sea válido en la BD de la app instalada (ver "Token privado") |
 | La Release no se descarga | Confirmar los 3 assets y que el repo tiene `github_token` válido en la BD |
 | No se envían correos | Verificar conexión Outlook en Configuración |
 | API de IA no responde | Verificar API key y modelo en BD |
@@ -236,9 +244,10 @@ Salida en `dist_instalador/`. Para versionado correcto: subir la versión en `pa
 ## Pendientes / Próximos pasos
 
 - [ ] **App Android sincronizada** (Capacitor o Expo) — conversado, pendiente de decisión
-- [ ] Ícono personalizado para la app (.ico) en el empaquetado
+- [ ] Obtener el logo del estudio en **alta resolución (≥256px)** para regenerar el icono a máxima nitidez
 - [ ] Notificador perezoso de actualizaciones más visible (opcional)
 - [ ] Publicar automáticamente usando solo `npm run dist -- --publish always` (verificado)
+- [x] Ícono personalizado en el empaquetado (v1.6.1 → v1.6.3, logo real del estudio)
 
 ---
 
