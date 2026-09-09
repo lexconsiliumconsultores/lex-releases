@@ -673,7 +673,7 @@ async function notificarAgendamiento(plazo) {
   }
   const fecha = formatDate(plazo.fecha_limite);
   const hora = plazo.hora ? ` a las ${plazo.hora}` : '';
-  const mensaje = `Estimado/a ${cliente.nombre}, le informamos que se ha programado una cita/agendamiento "${plazo.titulo}" de su caso ${caso.numero_caso} - ${caso.titulo} para el ${fecha}${hora}. Atentamente, CMR Jurídico.`;
+  const mensaje = `Estimado/a ${cliente.nombre}, le informamos que se ha programado una cita/agendamiento "${plazo.titulo}" de su caso ${caso.numero_caso} - ${caso.titulo} para el ${fecha}${hora}. Atentamente, LexConsilium Consultores.`;
   const asunto = `LEX - Agendamiento - ${caso.titulo}`;
   const res = await ipcRenderer.invoke('enviarEmail', cliente.email, asunto, mensaje);
   await ipcRenderer.invoke('addNotificacion', {
@@ -715,7 +715,7 @@ async function notificarPlazo(plazoId) {
   const fechaPlazo = formatDate(plazo.fecha_limite);
   const horaPlazo = plazo.hora ? ` a las ${plazo.hora}` : '';
   document.getElementById('notifMensaje').value = 
-    `Estimado/a cliente, le recordamos que el plazo "${plazo.titulo}" de su caso ${caso.numero_caso} - ${caso.titulo} vence el ${fechaPlazo}${horaPlazo}. Por favor, tome las acciones necesarias. Atentamente, CMR Jurídico.`;
+    `Estimado/a cliente, le recordamos que el plazo "${plazo.titulo}" de su caso ${caso.numero_caso} - ${caso.titulo} vence el ${fechaPlazo}${horaPlazo}. Por favor, tome las acciones necesarias. Atentamente, LexConsilium Consultores.`;
 }
 
 // ==================== SEGUIMIENTO ====================
@@ -785,7 +785,7 @@ async function saveSeguimiento(e) {
   await ipcRenderer.invoke('addSeguimiento', {
     caso_id: parseInt(casoId),
     nota: nota,
-    autor: 'CMR'
+    autor: 'LexConsilium Consultores'
   });
 
   document.getElementById('seguimientoNota').value = '';
@@ -862,11 +862,11 @@ async function plantillaNotificacion() {
   const caso = casos.find(c => c.id == casoId);
   const nombreCaso = caso ? `${caso.numero_caso} - ${caso.titulo}` : '[Caso]';
   const plantillas = {
-    'Agendamiento': `Estimado/a cliente, le informamos que se ha programado una cita referente al caso ${nombreCaso}. Le confirmaremos la fecha y hora por este medio. Atentamente, CMR Jurídico.`,
-    'Audiencia': `Estimado/a cliente, le informamos que tiene programada una audiencia referente al caso ${nombreCaso}. Le solicitamos confirmar su asistencia. Atentamente, CMR Jurídico.`,
-    'Plazo': `Estimado/a cliente, le recordamos que se aproxima un plazo importante en su caso ${nombreCaso}. Por favor, tome las acciones necesarias. Atentamente, CMR Jurídico.`,
-    'Estado': `Estimado/a cliente, le comunicamos una actualización en el estado de su caso ${nombreCaso}. Para más detalles, favor contactar a su abogado. Atentamente, CMR Jurídico.`,
-    'Solicitud': `Estimado/a cliente, necesitamos que nos proporcione documentación pendiente para su caso ${nombreCaso}. Favor enviar a la brevedad posible. Atentamente, CMR Jurídico.`,
+    'Agendamiento': `Estimado/a cliente, le informamos que se ha programado una cita referente al caso ${nombreCaso}. Le confirmaremos la fecha y hora por este medio. Atentamente, LexConsilium Consultores.`,
+    'Audiencia': `Estimado/a cliente, le informamos que tiene programada una audiencia referente al caso ${nombreCaso}. Le solicitamos confirmar su asistencia. Atentamente, LexConsilium Consultores.`,
+    'Plazo': `Estimado/a cliente, le recordamos que se aproxima un plazo importante en su caso ${nombreCaso}. Por favor, tome las acciones necesarias. Atentamente, LexConsilium Consultores.`,
+    'Estado': `Estimado/a cliente, le comunicamos una actualización en el estado de su caso ${nombreCaso}. Para más detalles, favor contactar a su abogado. Atentamente, LexConsilium Consultores.`,
+    'Solicitud': `Estimado/a cliente, necesitamos que nos proporcione documentación pendiente para su caso ${nombreCaso}. Favor enviar a la brevedad posible. Atentamente, LexConsilium Consultores.`,
     'Personalizado': ''
   };
   document.getElementById('notifMensaje').value = plantillas[tipo] || '';

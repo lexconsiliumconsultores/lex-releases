@@ -1,14 +1,14 @@
 {
   "name": "lex",
-  "version": "1.6.1",
-  "description": "Sistema de Gestión de Casos Jurídicos - CMR",
+  "version": "1.6.2",
+  "description": "Sistema de Gestión de Casos Jurídicos - LexConsilium Consultores",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dist": "node node_modules/electron-builder/out/cli/cli.js --win",
     "dist:portable": "node node_modules/electron-builder/out/cli/cli.js --win portable"
   },
-  "author": "CMR Jurídico",
+  "author": "LexConsilium Consultores",
   "license": "ISC",
   "build": {
     "appId": "com.cmr.lex",
