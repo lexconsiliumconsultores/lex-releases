@@ -1,0 +1,24 @@
+# Dependencias
+node_modules/
+
+# Builds / empaquetado
+dist_instalador/
+dist/
+out/
+
+# Base de datos local y datos de usuario
+*.db
+*.db-journal
+*.sqlite
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

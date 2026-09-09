@@ -1,0 +1,57 @@
+{
+  "name": "lex",
+  "version": "1.4.0",
+  "description": "Sistema de Gestión de Casos Jurídicos - CMR",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "node node_modules/electron-builder/out/cli/cli.js --win",
+    "dist:portable": "node node_modules/electron-builder/out/cli/cli.js --win portable"
+  },
+  "author": "CMR Jurídico",
+  "license": "ISC",
+  "build": {
+    "appId": "com.cmr.lex",
+    "productName": "LEX - Gestión Jurídica",
+    "directories": {
+      "output": "dist_instalador"
+    },
+    "files": [
+      "main.js",
+      "renderer.js",
+      "index.html",
+      "styles.css",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerHeaderIcon": null,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LEX"
+    }
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "nodemailer": "^9.0.6",
+    "sql.js": "^1.10.0"
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^26.0.12"
+  }
+}
