@@ -2,7 +2,7 @@
 
 Aplicación de escritorio (Electron) para estudios de abogados. Gestión de casos, clientes, plazos, facturas, seguimiento, documentación legal, notificaciones por correo (Outlook) y actualizaciones automáticas vía GitHub.
 
-**Versión actual:** 1.6.2
+**Versión actual:** 1.6.3
 
 ---
 
@@ -11,7 +11,7 @@ Aplicación de escritorio (Electron) para estudios de abogados. Gestión de caso
 | Aspecto | Estado |
 |---------|--------|
 | Código fuente | Subido a GitHub (repo privado) |
-| Control de versiones | Git + tags semánticos (v1.6.2) |
+| Control de versiones | Git + tags semánticos (v1.6.3) |
 | Instalador Windows | ✅ Generado (NSIS + portable) |
 | Actualizaciones automáticas | ✅ electron-updater + GitHub Releases |
 | Repositorio | `https://github.com/lexconsiliumconsultores/lex` |
@@ -203,6 +203,7 @@ Salida en `dist_instalador/`. Para versionado correcto: subir la versión en `pa
 
 | Versión | Fecha | Contenido |
 |---------|-------|-----------|
+| 1.6.3 | 2026-09-09 | **Corrección de icono**: se usa el logo real del estudio (`app_icon.ico` ampliado a 256×256) en instalador, acceso directo y barra de tareas |
 | 1.6.2 | 2026-09-09 | **Rebranding**: firma y referencias de marca a LexConsilium Consultores en notificaciones, LexAI, login y metadatos |
 | 1.6.1 | 2026-09-09 | **Icono del estudio** (`build/icon.png`) en instalador, acceso directo de escritorio y barra de tareas |
 | 1.6.0 | 2026-09-09 | **Correcciones**: script start compatible Windows, arranque de la app vía npm, Plazos Legales (lista vacía por doble indexación), Configuración sin banners SMTP/Outlook, gestión de usuarios restaurada |
