@@ -1242,7 +1242,7 @@ async function loadPlazosLegales() {
 
 async function renderPlazosLegales() {
   const materia = document.getElementById('plazosLegalMateria').value;
-  const plazos = (await ipcRenderer.invoke('getPlazosLegales', materia))[materia] || [];
+  const plazos = await ipcRenderer.invoke('getPlazosLegales', materia) || [];
   const matLabels = { civil: 'CIVIL', penal: 'PENAL', laboral: 'LABORAL', administrativo: 'CONTENCIOSO ADMINISTRATIVO', mercantil: 'MERCANTIL' };
   const list = document.getElementById('plazosLegalesList');
   list.innerHTML = `
@@ -1281,14 +1281,12 @@ async function loadConfiguracion() {
   if (document.getElementById('smtpUser')) document.getElementById('smtpUser').value = config.user || '';
   if (document.getElementById('smtpPass')) document.getElementById('smtpPass').value = config.pass || '';
   if (document.getElementById('smtpFrom')) document.getElementById('smtpFrom').value = config.from || '';
-  await actualizarEstadoSMTP();
-  await rellenarFormOutlook();
-  await actualizarEstadoOutlook();
+  const adminSection = document.getElementById('adminUsersSection');
   if (isAdmin()) {
     await loadUsuarios();
-    document.getElementById('adminUsersSection').style.display = 'block';
+    if (adminSection) adminSection.style.display = 'block';
   } else {
-    document.getElementById('adminUsersSection').style.display = 'none';
+    if (adminSection) adminSection.style.display = 'none';
   }
 }
 
@@ -1458,6 +1456,7 @@ async function deleteUsuario(id) {
 async function actualizarEstadoSMTP() {
   const config = await ipcRenderer.invoke('getSMTPConfig');
   const estadoEl = document.getElementById('smtpStatusTexto');
+  if (!estadoEl) return;
   if (config && config.host && config.user && config.pass) {
     const res = await ipcRenderer.invoke('testSMTP');
     if (res.success) {

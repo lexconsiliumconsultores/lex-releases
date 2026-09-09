@@ -1,10 +1,10 @@
 {
   "name": "lex",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Sistema de Gestión de Casos Jurídicos - CMR",
   "main": "main.js",
   "scripts": {
-    "start": "node_modules/.bin/electron .",
+    "start": "electron .",
     "dist": "node node_modules/electron-builder/out/cli/cli.js --win",
     "dist:portable": "node node_modules/electron-builder/out/cli/cli.js --win portable"
   },
@@ -34,11 +34,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": null
