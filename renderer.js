@@ -1276,11 +1276,11 @@ async function agregarPlazoLegal(titulo, dias) {
 // ==================== CONFIGURACIÓN ====================
 async function loadConfiguracion() {
   const config = await ipcRenderer.invoke('getSMTPConfig');
-  document.getElementById('smtpHost').value = config.host || '';
-  document.getElementById('smtpPort').value = config.port || '587';
-  document.getElementById('smtpUser').value = config.user || '';
-  document.getElementById('smtpPass').value = config.pass || '';
-  document.getElementById('smtpFrom').value = config.from || '';
+  if (document.getElementById('smtpHost')) document.getElementById('smtpHost').value = config.host || '';
+  if (document.getElementById('smtpPort')) document.getElementById('smtpPort').value = config.port || '587';
+  if (document.getElementById('smtpUser')) document.getElementById('smtpUser').value = config.user || '';
+  if (document.getElementById('smtpPass')) document.getElementById('smtpPass').value = config.pass || '';
+  if (document.getElementById('smtpFrom')) document.getElementById('smtpFrom').value = config.from || '';
   await actualizarEstadoSMTP();
   await rellenarFormOutlook();
   await actualizarEstadoOutlook();

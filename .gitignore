@@ -3,6 +3,7 @@ node_modules/
 
 # Builds / empaquetado
 dist_instalador/
+dist_release/
 dist/
 out/
 

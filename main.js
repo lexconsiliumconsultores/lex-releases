@@ -3,7 +3,6 @@ const path = require('path');
 const initSqlJs = require('sql.js');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { autoUpdater } = require('electron-updater');
 
 let mainWindow;
