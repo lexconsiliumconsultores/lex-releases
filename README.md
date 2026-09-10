@@ -2,7 +2,7 @@
 
 Aplicación de escritorio (Electron) para estudios de abogados. Gestión de casos, clientes, plazos, facturas, seguimiento, documentación legal, notificaciones por correo (Outlook) y actualizaciones automáticas vía GitHub.
 
-**Versión actual:** 1.6.4
+**Versión actual:** 1.6.5
 
 ---
 
@@ -13,7 +13,7 @@ Aplicación de escritorio (Electron) para estudios de abogados. Gestión de caso
 | Código fuente | Subido a GitHub (repo privado) |
 | Control de versiones | Git + tags semánticos (v1.6.3) |
 | Instalador Windows | ✅ Generado (NSIS + portable) |
-| Última release | ✅ v1.6.4 publicada (2026-09-10) |
+| Última release | ✅ v1.6.5 publicada (2026-09-10) |
 | Actualizaciones automáticas | ✅ electron-updater + GitHub Releases |
 | Repositorio | `https://github.com/lexconsiliumconsultores/lex` |
 
@@ -133,6 +133,7 @@ Start-Process "C:\Users\CASA\Desktop\TODOS LOS PROYECTOS\PROYECTO 5\LEX\node_mod
 
 ### Documentos
 - Subir, previsualizar, descargar y eliminar documentos vinculados a casos
+- **Visor interno 👁️**: los documentos (PDF, imágenes y archivos de texto) se pueden visualizar directamente dentro de LEX, sin salir del programa
 
 ### Plazos y Calendario
 - **Calendario visual mensual sincronizado con Outlook** (chips de plazos LEX y eventos Outlook)
@@ -158,6 +159,7 @@ Start-Process "C:\Users\CASA\Desktop\TODOS LOS PROYECTOS\PROYECTO 5\LEX\node_mod
 - **Tipos:** Agendamiento / Cita, Audiencia, Vencimiento de Plazo, Estado del Caso, Solicitud de Documentos, Personalizado
 - Plantillas automáticas, envío por **Outlook** (primario) o **SMTP** (respaldo)
 - Historial con estado de envío y reenvío
+- **Respuestas de cliente**: LEX vigila la bandeja de Outlook cada 5 minutos y detecta las respuestas de los clientes a los correos enviados (coincidencia de asunto del hilo). Al llegar, registra una notificación de tipo **Respuesta de Cliente** con el remitente y la vista previa, activa un **badge contador**, muestra un aviso en pantalla y marca la respuesta como leída al abrir la sección. Además hay un botón **"Verificar respuestas"** para forzar la comprobación
 
 ### Reportes
 - Métricas y exportación visual
@@ -218,6 +220,7 @@ Salida en `dist_instalador/`. Para versionado correcto: subir la versión en `pa
 
 | Versión | Fecha | Contenido |
 |---------|-------|-----------|
+| 1.6.5 | 2026-09-10 | **Rendimiento**: persistencia debounce + escritura asíncrona (la BD ya no se exporta completa en cada operación). **Respuestas de cliente**: vigilancia automática de la bandeja Outlook cada 5 min, notificación "Respuesta de Cliente" con vista previa, badge contador y aviso en pantalla (permiso `Mail.Read`, requiere reconectar). **Visor interno de documentos** (PDF, imágenes y texto con botón 👁️) |
 | 1.6.4 | 2026-09-10 | **Auditoría de funcionalidad habilitada**: config LexAI accesible desde el chat, conexión Outlook restaurada en Configuración, CRM de facturación completo (editar facturas + estado, filtros, cartera por cliente, eliminar pagos, historial global). **Notificador de actualizaciones mejorado**: barra de progreso, pulso visual, detección de descarga estancada con botón Reintentar. **Publicación automática** `npm run dist:publish` (`lex-setup-<v>.exe` / `lex-portable-<v>.exe`). Icono 256×256 confirmado |
 | 1.6.3 | 2026-09-09 | **Corrección de icono**: se usa el logo real del estudio (`app_icon.ico` ampliado a 256×256) en instalador, acceso directo y barra de tareas |
 | 1.6.2 | 2026-09-09 | **Rebranding**: firma y referencias de marca a LexConsilium Consultores en notificaciones, LexAI, login y metadatos |

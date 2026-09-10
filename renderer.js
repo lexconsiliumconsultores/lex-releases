@@ -498,11 +498,40 @@ async function loadDocumentos() {
         <td>${caso ? escapeHtml(caso.titulo) : '-'}</td>
         <td>${formatDate(d.fecha_subida)}</td>
         <td class="actions">
+          <button class="btn-icon" onclick="verDocumentoInterno(${d.id})" title="Ver en LEX">👁️</button>
           <button class="btn btn-danger btn-sm" onclick="deleteDocumento(${d.id})">🗑️</button>
         </td>
       </tr>
     `;
   }).join('');
+  if (tbody.innerHTML === '') {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay documentos registrados</td></tr>';
+  }
+}
+
+async function verDocumentoInterno(id) {
+  const res = await ipcRenderer.invoke('getDocumentoBase64', id);
+  if (!res || !res.success) {
+    alert('No se pudo visualizar el documento:\n' + (res && res.error ? res.error : 'Error desconocido'));
+    return;
+  }
+  document.getElementById('visorDocTitulo').textContent = 'Visor · ' + res.nombre;
+  const cont = document.getElementById('visorDocContenido');
+  const dataUrl = `data:${res.mime};base64,${res.base64}`;
+  if (res.mime.startsWith('image/')) {
+    cont.innerHTML = `<img src="${dataUrl}" alt="${escapeHtml(res.nombre)}" style="max-width:100%; max-height:100%; display:block; margin:0 auto; border-radius:6px;">`;
+  } else if (res.mime === 'application/pdf') {
+    cont.innerHTML = `<iframe src="${dataUrl}" style="width:100%; height:100%; border:0;"></iframe>`;
+  } else if (res.mime.startsWith('text/')) {
+    const bytes = Uint8Array.from(atob(res.base64), c => c.charCodeAt(0));
+    cont.innerHTML = `<pre style="padding:18px; color:#e2e8f0; white-space:pre-wrap; word-break:break-word; font-size:13px; line-height:1.5; height:100%; overflow:auto;">${escapeHtml(new TextDecoder().decode(bytes))}</pre>`;
+  } else {
+    cont.innerHTML = `<div style="padding:48px 24px; text-align:center; color:#94a3b8;">
+      <img src="${dataUrl}" style="max-width:100%; max-height:100%; display:block; margin:0 auto; border-radius:6px;">
+      <p style="margin-top:16px;">Formato <strong>${escapeHtml(res.mime)}</strong> compatible para vista previa.</p>
+    </div>`;
+  }
+  document.getElementById('visorDocModal').classList.add('active');
 }
 
 async function openDocumentoModal() {
@@ -832,7 +861,6 @@ async function loadNotificaciones() {
   const tbody = document.getElementById('notificacionesTable');
   if (notifs.length === 0) {
     tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No hay notificaciones enviadas</td></tr>';
-    return;
   }
   tbody.innerHTML = notifs.map(n => `
     <tr>
@@ -849,7 +877,41 @@ async function loadNotificaciones() {
       </td>
     </tr>
   `).join('');
+
+  await ipcRenderer.invoke('marcarRespuestasLeidas');
+  await contarRespuestas();
 }
+
+async function contarRespuestas() {
+  const res = await ipcRenderer.invoke('getRespuestasBadge');
+  const badge = document.getElementById('respuestasBadge');
+  if (!badge) return;
+  const n = (res && res.count) || 0;
+  badge.style.display = n > 0 ? '' : 'none';
+  badge.textContent = n > 0 ? ('✉️ ' + n + ' respuesta' + (n === 1 ? '' : 's')) : '';
+}
+
+async function buscarRespuestas() {
+  const res = await ipcRenderer.invoke('chequearRespuestasCliente');
+  if (!res || !res.success) {
+    alert('No se pudieron verificar respuestas de clientes:\n' + (res && res.error ? res.error : 'Error desconocido'));
+    return;
+  }
+  await loadNotificaciones();
+  await contarRespuestas();
+  alert(res.nuevas > 0
+    ? `📬 Se ${res.nuevas === 1 ? 'encontró' : 'encontraron'} ${res.nuevas} respuesta(s) de clientes en tu correo.`
+    : '📭 Sin respuestas nuevas de clientes en tu correo.');
+}
+
+ipcRenderer.on('respuestas-cliente', async (e, nuevas) => {
+  await contarRespuestas();
+  if (currentSection === 'notificaciones') {
+    await loadNotificaciones();
+  } else if (nuevas > 0) {
+    alert(`📬 ${nuevas} cliente(s) respondieron a tus correos. Revisa la sección Notificaciones por Correo.`);
+  }
+});
 
 async function openNotifModal(casoId = null, clienteId = null) {
   await loadCasosSelect('notifCaso');
@@ -951,14 +1013,14 @@ async function deleteNotificacion(id) {
 }
 
 function getTipoNotifClass(tipo) {
-  const classes = { 'Audiencia': 'activo', 'Plazo': 'vencido', 'Estado': 'proceso', 'Solicitud': 'pendiente', 'Personalizado': 'cerrado' };
+  const classes = { 'Audiencia': 'activo', 'Plazo': 'vencido', 'Estado': 'proceso', 'Solicitud': 'pendiente', 'Personalizado': 'cerrado', 'Respuesta de Cliente': 'proceso', 'Agendamiento': 'activo' };
   return classes[tipo] || 'pendiente';
 }
 
 function getEstadoNotifClass(estado) {
   if (!estado) return 'pendiente';
-  if (estado === 'Enviado') return 'activo';
-  return 'proceso';
+  const clases = { 'Enviado': 'activo', 'Recibido': 'pendiente', 'Visto': 'ok', 'Fallido': 'error', 'Error': 'error' };
+  return clases[estado] || 'proceso';
 }
 
 // ==================== REPORTES ====================

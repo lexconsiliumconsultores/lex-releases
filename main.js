@@ -14,12 +14,53 @@ function getDbPath() {
   return path.join(app.getPath('userData'), 'lex.db');
 }
 
-function saveDb() {
-  if (db) {
+let dbDirty = false;
+let dbSaveTimer = null;
+let dbWriting = false;
+
+// Guardado con debounce: la BD (sql.js, en memoria) solo se exporta a disco
+// cuando deja de haber escrituras (300ms) y en segundo plano, para no bloquear
+// la UI con db.export() + writeFileSync en cada INSERT/UPDATE/DELETE.
+function saveDbNowSync() {
+  if (!db) return;
+  if (dbSaveTimer) {
+    clearTimeout(dbSaveTimer);
+    dbSaveTimer = null;
+  }
+  dbDirty = false;
+  const data = db.export();
+  const buffer = Buffer.from(data);
+  fs.writeFileSync(dbPath, buffer);
+}
+
+async function persistDbAsync() {
+  if (!db) return;
+  if (dbWriting) return;
+  dbDirty = false;
+  dbWriting = true;
+  try {
     const data = db.export();
     const buffer = Buffer.from(data);
-    fs.writeFileSync(dbPath, buffer);
+    await fs.promises.writeFile(dbPath, buffer);
+  } catch (err) {
+    console.error('Error guardando la base de datos:', err);
+  } finally {
+    dbWriting = false;
   }
+}
+
+function saveDb() {
+  saveDbNowSync();
+}
+
+function scheduleDbSave() {
+  if (!db || dbWriting) return;
+  dbDirty = true;
+  if (dbSaveTimer) clearTimeout(dbSaveTimer);
+  dbSaveTimer = setTimeout(() => {
+    dbSaveTimer = null;
+    if (dbDirty) persistDbAsync();
+  }, 300);
 }
 
 function createWindow() {
@@ -43,7 +84,10 @@ function createWindow() {
   Menu.setApplicationMenu(menu);
 
   mainWindow.on('close', () => {
-    saveDb();
+    if (dbSaveTimer) {
+      clearTimeout(dbSaveTimer);
+      dbSaveTimer = null;
+    }
   });
 }
 
@@ -223,6 +267,9 @@ async function initDatabase() {
   if (!colsNotif.includes('canal')) {
     db.run('ALTER TABLE notificaciones ADD COLUMN canal TEXT');
   }
+  if (!colsNotif.includes('asunto')) {
+    db.run('ALTER TABLE notificaciones ADD COLUMN asunto TEXT');
+  }
 
   const colsPlazos = queryAll('PRAGMA table_info(plazos)').map(c => c.name);
   if (!colsPlazos.includes('outlook_event_id')) {
@@ -256,7 +303,7 @@ function queryOne(sql, params = []) {
 
 function runQuery(sql, params = []) {
   db.run(sql, params);
-  saveDb();
+  scheduleDbSave();
   return { changes: db.getRowsModified(), lastId: queryOne('SELECT last_insert_rowid() as id').id };
 }
 
@@ -376,6 +423,36 @@ ipcMain.handle('addDocumento', (event, doc) => {
 ipcMain.handle('deleteDocumento', (event, id) => {
   runQuery('DELETE FROM documentos WHERE id=?', [id]);
   return { success: true };
+});
+
+const MIME_DOCS = {
+  '.pdf': 'application/pdf',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif', '.webp': 'image/webp', '.bmp': 'image/bmp',
+  '.txt': 'text/plain', '.md': 'text/markdown',
+  '.html': 'text/html', '.htm': 'text/html',
+  '.csv': 'text/csv', '.json': 'application/json'
+};
+
+ipcMain.handle('getDocumentoBase64', (event, id) => {
+  const doc = queryOne('SELECT * FROM documentos WHERE id=?', [id]);
+  if (!doc) return { success: false, error: 'Documento no encontrado' };
+  try {
+    if (!doc.ruta || !fs.existsSync(doc.ruta)) {
+      return { success: false, error: 'El archivo ya no existe en la ruta registrada:\n' + (doc.ruta || '(sin ruta)') };
+    }
+    const stats = fs.statSync(doc.ruta);
+    if (stats.size > 25 * 1024 * 1024) {
+      return { success: false, error: 'El archivo supera 25 MB y es demasiado grande para el visor interno. Descárgalo para revisarlo.' };
+    }
+    const ext = path.extname(doc.ruta).toLowerCase();
+    const mime = MIME_DOCS[ext] || 'application/octet-stream';
+    const base64 = fs.readFileSync(doc.ruta).toString('base64');
+    return { success: true, base64, mime, nombre: doc.nombre };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 });
 
 ipcMain.handle('selectFile', async () => {
@@ -661,7 +738,7 @@ ipcMain.handle('testSMTP', async () => {
 
 // ==================== MICROSOFT OUTLOOK (GRAPH API) ====================
 const GRAPH_BASE = 'https://graph.microsoft.com/v1.0';
-const OUTLOOK_SCOPES = 'offline_access openid profile User.Read Calendars.ReadWrite Mail.Send';
+const OUTLOOK_SCOPES = 'offline_access openid profile User.Read Calendars.ReadWrite Mail.Read Mail.Send';
 
 function getOutlookConfig() {
   return {
@@ -760,6 +837,101 @@ async function sendMailOutlookDirect(para, asunto, mensaje) {
   if (data.error) return { success: false, error: data.error };
   return { success: true };
 }
+
+// ==================== RESPUESTAS DE CLIENTE ====================
+function normalizarAsunto(t) {
+  return (t || '')
+    .replace(/^\s*(re|fw|fwd|res|rv|aw|sv)\s*:/i, '')
+    .replace(/^\[[^\]]*\]\s*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+async function chequearRespuestasCliente() {
+  try {
+    const tokens = getOutlookTokens();
+    if ((!tokens.access_token && !tokens.refresh_token) || !tokens.email) {
+      return { success: false, error: 'Outlook no conectado' };
+    }
+
+    const enviados = queryAll(`
+      SELECT n.tipo, n.email, n.caso_id, c.titulo as caso_titulo
+      FROM notificaciones n
+      LEFT JOIN casos c ON n.caso_id = c.id
+      WHERE n.estado='Enviado' AND n.email IS NOT NULL AND n.email <> ''
+      ORDER BY n.fecha DESC
+    `);
+    if (!enviados.length) return { success: false, error: 'Aún no hay correos enviados desde LEX' };
+
+    const asuntosEsperados = enviados
+      .map(n => normalizarAsunto(n.caso_titulo ? `LEX - ${n.tipo} - ${n.caso_titulo}` : `LEX - ${n.tipo}`))
+      .filter(Boolean);
+    if (!asuntosEsperados.length) return { success: false, error: 'Sin correos con asunto disponible' };
+
+    let desde = getConfig('outlook_respuestas_desde');
+    if (!desde) desde = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+
+    const ruta = `/me/messages?$filter=${encodeURIComponent('receivedDateTime ge ' + desde)}&$top=60&$select=id,subject,from,receivedDateTime,bodyPreview,conversationId,internetMessageId`;
+    const data = await graphRequest(ruta);
+    if (data.error) return { success: false, error: data.error };
+
+    let vistos = [];
+    try { vistos = JSON.parse(getConfig('outlook_respuestas_vistos') || '[]'); } catch (e) { vistos = []; }
+    const nuevoVistos = [...vistos];
+
+    const cuenta = tokens.email.toLowerCase();
+    let nuevas = 0;
+    const items = (data.value || []).filter(m =>
+      m.from && m.from.emailAddress && m.from.emailAddress.address &&
+      String(m.from.emailAddress.address).toLowerCase() !== cuenta
+    );
+
+    for (const m of items) {
+      const subj = normalizarAsunto(m.subject);
+      const coincide = asuntosEsperados.some(a => subj.includes(a));
+      if (!coincide || vistos.includes(m.id)) continue;
+      nuevoVistos.push(m.id);
+      nuevas++;
+
+      let cliente_id = null;
+      let caso_id = null;
+      const cli = queryOne('SELECT id FROM clientes WHERE lower(email)=lower(?)', [m.from.emailAddress.address]);
+      if (cli) {
+        cliente_id = cli.id;
+        const caso = queryOne("SELECT id FROM casos WHERE cliente_id=? AND estado='Activo' ORDER BY id DESC LIMIT 1", [cli.id]);
+        if (caso) caso_id = caso.id;
+      }
+
+      runQuery(
+        'INSERT INTO notificaciones (caso_id, cliente_id, tipo, mensaje, telefono, email, canal, estado, asunto) VALUES (?,?,?,?,?,?,?,?,?)',
+        [caso_id, cliente_id, 'Respuesta de Cliente', (m.bodyPreview || '').substring(0, 500) || '(Sin contenido)', null, m.from.emailAddress.address, 'Outlook', 'Recibido', (m.subject || '') + ' · ' + m.receivedDateTime]
+      );
+    }
+
+    setConfig('outlook_respuestas_vistos', JSON.stringify(nuevoVistos.slice(-500)));
+    setConfig('outlook_respuestas_desde', new Date().toISOString());
+
+    if (nuevas > 0 && mainWindow) {
+      mainWindow.webContents.send('respuestas-cliente', nuevas);
+    }
+    return { success: true, nuevas };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+ipcMain.handle('chequearRespuestasCliente', () => chequearRespuestasCliente());
+
+ipcMain.handle('getRespuestasBadge', () => {
+  const count = queryOne("SELECT COUNT(*) as total FROM notificaciones WHERE tipo='Respuesta de Cliente' AND estado='Recibido'").total;
+  return { count };
+});
+
+ipcMain.handle('marcarRespuestasLeidas', () => {
+  runQuery("UPDATE notificaciones SET estado='Visto' WHERE tipo='Respuesta de Cliente' AND estado='Recibido'");
+  return { success: true };
+});
 
 async function createOutlookEventDirect(ev) {
   const payload = {
@@ -1512,10 +1684,16 @@ app.whenReady().then(async () => {
   await initDatabase();
   createWindow();
   setupAutoUpdater();
+  // Vigilancia de respuestas de clientes (Outlook): chequeo inicial + cada 5 min.
+  setTimeout(() => chequearRespuestasCliente(), 20000);
+  setInterval(() => chequearRespuestasCliente(), 5 * 60 * 1000);
 });
 
-app.on('window-all-closed', () => {
-  saveDb();
+app.on('window-all-closed', async () => {
+  while (dbWriting) {
+    await new Promise(r => setTimeout(r, 20));
+  }
+  saveDbNowSync();
   if (db) db.close();
   if (process.platform !== 'darwin') app.quit();
 });

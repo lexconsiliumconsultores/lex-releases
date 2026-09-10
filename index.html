@@ -523,7 +523,11 @@
       <section id="notificaciones" class="section">
         <div class="section-header">
           <h2>Notificaciones por Correo</h2>
-          <button class="btn btn-primary" onclick="openNotifModal()">+ Nueva Notificación</button>
+          <div class="header-actions">
+            <span id="respuestasBadge" class="badge badge-ok" style="display:none;"></span>
+            <button class="btn btn-secondary" onclick="buscarRespuestas()">🔄 Verificar respuestas</button>
+            <button class="btn btn-primary" onclick="openNotifModal()">+ Nueva Notificación</button>
+          </div>
         </div>
         <div class="table-container">
           <table class="data-table">
@@ -770,6 +774,17 @@
           <button type="submit" class="btn btn-primary">Guardar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal Visor Interno de Documentos -->
+  <div id="visorDocModal" class="modal">
+    <div class="modal-content" style="width: 900px; max-width: 94vw; height: 86vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <h3 id="visorDocTitulo">Visor de Documento</h3>
+        <button class="modal-close" onclick="closeModal('visorDocModal')">&times;</button>
+      </div>
+      <div id="visorDocContenido" style="flex: 1; overflow: auto; background: #0f172a; border-radius: 8px; margin: 0 24px 24px;"></div>
     </div>
   </div>
 
