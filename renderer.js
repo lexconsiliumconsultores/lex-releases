@@ -15,9 +15,14 @@ function showUpdateBanner(message, btnText, btnAction) {
   }
   banner.innerHTML = `
     <div class="update-banner-icon">🚀</div>
-    <div class="update-banner-msg">${message}</div>
-    <button class="update-banner-btn" id="updateBannerBtn">${btnText}</button>
-    <button class="update-banner-close" id="updateBannerClose">✕</button>
+    <div class="update-banner-body">
+      <div class="update-banner-msg">${message}</div>
+      <div class="update-banner-bar"><div class="update-banner-bar-fill" id="updateBarFill"></div><span class="update-banner-pct" id="updateBarPct">0%</span></div>
+      <div class="update-banner-actions">
+        ${btnText ? `<button class="update-banner-btn" id="updateBannerBtn">${btnText}</button>` : ''}
+        <button class="update-banner-close" id="updateBannerClose">✕</button>
+      </div>
+    </div>
   `;
   banner.classList.add('active');
   const closeBtn = document.getElementById('updateBannerClose');
@@ -26,13 +31,42 @@ function showUpdateBanner(message, btnText, btnAction) {
   if (btn && btnAction) btn.onclick = btnAction;
 }
 
+function aplicarProgresoUpdate(p) {
+  window.__updaterProgress = p || { percent: 0, transferred: 0, total: 0 };
+  const fill = document.getElementById('updateBarFill');
+  const pct = document.getElementById('updateBarPct');
+  if (fill) fill.style.width = Math.min(100, window.__updaterProgress.percent || 0) + '%';
+  if (pct) pct.textContent = 'Descargando ' + (window.__updaterProgress.percent || 0) + '%';
+}
+
 ipcRenderer.on('update-available', (e, version) => {
-  showUpdateBanner(`Nueva versión ${version} disponible. Descargando...`, '', null);
+  updateBannerDismissed = false;
+  showUpdateBanner(`Nueva versión ${version} disponible. Descargando actualización en segundo plano...`, '', null);
+  aplicarProgresoUpdate(null);
+});
+
+ipcRenderer.on('update-progress', (e, p) => {
+  const banner = document.getElementById('updateBanner');
+  if (!banner || !banner.classList.contains('active')) {
+    showUpdateBanner('Actualización disponible. Descargando...', '', null);
+  }
+  aplicarProgresoUpdate(p);
 });
 
 ipcRenderer.on('update-downloaded', (e, version) => {
   updateBannerDismissed = false;
-  showUpdateBanner(`Versión ${version} descargada. Reinicia LEX para aplicar la actualización.`, 'Reiniciar', () => ipcRenderer.invoke('restartApp'));
+  showUpdateBanner(`Versión ${version} descargada. Reinicia LEX para aplicar los cambios.`, 'Reiniciar', () => ipcRenderer.invoke('restartApp'));
+  aplicarProgresoUpdate({ percent: 100 });
+  setTimeout(() => aplicarProgresoUpdate({ percent: 100 }), 100);
+});
+
+ipcRenderer.on('update-stalled', () => {
+  updateBannerDismissed = false;
+  showUpdateBanner(
+    '⚠️ La descarga de la actualización no avanza. Si el repo es privado, revisa que el <strong>token de GitHub</strong> esté configurado (clave <code>github_token</code> de la BD local).',
+    'Reintentar',
+    () => ipcRenderer.invoke('retryUpdateCheck')
+  );
 });
 
 ipcRenderer.on('update-error', (e, err) => {
@@ -961,7 +995,14 @@ async function loadReportes() {
 
 // ==================== CUENTAS POR COBRAR ====================
 async function loadFacturas() {
-  const facturas = await ipcRenderer.invoke('getFacturas');
+  const filtro = (document.getElementById('facturasFiltro') || {}).value || 'todas';
+  let facturas;
+  if (filtro === 'pendientes') {
+    facturas = await ipcRenderer.invoke('getFacturasPendientes');
+  } else {
+    facturas = await ipcRenderer.invoke('getFacturas');
+    if (filtro === 'pagadas') facturas = facturas.filter(f => f.estado === 'Pagada');
+  }
   const tbody = document.getElementById('facturasTable');
   const totalFac = facturas.reduce((s, f) => s + (f.monto || 0), 0);
   const totalPagado = facturas.reduce((s, f) => s + (f.pagado || 0), 0);
@@ -991,6 +1032,7 @@ async function loadFacturas() {
       <td>${f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : '-'}${vencida ? ' ⚠️' : ''}</td>
       <td><span class="badge badge-${estadoClass}">${f.estado}</span></td>
       <td>
+        <button class="btn-icon" onclick="openFacturaModal(${f.id})" title="Editar factura">✏️</button>
         <button class="btn-icon" onclick="openPagoModal(${f.id})" title="Registrar Pago">💵</button>
         <button class="btn-icon" onclick="deleteFactura(${f.id})" title="Eliminar">🗑️</button>
       </td>
@@ -1000,14 +1042,52 @@ async function loadFacturas() {
   if (facturas.length === 0) {
     tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">No hay facturas registradas.</td></tr>';
   }
+  try { await loadCartera(); } catch (e) { /* sin cartera */ }
 }
 
-async function openFacturaModal() {
+async function loadCartera() {
+  const rows = await ipcRenderer.invoke('getCuentasPorCobrar');
+  const el = document.getElementById('carteraLista');
+  if (!el) return;
+  const total = rows.reduce((s, r) => s + (r.saldo || 0), 0);
+  el.innerHTML = rows.length ? rows.map(r => `
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(59,130,246,0.08);">
+      <div>
+        <strong>${escapeHtml(r.cliente_nombre || 'Sin cliente')}</strong>
+        <div style="font-size:12px; color:#94a3b8;">${escapeHtml(r.numero)} · ${escapeHtml(r.concepto || '')}${r.vencida ? ' <span class="badge badge-error">VENCIDA</span>' : ''}</div>
+      </div>
+      <strong style="color:${r.vencida ? '#ef4444' : '#eab308'};">$${(r.saldo || 0).toLocaleString('es-CL', { maximumFractionDigits: 0 })}</strong>
+    </div>`).join('') + `
+    <div style="display:flex; justify-content:space-between; padding-top:12px;"><strong>TOTAL POR COBRAR</strong><strong>$${total.toLocaleString('es-CL', { maximumFractionDigits: 0 })}</strong></div>`
+    : '<p class="empty-state" style="padding:16px; color:#6b7280;">Todo cobrado. No hay saldos pendientes.</p>';
+}
+
+async function openFacturaModal(facturaId) {
   await loadClientesSelect('facturaCliente');
   await loadCasosSelect('facturaCaso');
+  document.getElementById('facturaId').value = '';
   document.getElementById('facturaConcepto').value = '';
   document.getElementById('facturaMonto').value = '';
   document.getElementById('facturaVencimiento').value = '';
+  document.getElementById('facturaEstado').value = 'Pendiente';
+  document.getElementById('facturaModalTitle').textContent = 'Nueva Factura';
+  document.getElementById('facturaSubmitBtn').textContent = 'Crear Factura';
+  if (facturaId) {
+    const facturas = await ipcRenderer.invoke('getFacturas');
+    const f = facturas.find(x => x.id === facturaId);
+    if (f) {
+      document.getElementById('facturaId').value = f.id;
+      document.getElementById('facturaCaso').value = f.caso_id || '';
+      autofillFacturaCliente();
+      document.getElementById('facturaCliente').value = f.cliente_id || '';
+      document.getElementById('facturaConcepto').value = f.concepto || '';
+      document.getElementById('facturaMonto').value = f.monto || '';
+      document.getElementById('facturaVencimiento').value = (f.fecha_vencimiento || '').substring(0, 10);
+      document.getElementById('facturaEstado').value = f.estado || 'Pendiente';
+      document.getElementById('facturaModalTitle').textContent = 'Editar Factura ' + f.numero;
+      document.getElementById('facturaSubmitBtn').textContent = 'Guardar Cambios';
+    }
+  }
   document.getElementById('facturaModal').classList.add('active');
 }
 
@@ -1023,21 +1103,30 @@ async function saveFactura(e) {
   e.preventDefault();
   const monto = parseFloat(document.getElementById('facturaMonto').value) || 0;
   if (monto <= 0) { alert('El monto debe ser mayor a cero.'); return; }
+  const id = document.getElementById('facturaId').value;
   const factura = {
+    id: id || null,
     caso_id: document.getElementById('facturaCaso').value || null,
     cliente_id: document.getElementById('facturaCliente').value || null,
     concepto: document.getElementById('facturaConcepto').value,
     monto: monto,
-    estado: 'Pendiente',
+    estado: document.getElementById('facturaEstado').value || 'Pendiente',
     fecha_vencimiento: document.getElementById('facturaVencimiento').value || null
   };
-  const res = await ipcRenderer.invoke('addFactura', factura);
-  if (res.lastId) {
+  if (id) {
+    await ipcRenderer.invoke('updateFactura', factura);
     closeModal('facturaModal');
     await loadFacturas();
-    alert('Factura creada.');
+    alert('Factura actualizada.');
   } else {
-    alert('Error al crear la factura.');
+    const res = await ipcRenderer.invoke('addFactura', factura);
+    if (res.lastId) {
+      closeModal('facturaModal');
+      await loadFacturas();
+      alert('Factura creada.');
+    } else {
+      alert('Error al crear la factura.');
+    }
   }
 }
 
@@ -1059,9 +1148,39 @@ async function openPagoModal(facturaId) {
   document.getElementById('pagoFacturaInfo').innerHTML = 
     `Factura <strong>N° ${factura.numero}</strong> · ${escapeHtml(factura.cliente_nombre || '')} · Monto: <strong>$${(factura.monto||0).toLocaleString('es-CL',{maximumFractionDigits:0})}</strong> · Saldo: <strong class="color-${saldo>0?'red':'green'}">$${saldo.toLocaleString('es-CL',{maximumFractionDigits:0})}</strong>`;
   document.getElementById('pagosLista').innerHTML = pagos.length
-    ? pagos.map(p => `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(59,130,246,0.1);"><span>${formatDate(p.fecha)} · ${escapeHtml(p.metodo || '')} · <small>${escapeHtml(p.referencia || '')}</small></span><strong>$${p.monto.toLocaleString('es-CL',{maximumFractionDigits:0})}</strong></div>`).join('')
+    ? pagos.map(p => `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(59,130,246,0.1);"><span>${formatDate(p.fecha)} · ${escapeHtml(p.metodo || '')} · <small>${escapeHtml(p.referencia || '')}</small></span><span><strong>$${p.monto.toLocaleString('es-CL',{maximumFractionDigits:0})}</strong> <button class="btn-icon" onclick="eliminarPago(${p.id})" title="Eliminar pago">🗑️</button></span></div>`).join('')
     : '<p class="empty-state" style="padding:16px; text-align:center; color:#6b7280;">Sin pagos registrados aún.</p>';
   document.getElementById('pagoModal').classList.add('active');
+}
+
+async function eliminarPago(pagoId) {
+  const facturaId = parseInt(document.getElementById('pagoFacturaId').value);
+  if (!confirm('¿Eliminar este pago?\nEl saldo y el estado de la factura se recalculan.')) return;
+  await ipcRenderer.invoke('deletePago', pagoId);
+  await loadFacturas();
+  await openPagoModal(facturaId);
+}
+
+async function openHistorialPagos() {
+  const pagos = await ipcRenderer.invoke('getPagosTodos');
+  const tbody = document.getElementById('historialPagosTable');
+  if (!pagos.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">Sin pagos registrados.</td></tr>';
+  } else {
+    const total = pagos.reduce((s, p) => s + (p.monto || 0), 0);
+    tbody.innerHTML = pagos.map(p => `<tr>
+      <td><strong>N° ${escapeHtml(p.factura_num || '')}</strong></td>
+      <td>${escapeHtml(p.cliente_nombre || '-')}</td>
+      <td>${formatDate(p.fecha)}</td>
+      <td>${escapeHtml(p.metodo || '-')}</td>
+      <td><small>${escapeHtml(p.referencia || '-')}</small></td>
+      <td class="color-green"><strong>$$${(p.monto || 0).toLocaleString('es-CL', { maximumFractionDigits: 0 })}</strong></td>
+    </tr>`).join('') + `<tr>
+      <td colspan="5" style="text-align:right;"><strong>Total cobrado</strong></td>
+      <td class="color-green"><strong>$$${total.toLocaleString('es-CL', { maximumFractionDigits: 0 })}</strong></td>
+    </tr>`;
+  }
+  document.getElementById('historialPagosModal').classList.add('active');
 }
 
 async function savePago(e) {
@@ -1275,6 +1394,10 @@ async function agregarPlazoLegal(titulo, dias) {
 
 // ==================== CONFIGURACIÓN ====================
 async function loadConfiguracion() {
+  try {
+    await rellenarFormOutlook();
+    await actualizarEstadoOutlook();
+  } catch (e) { /* Outlook no disponible */ }
   const config = await ipcRenderer.invoke('getSMTPConfig');
   if (document.getElementById('smtpHost')) document.getElementById('smtpHost').value = config.host || '';
   if (document.getElementById('smtpPort')) document.getElementById('smtpPort').value = config.port || '587';

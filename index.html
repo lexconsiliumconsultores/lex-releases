@@ -385,6 +385,7 @@
         <div class="section-header">
           <h2>Cuentas por Cobrar</h2>
           <div class="header-actions">
+            <button class="btn btn-secondary" onclick="openHistorialPagos()">📜 Historial de Pagos</button>
             <button class="btn btn-primary" onclick="openFacturaModal()">+ Nueva Factura</button>
           </div>
         </div>
@@ -404,6 +405,17 @@
               <div class="stat-info"><span class="stat-label">FACTURAS VENCIDAS</span><span class="stat-value" id="facturasVencidas" style="font-size: 22px;">0</span></div>
             </div>
           </div>
+        </div>
+        <div class="card" style="margin-bottom: 16px;">
+          <h3>💵 Cartera por Cliente</h3>
+          <div id="carteraLista"></div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 12px;">
+          <select id="facturasFiltro" onchange="loadFacturas()">
+            <option value="todas">Todas las facturas</option>
+            <option value="pendientes">Solo pendientes</option>
+            <option value="pagadas">Solo pagadas</option>
+          </select>
         </div>
         <div class="table-container">
           <table class="data-table">
@@ -577,6 +589,29 @@
           </div>
           <div class="form-actions" style="margin-top: 16px;">
             <button class="btn btn-primary" onclick="openUsuarioModal()">+ Nuevo Usuario</button>
+          </div>
+        </div>
+        <div id="outlookSection" class="card" style="max-width: 640px; margin-top: 16px;">
+          <h3>Integración con Outlook</h3>
+          <p class="setting-note">Conecta una cuenta de Microsoft para sincronizar los plazos con el Calendario y enviar correos desde Outlook.</p>
+          <div id="outlookStatusTexto" class="setting-note" style="margin-top: 10px;">Consultando estado...</div>
+          <div class="form-row" style="margin-top: 14px;">
+            <div class="form-group">
+              <label>Client ID (Azure)</label>
+              <input type="text" id="outlookClientId" placeholder="ID de la aplicación de Azure">
+            </div>
+            <div class="form-group">
+              <label>Tenant</label>
+              <input type="text" id="outlookTenant" placeholder="consumers" value="consumers">
+            </div>
+          </div>
+          <label class="checkbox-label" style="margin-top: 10px;">
+            <input type="checkbox" id="outlookSyncPlazos" checked> Sincronizar plazos con el Calendario
+          </label>
+          <div class="form-actions" style="margin-top: 14px; padding: 0; border: none;">
+            <button class="btn btn-primary" onclick="saveOutlookConfig(event)">Guardar configuración</button>
+            <button class="btn btn-secondary" id="outlookConnectBtn" onclick="conectarOutlook()">Conectar con Outlook</button>
+            <button class="btn btn-secondary" id="outlookDisconnectBtn" onclick="desconectarOutlook()" style="display: none;">Desconectar</button>
           </div>
         </div>
         <div class="card" style="max-width: 640px; margin-top: 16px;">
@@ -854,6 +889,7 @@
         <div class="chat-header-actions">
           <button class="chat-header-btn" onclick="nuevaConversacion()" title="Nueva conversación">➕</button>
           <button class="chat-header-btn" onclick="abrirHistorialConversaciones()" title="Historial de conversaciones">📚</button>
+          <button class="chat-header-btn" onclick="openIAConfig()" title="Configuración de LexAI">⚙️</button>
           <button class="chat-close" onclick="toggleChat()">✕</button>
         </div>
       </div>
@@ -895,10 +931,11 @@
   <div id="facturaModal" class="modal">
     <div class="modal-content" style="width: 560px;">
       <div class="modal-header">
-        <h3>Nueva Factura</h3>
+        <h3 id="facturaModalTitle">Nueva Factura</h3>
         <button class="modal-close" onclick="closeModal('facturaModal')">&times;</button>
       </div>
       <form id="facturaForm" onsubmit="saveFactura(event)">
+        <input type="hidden" id="facturaId">
         <div class="form-row">
           <div class="form-group">
             <label>Caso</label>
@@ -922,10 +959,18 @@
             <label>Fecha de Vencimiento</label>
             <input type="date" id="facturaVencimiento">
           </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="facturaEstado">
+              <option value="Pendiente">Pendiente</option>
+              <option value="Parcial">Parcial</option>
+              <option value="Pagada">Pagada</option>
+            </select>
+          </div>
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" onclick="closeModal('facturaModal')">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Crear Factura</button>
+          <button type="submit" class="btn btn-primary" id="facturaSubmitBtn">Crear Factura</button>
         </div>
       </form>
     </div>
@@ -968,6 +1013,31 @@
           <button type="submit" class="btn btn-primary">Registrar Pago</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal Historial Global de Pagos -->
+  <div id="historialPagosModal" class="modal">
+    <div class="modal-content" style="width: 720px;">
+      <div class="modal-header">
+        <h3>📜 Historial Global de Pagos</h3>
+        <button class="modal-close" onclick="closeModal('historialPagosModal')">&times;</button>
+      </div>
+      <div class="table-container" style="max-height: 60vh; overflow-y: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Factura</th>
+              <th>Cliente</th>
+              <th>Fecha</th>
+              <th>Método</th>
+              <th>Referencia</th>
+              <th>Monto</th>
+            </tr>
+          </thead>
+          <tbody id="historialPagosTable"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 

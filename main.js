@@ -1425,7 +1425,36 @@ function setupAutoUpdater() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
+  let updaterLastProgress = null;
+  let updaterStallTimer = null;
+  let updaterStallNotified = false;
+  let updateAvailableTime = 0;
+
+  const stopStallWatch = () => {
+    if (updaterStallTimer) clearInterval(updaterStallTimer);
+    updaterStallTimer = null;
+  };
+
+  const checkUpdaterStalled = () => {
+    if (!mainWindow || updaterStallNotified) return;
+    if (autoUpdater.autoDownload === false) return;
+    const now = Date.now();
+    const stalled = updaterLastProgress
+      ? (now - updaterLastProgress.lastChange) > 30000
+      : (now - updateAvailableTime) > 20000;
+    if (stalled) {
+      updaterStallNotified = true;
+      stopStallWatch();
+      mainWindow.webContents.send('update-stalled');
+    }
+  };
+
   autoUpdater.on('update-available', (info) => {
+    updateAvailableTime = Date.now();
+    updaterLastProgress = null;
+    updaterStallNotified = false;
+    stopStallWatch();
+    updaterStallTimer = setInterval(checkUpdaterStalled, 10000);
     if (Notification.isSupported()) {
       new Notification({
         title: 'Nueva versión disponible',
@@ -1435,7 +1464,21 @@ function setupAutoUpdater() {
     if (mainWindow) mainWindow.webContents.send('update-available', info.version);
   });
 
+  autoUpdater.on('download-progress', (p) => {
+    const now = Date.now();
+    if (!updaterLastProgress || p.transferred > updaterLastProgress.transferred) {
+      updaterLastProgress = { transferred: p.transferred || 0, total: p.total || 0, lastChange: now };
+      updaterStallNotified = false;
+    }
+    if (mainWindow) mainWindow.webContents.send('update-progress', {
+      percent: Math.round(p.percent || 0),
+      transferred: p.transferred || 0,
+      total: p.total || 0
+    });
+  });
+
   autoUpdater.on('update-downloaded', (info) => {
+    stopStallWatch();
     if (mainWindow) mainWindow.webContents.send('update-downloaded', info.version);
     const choice = dialog.showMessageBoxSync(mainWindow, {
       type: 'info',
@@ -1456,6 +1499,7 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on('error', (err) => {
+    stopStallWatch();
     if (mainWindow) mainWindow.webContents.send('update-error', String((err && err.message) || err));
   });
 
@@ -1479,4 +1523,10 @@ app.on('window-all-closed', () => {
 ipcMain.handle('restartApp', () => {
   app.relaunch();
   app.exit(0);
+});
+
+ipcMain.handle('retryUpdateCheck', () => {
+  if (!app.isPackaged) return { success: false, error: 'No empaquetada.' };
+  autoUpdater.checkForUpdates().catch(() => {});
+  return { success: true };
 });

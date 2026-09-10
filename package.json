@@ -1,12 +1,13 @@
 {
   "name": "lex",
-  "version": "1.6.3",
+  "version": "1.6.4",
   "description": "Sistema de Gestión de Casos Jurídicos - LexConsilium Consultores",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dist": "node node_modules/electron-builder/out/cli/cli.js --win",
-    "dist:portable": "node node_modules/electron-builder/out/cli/cli.js --win portable"
+    "dist:portable": "node node_modules/electron-builder/out/cli/cli.js --win portable",
+    "dist:publish": "node node_modules/electron-builder/out/cli/cli.js --win --publish always"
   },
   "author": "LexConsilium Consultores",
   "license": "ISC",
@@ -31,6 +32,7 @@
       "releaseType": "release"
     },
     "win": {
+      "artifactName": "lex-setup-${version}.${ext}",
       "target": [
         {
           "target": "nsis",
@@ -46,6 +48,9 @@
         }
       ],
       "icon": "build/icon.png"
+    },
+    "portable": {
+      "artifactName": "lex-portable-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,

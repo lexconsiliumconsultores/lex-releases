@@ -28,7 +28,15 @@ LEX usa **electron-updater** conectado al repo de GitHub (privado). Al abrir la 
 3. Descarga en segundo plano.
 4. Al terminar → banner con botón **"Reiniciar"** y diálogo *"¿Desea reiniciar para aplicar la actualización?"*.
 
-### Cómo publicar una actualización (manual paso a paso)
+### Cómo publicar una actualización
+
+**Método automático (recomendado):**
+```bash
+npm run dist:publish
+```
+`electron-builder` genera los instaladores con nombres estables (`lex-setup-<version>.exe`, `lex-portable-<version>.exe`, `latest.yml`) y los sube directo a la Release de GitHub (mal necesario `GH_TOKEN` con scope `repo`). Pasos previos: subir `package.json` (versión) y `git tag vX.Y.Z` para que el updater detecte la versión.
+
+**Método manual (paso a paso):**
 
 1. Editar la versión en `package.json`:
    ```json
@@ -243,10 +251,10 @@ Salida en `dist_instalador/`. Para versionado correcto: subir la versión en `pa
 
 ## Pendientes / Próximos pasos
 
-- [ ] **App Android sincronizada** (Capacitor o Expo) — conversado, pendiente de decisión
-- [ ] Obtener el logo del estudio en **alta resolución (≥256px)** para regenerar el icono a máxima nitidez
-- [ ] Notificador perezoso de actualizaciones más visible (opcional)
-- [ ] Publicar automáticamente usando solo `npm run dist -- --publish always` (verificado)
+- [ ] **App Android sincronizada** (Capacitor o Expo) — conversado, pendiente de decisión. Base técnica: reutilizar el SQLite actual requiere un backend de sincronización (API central o BaaS tipo Supabase/Firebase); con Capacitor se empaqueta la misma UI web pero la BD y el token de Graph se leen del servidor. Alternativa más ligera: **Progressive Web App** con notificaciones web push y lectura de la agenda vía Microsoft Graph usando el mismo Client ID.
+- [x] Logo del estudio en **alta resolución (≥256px)** → `build/icon.png` ya es 256×256 y se usa como fuente del icono
+- [x] **Notificador de actualizaciones más visible**: banner con barra de progreso real, pulso esmeralda/dorado, alerta de descarga estancada con botón "Reintentar" y aviso sobre el token de GitHub privado
+- [x] **Publicación automática** con `npm run dist:publish` (`--publish always`, `artifactName` `lex-setup-<version>.exe` / `lex-portable-<version>.exe`)
 - [x] Ícono personalizado en el empaquetado (v1.6.1 → v1.6.3, logo real del estudio)
 
 ---
