@@ -390,6 +390,7 @@ async function saveCaso(e) {
   } else {
     await ipcRenderer.invoke('addCaso', caso);
   }
+  await refrescarSelectsCasosClientes();
   closeModal('casoModal');
   loadCasos();
 }
@@ -469,6 +470,7 @@ async function saveCliente(e) {
   } else {
     await ipcRenderer.invoke('addCliente', cliente);
   }
+  await refrescarSelectsCasosClientes();
   closeModal('clienteModal');
   loadClientes();
 }
@@ -862,7 +864,10 @@ async function loadNotificaciones() {
   if (notifs.length === 0) {
     tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No hay notificaciones enviadas</td></tr>';
   }
-  tbody.innerHTML = notifs.map(n => `
+tbody.innerHTML = notifs.map(n => {
+    const asunto = n.asunto || ('LEX - ' + n.tipo);
+    const detalle = `<strong>Cliente:</strong> ${escapeHtml(n.cliente_nombre || '-')} &nbsp;·&nbsp; <strong>Caso:</strong> ${escapeHtml(n.caso_titulo || '-')} &nbsp;·&nbsp; <strong>Email:</strong> ${escapeHtml(n.email || '-')}<br><strong>Fecha:</strong> ${formatDate(n.fecha)} &nbsp;·&nbsp; <strong>Estado:</strong> <span class="badge badge-${getEstadoNotifClass(n.estado)}">${escapeHtml(n.estado)}${n.canal ? ' · ' + escapeHtml(n.canal) : ''}</span>`;
+    return `
     <tr>
       <td>${formatDate(n.fecha)}</td>
       <td><span class="badge badge-${getTipoNotifClass(n.tipo)}">${escapeHtml(n.tipo)}</span></td>
@@ -872,46 +877,25 @@ async function loadNotificaciones() {
       <td class="notif-msg">${escapeHtml(n.mensaje).substring(0, 80)}${n.mensaje.length > 80 ? '...' : ''}</td>
       <td><span class="badge badge-${getEstadoNotifClass(n.estado)}">${escapeHtml(n.estado)}${n.canal ? ' · ' + escapeHtml(n.canal) : ''}</span></td>
       <td class="actions">
+        <button class="btn-icon" title="Ver mensaje completo" onclick="verNotificacionCompleta(this)" data-titulo="${escapeHtml(asunto)}" data-detalle="${escapeHtml(detalle)}" data-msg="${escapeHtml(n.mensaje)}">👁️</button>
         <button class="btn btn-secondary btn-sm" title="Reenviar correo" onclick="reenviarNotificacion(${n.id}, this.dataset.email, 'Reenvío LEX', this.dataset.msg)" data-email="${escapeHtml(n.email || '')}" data-msg="${escapeHtml(n.mensaje)}">✉️</button>
         <button class="btn btn-danger btn-sm" onclick="deleteNotificacion(${n.id})">🗑️</button>
       </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 
-  await ipcRenderer.invoke('marcarRespuestasLeidas');
-  await contarRespuestas();
-}
-
-async function contarRespuestas() {
-  const res = await ipcRenderer.invoke('getRespuestasBadge');
-  const badge = document.getElementById('respuestasBadge');
-  if (!badge) return;
-  const n = (res && res.count) || 0;
-  badge.style.display = n > 0 ? '' : 'none';
-  badge.textContent = n > 0 ? ('✉️ ' + n + ' respuesta' + (n === 1 ? '' : 's')) : '';
-}
-
-async function buscarRespuestas() {
-  const res = await ipcRenderer.invoke('chequearRespuestasCliente');
-  if (!res || !res.success) {
-    alert('No se pudieron verificar respuestas de clientes:\n' + (res && res.error ? res.error : 'Error desconocido'));
-    return;
+  if (notifs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No hay notificaciones enviadas</td></tr>';
   }
-  await loadNotificaciones();
-  await contarRespuestas();
-  alert(res.nuevas > 0
-    ? `📬 Se ${res.nuevas === 1 ? 'encontró' : 'encontraron'} ${res.nuevas} respuesta(s) de clientes en tu correo.`
-    : '📭 Sin respuestas nuevas de clientes en tu correo.');
 }
 
-ipcRenderer.on('respuestas-cliente', async (e, nuevas) => {
-  await contarRespuestas();
-  if (currentSection === 'notificaciones') {
-    await loadNotificaciones();
-  } else if (nuevas > 0) {
-    alert(`📬 ${nuevas} cliente(s) respondieron a tus correos. Revisa la sección Notificaciones por Correo.`);
-  }
-});
+function verNotificacionCompleta(btn) {
+  document.getElementById('verNotifTitulo').textContent = btn.dataset.titulo || 'Notificación';
+  document.getElementById('verNotifDetalle').innerHTML = btn.dataset.detalle || '';
+  document.getElementById('verNotifMensaje').textContent = btn.dataset.msg || '';
+  document.getElementById('verNotificacionModal').classList.add('active');
+}
 
 async function openNotifModal(casoId = null, clienteId = null) {
   await loadCasosSelect('notifCaso');
@@ -1013,7 +997,7 @@ async function deleteNotificacion(id) {
 }
 
 function getTipoNotifClass(tipo) {
-  const classes = { 'Audiencia': 'activo', 'Plazo': 'vencido', 'Estado': 'proceso', 'Solicitud': 'pendiente', 'Personalizado': 'cerrado', 'Respuesta de Cliente': 'proceso', 'Agendamiento': 'activo' };
+  const classes = { 'Audiencia': 'activo', 'Plazo': 'vencido', 'Estado': 'proceso', 'Solicitud': 'pendiente', 'Personalizado': 'cerrado', 'Agendamiento': 'activo', 'Recordatorio de Pago': 'activo' };
   return classes[tipo] || 'pendiente';
 }
 
@@ -1094,6 +1078,7 @@ async function loadFacturas() {
       <td>${f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : '-'}${vencida ? ' ⚠️' : ''}</td>
       <td><span class="badge badge-${estadoClass}">${f.estado}</span></td>
       <td>
+        ${saldo > 0 ? `<button class="btn-icon" onclick="recordarCobro(${f.id})" title="Enviar recordatorio de cobro">📧</button>` : ''}
         <button class="btn-icon" onclick="openFacturaModal(${f.id})" title="Editar factura">✏️</button>
         <button class="btn-icon" onclick="openPagoModal(${f.id})" title="Registrar Pago">💵</button>
         <button class="btn-icon" onclick="deleteFactura(${f.id})" title="Eliminar">🗑️</button>
@@ -1105,6 +1090,35 @@ async function loadFacturas() {
     tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">No hay facturas registradas.</td></tr>';
   }
   try { await loadCartera(); } catch (e) { /* sin cartera */ }
+}
+
+async function recordarCobro(id) {
+  const res = await ipcRenderer.invoke('enviarRecordatorioCobro', id);
+  let estado = 'Enviado';
+  let canal = res.canal || '';
+  if (!res.success) {
+    if (confirm(`No se pudo enviar el recordatorio de cobro:\n${res.error}\n\n¿Abrir el programa de correo para hacerlo manualmente?`)) {
+      window.open(`mailto:${res.email}?subject=${encodeURIComponent(res.asunto)}&body=${encodeURIComponent(res.mensaje)}`);
+      estado = 'Manual';
+    } else {
+      return;
+    }
+  }
+  await ipcRenderer.invoke('addNotificacion', {
+    caso_id: res.caso_id ? parseInt(res.caso_id) : null,
+    cliente_id: res.cliente_id ? parseInt(res.cliente_id) : null,
+    tipo: 'Recordatorio de Pago',
+    mensaje: res.mensaje,
+    email: res.email,
+    canal,
+    estado
+  });
+  await loadFacturas();
+  if (estado === 'Enviado') {
+    alert('📧 Recordatorio de cobro enviado al cliente vía ' + canal + '.');
+  } else {
+    alert('✉️ Se abrió tu programa de correo. El recordatorio quedó registrado como "Manual".');
+  }
 }
 
 async function loadCartera() {
@@ -1456,10 +1470,6 @@ async function agregarPlazoLegal(titulo, dias) {
 
 // ==================== CONFIGURACIÓN ====================
 async function loadConfiguracion() {
-  try {
-    await rellenarFormOutlook();
-    await actualizarEstadoOutlook();
-  } catch (e) { /* Outlook no disponible */ }
   const config = await ipcRenderer.invoke('getSMTPConfig');
   if (document.getElementById('smtpHost')) document.getElementById('smtpHost').value = config.host || '';
   if (document.getElementById('smtpPort')) document.getElementById('smtpPort').value = config.port || '587';
@@ -1473,94 +1483,6 @@ async function loadConfiguracion() {
   } else {
     if (adminSection) adminSection.style.display = 'none';
   }
-}
-
-// ==================== INTEGRACIÓN CON OUTLOOK ====================
-let outlookPollTimer = null;
-
-async function rellenarFormOutlook() {
-  const status = await ipcRenderer.invoke('getOutlookStatus');
-  if (document.getElementById('outlookClientId')) document.getElementById('outlookClientId').value = status.client_id || '';
-  if (document.getElementById('outlookTenant')) document.getElementById('outlookTenant').value = status.tenant || 'consumers';
-  if (document.getElementById('outlookSyncPlazos')) document.getElementById('outlookSyncPlazos').checked = !!status.sync_plazos;
-}
-
-async function actualizarEstadoOutlook() {
-  const status = await ipcRenderer.invoke('getOutlookStatus');
-  const estadoEl = document.getElementById('outlookStatusTexto');
-  const connectBtn = document.getElementById('outlookConnectBtn');
-  const disconnectBtn = document.getElementById('outlookDisconnectBtn');
-  if (!estadoEl) return;
-  if (status.conectado) {
-    estadoEl.innerHTML = `<span class="badge badge-ok">Conectado</span> ${escapeHtml(status.email || 'Cuenta de Outlook')} · Correos enviados desde Outlook y plazos sincronizados con el Calendario.`;
-    if (connectBtn) connectBtn.style.display = 'none';
-    if (disconnectBtn) disconnectBtn.style.display = '';
-  } else if (status.configurado) {
-    estadoEl.innerHTML = '<span class="badge badge-warn">No conectado</span> Pulsa "Conectar con Outlook" para sincronizar la agenda y enviar correos desde tu cuenta.';
-    if (connectBtn) connectBtn.style.display = '';
-    if (disconnectBtn) disconnectBtn.style.display = 'none';
-  } else {
-    estadoEl.innerHTML = '<span class="badge badge-warn">No configurado</span> Registra una aplicación en portal.azure.com y pega el Client ID para conectar con Outlook.';
-  }
-}
-
-async function saveOutlookConfig(e) {
-  e.preventDefault();
-  const cfg = {
-    client_id: document.getElementById('outlookClientId').value.trim(),
-    tenant: document.getElementById('outlookTenant').value.trim() || 'consumers',
-    sync_plazos: document.getElementById('outlookSyncPlazos').checked
-  };
-  await ipcRenderer.invoke('saveOutlookConfig', cfg);
-  await actualizarEstadoOutlook();
-  alert('Configuración de Outlook guardada. Ahora pulsa "Conectar con Outlook".');
-}
-
-async function conectarOutlook() {
-  const res = await ipcRenderer.invoke('startOutlookConnect');
-  if (!res.success) {
-    alert('No se pudo iniciar la conexión:\n' + (res.error || 'Error desconocido'));
-    return;
-  }
-  document.getElementById('outlookAuthUrl').href = res.verification_uri || 'https://microsoft.com/link';
-  document.getElementById('outlookUserCode').textContent = res.user_code || '······';
-  document.getElementById('outlookConnectStatus').textContent = 'Esperando autorización...';
-  document.getElementById('outlookConnectModal').classList.add('active');
-  if (outlookPollTimer) clearInterval(outlookPollTimer);
-  outlookPollTimer = setInterval(pollOutlook, 5000);
-}
-
-async function pollOutlook() {
-  const res = await ipcRenderer.invoke('pollOutlookConnect');
-  if (res.status === 'success') {
-    if (outlookPollTimer) clearInterval(outlookPollTimer);
-    outlookPollTimer = null;
-    document.getElementById('outlookConnectStatus').textContent = res.email ? '¡Conectado! Cuenta: ' + res.email : '¡Conectado!';
-    closeModal('outlookConnectModal');
-    await actualizarEstadoOutlook();
-    alert(res.email ? `Conectado con Outlook (${res.email}).` : 'Conexión con Outlook exitosa.');
-  } else if (res.status === 'error') {
-    if (outlookPollTimer) clearInterval(outlookPollTimer);
-    outlookPollTimer = null;
-    document.getElementById('outlookConnectStatus').textContent = 'Error: ' + (res.error || '');
-    closeModal('outlookConnectModal');
-    alert('Error de conexión:\n' + (res.error || ''));
-  } else {
-    document.getElementById('outlookConnectStatus').textContent = 'Esperando que autorices el código en tu navegador de Microsoft...';
-  }
-}
-
-function cancelarConexionOutlook() {
-  if (outlookPollTimer) clearInterval(outlookPollTimer);
-  outlookPollTimer = null;
-  closeModal('outlookConnectModal');
-}
-
-async function desconectarOutlook() {
-  if (!confirm('¿Desconectar la cuenta de Outlook?\nLos plazos dejarán de sincronizarse. Los eventos ya creados en el Calendario no se borran.')) return;
-  await ipcRenderer.invoke('disconnectOutlook');
-  await actualizarEstadoOutlook();
-  alert('Outlook desconectado.');
 }
 
 // ==================== GESTIÓN DE USUARIOS ====================
@@ -1687,18 +1609,48 @@ async function testSMTPConfig() {
 }
 
 // ==================== HELPERS ====================
+const selectCasosRegistrados = new Set();
+const selectClientesRegistrados = new Set();
+
 async function loadClientesSelect(selectId = 'casoCliente') {
+  selectClientesRegistrados.add(selectId);
   const clientes = await ipcRenderer.invoke('getClientes');
   const select = document.getElementById(selectId);
+  const previo = select.value;
   select.innerHTML = '<option value="">Seleccionar cliente...</option>' + 
     clientes.map(c => `<option value="${c.id}">${escapeHtml(c.nombre)}</option>`).join('');
+  if (previo && [...select.options].some(o => o.value === previo)) select.value = previo;
 }
 
 async function loadCasosSelect(selectId) {
+  selectCasosRegistrados.add(selectId);
   const casos = await ipcRenderer.invoke('getCasos');
   const select = document.getElementById(selectId);
+  const previo = select.value;
   select.innerHTML = '<option value="">Seleccionar caso...</option>' + 
     casos.map(c => `<option value="${c.id}" data-cliente="${c.cliente_id || ''}">${escapeHtml(c.numero_caso)} - ${escapeHtml(c.titulo)}</option>`).join('');
+  if (previo && [...select.options].some(o => o.value === previo)) select.value = previo;
+}
+
+async function refrescarSelectsCasosClientes() {
+  const clientes = await ipcRenderer.invoke('getClientes');
+  for (const id of selectClientesRegistrados) {
+    const sel = document.getElementById(id);
+    if (!sel) continue;
+    const previo = sel.value;
+    sel.innerHTML = '<option value="">Seleccionar cliente...</option>' +
+      clientes.map(c => `<option value="${c.id}">${escapeHtml(c.nombre)}</option>`).join('');
+    if (previo && [...sel.options].some(o => o.value === previo)) sel.value = previo;
+  }
+  const casos = await ipcRenderer.invoke('getCasos');
+  for (const id of selectCasosRegistrados) {
+    const sel = document.getElementById(id);
+    if (!sel) continue;
+    const previo = sel.value;
+    sel.innerHTML = '<option value="">Seleccionar caso...</option>' +
+      casos.map(c => `<option value="${c.id}" data-cliente="${c.cliente_id || ''}">${escapeHtml(c.numero_caso)} - ${escapeHtml(c.titulo)}</option>`).join('');
+    if (previo && [...sel.options].some(o => o.value === previo)) sel.value = previo;
+  }
 }
 
 function closeModal(modalId) {

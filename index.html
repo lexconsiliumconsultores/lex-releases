@@ -524,8 +524,6 @@
         <div class="section-header">
           <h2>Notificaciones por Correo</h2>
           <div class="header-actions">
-            <span id="respuestasBadge" class="badge badge-ok" style="display:none;"></span>
-            <button class="btn btn-secondary" onclick="buscarRespuestas()">🔄 Verificar respuestas</button>
             <button class="btn btn-primary" onclick="openNotifModal()">+ Nueva Notificación</button>
           </div>
         </div>
@@ -593,29 +591,6 @@
           </div>
           <div class="form-actions" style="margin-top: 16px;">
             <button class="btn btn-primary" onclick="openUsuarioModal()">+ Nuevo Usuario</button>
-          </div>
-        </div>
-        <div id="outlookSection" class="card" style="max-width: 640px; margin-top: 16px;">
-          <h3>Integración con Outlook</h3>
-          <p class="setting-note">Conecta una cuenta de Microsoft para sincronizar los plazos con el Calendario y enviar correos desde Outlook.</p>
-          <div id="outlookStatusTexto" class="setting-note" style="margin-top: 10px;">Consultando estado...</div>
-          <div class="form-row" style="margin-top: 14px;">
-            <div class="form-group">
-              <label>Client ID (Azure)</label>
-              <input type="text" id="outlookClientId" placeholder="ID de la aplicación de Azure">
-            </div>
-            <div class="form-group">
-              <label>Tenant</label>
-              <input type="text" id="outlookTenant" placeholder="consumers" value="consumers">
-            </div>
-          </div>
-          <label class="checkbox-label" style="margin-top: 10px;">
-            <input type="checkbox" id="outlookSyncPlazos" checked> Sincronizar plazos con el Calendario
-          </label>
-          <div class="form-actions" style="margin-top: 14px; padding: 0; border: none;">
-            <button class="btn btn-primary" onclick="saveOutlookConfig(event)">Guardar configuración</button>
-            <button class="btn btn-secondary" id="outlookConnectBtn" onclick="conectarOutlook()">Conectar con Outlook</button>
-            <button class="btn btn-secondary" id="outlookDisconnectBtn" onclick="desconectarOutlook()" style="display: none;">Desconectar</button>
           </div>
         </div>
         <div class="card" style="max-width: 640px; margin-top: 16px;">
@@ -887,6 +862,18 @@
     </div>
   </div>
 
+  <!-- Modal Ver Notificación -->
+  <div id="verNotificacionModal" class="modal">
+    <div class="modal-content" style="width: 640px; max-width: 94vw;">
+      <div class="modal-header">
+        <h3 id="verNotifTitulo">Notificación</h3>
+        <button class="modal-close" onclick="closeModal('verNotificacionModal')">&times;</button>
+      </div>
+      <div id="verNotifDetalle" class="setting-note" style="margin: 16px 24px 0; padding-bottom: 10px; border-bottom: 1px solid rgba(59,130,246,0.12);"></div>
+      <div id="verNotifMensaje" style="margin: 16px 24px 24px; padding: 16px; background: #0f172a; border-radius: 8px; color: #e2e8f0; white-space: pre-wrap; word-break: break-word; font-size: 13px; line-height: 1.6; max-height: 60vh; overflow: auto;"></div>
+    </div>
+  </div>
+
   <!-- Chatbot IA -->
   <div class="chatbot-float" id="chatbotFloat" onclick="toggleChat()">
     <span class="chatbot-fab" id="chatbotFab">🤖</span>
@@ -1130,27 +1117,6 @@
         <button type="button" class="btn btn-secondary" onclick="imprimirDocumento()">🖨️ Imprimir</button>
         <button type="button" class="btn btn-secondary" onclick="copiarDocumento()">📋 Copiar</button>
         <button type="button" class="btn btn-primary" onclick="guardarDocModal()">💾 Guardar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Conexión Outlook -->
-  <div id="outlookConnectModal" class="modal">
-    <div class="modal-content" style="width: 520px;">
-      <div class="modal-header">
-        <h3>🔗 Conectar con Outlook</h3>
-        <button class="modal-close" onclick="cancelarConexionOutlook()">&times;</button>
-      </div>
-      <div class="form-group" style="margin-top: 20px;">
-        <p><strong>1.</strong> Abre el siguiente enlace en tu navegador de Microsoft:</p>
-        <a id="outlookAuthUrl" href="#" target="_blank" class="btn btn-secondary" style="display: block; text-align: center; margin: 12px 0;">Abrir página de Microsoft</a>
-        <p><strong>2.</strong> Introduce este código:</p>
-        <div id="outlookUserCode" class="outlook-code">······</div>
-        <p class="setting-note">Acepta el permiso de acceso al calendario y al correo. Cuando lo autorices, LEX se conectará automáticamente (el código expira en 15 minutos).</p>
-        <div id="outlookConnectStatus" class="setting-note" style="margin-top: 12px;">Esperando autorización...</div>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn btn-secondary" onclick="cancelarConexionOutlook()">Cancelar</button>
       </div>
     </div>
   </div>

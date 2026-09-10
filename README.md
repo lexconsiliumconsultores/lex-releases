@@ -2,7 +2,7 @@
 
 Aplicación de escritorio (Electron) para estudios de abogados. Gestión de casos, clientes, plazos, facturas, seguimiento, documentación legal, notificaciones por correo (Outlook) y actualizaciones automáticas vía GitHub.
 
-**Versión actual:** 1.6.5
+**Versión actual:** 1.6.6
 
 ---
 
@@ -13,7 +13,7 @@ Aplicación de escritorio (Electron) para estudios de abogados. Gestión de caso
 | Código fuente | Subido a GitHub (repo privado) |
 | Control de versiones | Git + tags semánticos (v1.6.3) |
 | Instalador Windows | ✅ Generado (NSIS + portable) |
-| Última release | ✅ v1.6.5 publicada (2026-09-10) |
+| Última release | ✅ v1.6.6 publicada (2026-09-10) |
 | Actualizaciones automáticas | ✅ electron-updater + GitHub Releases |
 | Repositorio | `https://github.com/lexconsiliumconsultores/lex` |
 
@@ -145,8 +145,12 @@ Start-Process "C:\Users\CASA\Desktop\TODOS LOS PROYECTOS\PROYECTO 5\LEX\node_mod
 ### Seguimiento
 - Notas de seguimiento por caso, historial cronológico
 
+### Sincronización
+- Al **crear/editar un caso o un cliente**, todos los menús y selectores del programa (facturas, documentos, notificaciones, plazos, seguimiento, generador legal) se actualizan al instante, sin recargar la app
+
 ### Facturación
 - Facturas con cliente, monto en **CLP** (pesos chilenos), estados Pendiente/Pagada
+- **Recordatorio de cobro 📧**: botón por factura con saldo pendiente para enviar al cliente un correo de recordatorio de pago (con monto, saldo y vencimiento) vía Outlook/SMTP; queda registrado en Notificaciones como *Recordatorio de Pago*
 
 ### Documentación Legal
 - Tipos: Contrato, Poder, Demanda, Contestación, Otros
@@ -159,7 +163,8 @@ Start-Process "C:\Users\CASA\Desktop\TODOS LOS PROYECTOS\PROYECTO 5\LEX\node_mod
 - **Tipos:** Agendamiento / Cita, Audiencia, Vencimiento de Plazo, Estado del Caso, Solicitud de Documentos, Personalizado
 - Plantillas automáticas, envío por **Outlook** (primario) o **SMTP** (respaldo)
 - Historial con estado de envío y reenvío
-- **Respuestas de cliente**: LEX vigila la bandeja de Outlook cada 5 minutos y detecta las respuestas de los clientes a los correos enviados (coincidencia de asunto del hilo). Al llegar, registra una notificación de tipo **Respuesta de Cliente** con el remitente y la vista previa, activa un **badge contador**, muestra un aviso en pantalla y marca la respuesta como leída al abrir la sección. Además hay un botón **"Verificar respuestas"** para forzar la comprobación
+- Icono **👁️** por fila para ver el mensaje completo enviado (asunto, cliente, caso, estado y texto íntegro)
+- El correo solo se **envía**: no se lee ni rastrea la bandeja de entrada. La sesión de Outlook guardada se renueva sola al abrir LEX (sin pantallas ni botones de reconectar)
 
 ### Reportes
 - Métricas y exportación visual
@@ -171,12 +176,12 @@ Start-Process "C:\Users\CASA\Desktop\TODOS LOS PROYECTOS\PROYECTO 5\LEX\node_mod
 
 ## Conexiones externas
 
-### Microsoft Outlook (Calendar + Correo)
+### Microsoft Outlook (Calendar + Correo automático)
 - Client ID: `084a3e9f-a9f4-43f7-89f9-d229cf97853e` (aplicación pública open source)
 - Tenant: `consumers`
 - Cuenta conectada: `lexconsiliumconsul@outlook.com`
-- Sync de plazos → Calendario Outlook (activo por defecto)
-- Correo vía Graph API (Outlook) con fallback SMTP
+- Sync de plazos → Calendario Outlook automático (se conserva activado por defecto)
+- Correo vía Graph API (Outlook) con fallback SMTP; la sesión guardada se auto-conecta y renueva al abrir LEX, sin necesidad de configurar ni reconectar en la UI
 
 ### Inteligencia Artificial (Gemini)
 - Modelo: `gemini-3.6-flash` (Google Generative Language API)
@@ -220,6 +225,7 @@ Salida en `dist_instalador/`. Para versionado correcto: subir la versión en `pa
 
 | Versión | Fecha | Contenido |
 |---------|-------|-----------|
+| 1.6.6 | 2026-09-10 | **Notificaciones solo envío**: se elimina el rastreo de la bandeja de entrada (respuestas de cliente, badge y verificación); el correo solo se envía. **Icono 👁️** en cada notificación para ver el mensaje completo. **Recordatorio de cobro 📧** por factura (envía monto/saldo/vencimiento al cliente y queda registrado). **Outlook automático**: se quita la tarjeta y el modal de conexión de Configuración; la sesión guardada se renueva sola y el envío usa Outlook o SMTP. **Sincronización total**: crear/editar un caso o cliente actualiza al instante todos los menús del programa |
 | 1.6.5 | 2026-09-10 | **Rendimiento**: persistencia debounce + escritura asíncrona (la BD ya no se exporta completa en cada operación). **Respuestas de cliente**: vigilancia automática de la bandeja Outlook cada 5 min, notificación "Respuesta de Cliente" con vista previa, badge contador y aviso en pantalla (permiso `Mail.Read`, requiere reconectar). **Visor interno de documentos** (PDF, imágenes y texto con botón 👁️) |
 | 1.6.4 | 2026-09-10 | **Auditoría de funcionalidad habilitada**: config LexAI accesible desde el chat, conexión Outlook restaurada en Configuración, CRM de facturación completo (editar facturas + estado, filtros, cartera por cliente, eliminar pagos, historial global). **Notificador de actualizaciones mejorado**: barra de progreso, pulso visual, detección de descarga estancada con botón Reintentar. **Publicación automática** `npm run dist:publish` (`lex-setup-<v>.exe` / `lex-portable-<v>.exe`). Icono 256×256 confirmado |
 | 1.6.3 | 2026-09-09 | **Corrección de icono**: se usa el logo real del estudio (`app_icon.ico` ampliado a 256×256) en instalador, acceso directo y barra de tareas |
