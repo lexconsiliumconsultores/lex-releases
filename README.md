@@ -2,7 +2,7 @@
 
 Aplicación de escritorio (Electron) para estudios de abogados. Gestión de casos, clientes, plazos, facturas, seguimiento, documentación legal, notificaciones por correo (Outlook) y actualizaciones automáticas vía GitHub.
 
-**Versión actual:** 1.6.3
+**Versión actual:** 1.6.4
 
 ---
 
@@ -13,7 +13,7 @@ Aplicación de escritorio (Electron) para estudios de abogados. Gestión de caso
 | Código fuente | Subido a GitHub (repo privado) |
 | Control de versiones | Git + tags semánticos (v1.6.3) |
 | Instalador Windows | ✅ Generado (NSIS + portable) |
-| Última release | ✅ v1.6.3 publicada (2026-09-09) |
+| Última release | ✅ v1.6.4 publicada (2026-09-10) |
 | Actualizaciones automáticas | ✅ electron-updater + GitHub Releases |
 | Repositorio | `https://github.com/lexconsiliumconsultores/lex` |
 
@@ -218,6 +218,7 @@ Salida en `dist_instalador/`. Para versionado correcto: subir la versión en `pa
 
 | Versión | Fecha | Contenido |
 |---------|-------|-----------|
+| 1.6.4 | 2026-09-10 | **Auditoría de funcionalidad habilitada**: config LexAI accesible desde el chat, conexión Outlook restaurada en Configuración, CRM de facturación completo (editar facturas + estado, filtros, cartera por cliente, eliminar pagos, historial global). **Notificador de actualizaciones mejorado**: barra de progreso, pulso visual, detección de descarga estancada con botón Reintentar. **Publicación automática** `npm run dist:publish` (`lex-setup-<v>.exe` / `lex-portable-<v>.exe`). Icono 256×256 confirmado |
 | 1.6.3 | 2026-09-09 | **Corrección de icono**: se usa el logo real del estudio (`app_icon.ico` ampliado a 256×256) en instalador, acceso directo y barra de tareas |
 | 1.6.2 | 2026-09-09 | **Rebranding**: firma y referencias de marca a LexConsilium Consultores en notificaciones, LexAI, login y metadatos |
 | 1.6.1 | 2026-09-09 | **Icono del estudio** (`build/icon.png`) en instalador, acceso directo de escritorio y barra de tareas |
@@ -244,6 +245,7 @@ Salida en `dist_instalador/`. Para versionado correcto: subir la versión en `pa
 | El banner dice "Descargando..." y no avanza | Repo privado: revisar que `github_token`/`GH_TOKEN` sea válido en la BD de la app instalada (ver "Token privado") |
 | La Release no se descarga | Confirmar los 3 assets y que el repo tiene `github_token` válido en la BD |
 | No se envían correos | Verificar conexión Outlook en Configuración |
+| `dist:publish` falla con `HttpError: 422 ... tag_name already exists` | El tag existe pero la Release no: publicar primero con `gh release create v1.6.4 --title "LEX 1.6.4"` (o `--draft`) y volver a ejecutar `npm run dist:publish` — electron-builder subirá los assets a la Release existente |
 | API de IA no responde | Verificar API key y modelo en BD |
 | Tabla sin columna Acciones | Scroll horizontal (ancho mínimo de tabla 860px) |
 
