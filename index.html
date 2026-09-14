@@ -28,8 +28,9 @@
           <div id="loginError" class="login-error" style="display: none;"></div>
           <button type="submit" class="btn btn-primary login-btn">Iniciar Sesión</button>
         </form>
-        <div class="login-footer">
-          <p>LexConsilium Consultores · v1.6.3</p>
+<div class="login-footer">
+          <p>LexConsilium Consultores</p>
+          <p class="version">v1.6.7</p>
         </div>
       </div>
     </div>
@@ -45,7 +46,7 @@
           <span class="logo-subtitle">GESTIÓN JURÍDICA</span>
         </div>
       </div>
-      <nav class="nav-menu">
+      </div>      <nav class="nav-menu">
         <p class="menu-label">MENÚ PRINCIPAL</p>
         <button class="nav-btn active" data-section="dashboard">
           <span class="nav-icon">📊</span>
@@ -105,7 +106,7 @@
           </div>
         </div>
         <button class="btn btn-secondary logout-btn" onclick="handleLogout()" style="width: 100%; margin-top: 12px; font-size: 12px; padding: 8px;">🚪 Cerrar Sesión</button>
-        <span class="version">v1.6.3</span>
+        <span class="version">v1.6.7</span>
       </div>
     </aside>
 
@@ -594,6 +595,21 @@
           </div>
         </div>
         <div class="card" style="max-width: 640px; margin-top: 16px;">
+          <h3>📱 WhatsApp (envío automático gratuito)</h3>
+          <p class="setting-note">Conecta tu WhatsApp escaneando el código QR con tu celular una sola vez. Luego LEX podrá enviar recordatorios de cobro y avisos de plazos a tus clientes como mensajes de WhatsApp.</p>
+          <div id="waEstado" class="setting-note" style="margin-top: 12px; font-weight: 600;">Cargando estado...</div>
+          <div id="waQrContainer" style="display: none; text-align: center; margin-top: 12px; padding: 12px; background: #fff; border-radius: 8px;">
+            <p style="color: #1a1a2e; font-size: 12px; margin-bottom: 8px;">Escanea con WhatsApp → Ajustes → Dispositivos vinculados</p>
+            <img id="waQrImg" alt="QR de WhatsApp" style="width: 220px; height: 220px; image-rendering: pixelated;">
+            <p style="color: #94a3b8; font-size: 12px; margin-top: 8px;">El QR vence en unos minutos. Si vence, presiona "Conectar" de nuevo.</p>
+          </div>
+          <div id="waErrores" class="setting-note" style="margin-top: 8px; color: #f87171; display: none;"></div>
+          <div class="form-actions" style="padding: 0; border: none; margin-top: 12px;">
+            <button class="btn btn-primary" onclick="conectarWhatsApp()">🔗 Conectar</button>
+            <button class="btn btn-secondary" onclick="desconectarWhatsApp()" id="waDesconectarBtn" style="display: none;">Desconectar</button>
+          </div>
+        </div>
+        <div class="card" style="max-width: 640px; margin-top: 16px;">
           <h3>Cerrar Sesión</h3>
           <p class="setting-note">Cierra tu sesión actual y vuelve a la pantalla de login.</p>
           <div class="form-actions" style="padding: 0; border: none;">
@@ -846,6 +862,20 @@
             <select id="notifCliente" onchange="cargarEmailCliente()"></select>
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Canal de envío</label>
+            <select id="notifCanal">
+              <option value="ambos">Correo + WhatsApp</option>
+              <option value="correo">Solo correo</option>
+              <option value="whatsapp">Solo WhatsApp</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Teléfono del Cliente (WhatsApp)</label>
+            <input type="text" id="notifTelefono" placeholder="+58 412 123 4567">
+          </div>
+        </div>
         <div class="form-group">
           <label>Email del Cliente</label>
           <input type="email" id="notifEmail" placeholder="cliente@correo.com" required>
@@ -856,7 +886,7 @@
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" onclick="closeModal('notifModal')">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Enviar Correo</button>
+          <button type="submit" class="btn btn-primary">Enviar</button>
         </div>
       </form>
     </div>
@@ -955,7 +985,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>Monto (CLP)</label>
-            <input type="number" id="facturaMonto" step="0.01" min="0" required placeholder="0.00">
+            <input type="text" id="facturaMonto" inputmode="numeric" required placeholder="0" oninput="formatearMontoCLP(this)">
           </div>
           <div class="form-group">
             <label>Fecha de Vencimiento</label>
@@ -991,8 +1021,8 @@
         <input type="hidden" id="pagoFacturaId">
         <div class="form-row" style="margin-top: 16px;">
           <div class="form-group">
-            <label>Monto del Pago</label>
-            <input type="number" id="pagoMonto" step="0.01" min="0.01" required placeholder="0.00">
+            <label>Monto del Pago (CLP)</label>
+            <input type="text" id="pagoMonto" inputmode="numeric" required placeholder="0" oninput="formatearMontoCLP(this)">
           </div>
           <div class="form-group">
             <label>Método</label>

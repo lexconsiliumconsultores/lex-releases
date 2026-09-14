@@ -73,6 +73,25 @@ ipcRenderer.on('update-error', (e, err) => {
   console.warn('Update check error:', err);
 });
 
+// ==================== WHATSAPP (eventos desde main) ====================
+ipcRenderer.on('whatsapp-qr', (e, dataUrl) => {
+  const qrImg = document.getElementById('waQrImg');
+  const qrCont = document.getElementById('waQrContainer');
+  if (!qrImg || !qrCont) return;
+  qrImg.src = dataUrl;
+  qrCont.style.display = 'block';
+});
+
+ipcRenderer.on('whatsapp-estado', (e, estado) => {
+  const qrCont = document.getElementById('waQrContainer');
+  if (qrCont && estado && estado.conectado) qrCont.style.display = 'none';
+  cargarEstadoWhatsApp();
+});
+
+ipcRenderer.on('whatsapp-error', (e, msg) => {
+  mostrarErrorWhatsApp(msg);
+});
+
 // ==================== AUTENTICACIÓN ====================
 async function checkAuth() {
   const user = await ipcRenderer.invoke('getCurrentUser');
@@ -662,6 +681,7 @@ async function loadPlazos() {
       <td class="actions">
         <button class="btn btn-secondary btn-sm" onclick="editPlazo(${p.id})" title="Editar">✏️</button>
         <button class="btn btn-secondary btn-sm" onclick="notificarPlazo(${p.id})" title="Enviar correo">✉️</button>
+        <button class="btn btn-secondary btn-sm" onclick="waNotificarPlazo(${p.id})" title="Enviar por WhatsApp">📱</button>
         <button class="btn btn-secondary btn-sm" onclick="togglePlazoEstado(${p.id}, '${escapeHtml(p.estado)}')">✓</button>
         <button class="btn btn-danger btn-sm" onclick="deletePlazo(${p.id})">🗑️</button>
       </td>
@@ -783,6 +803,41 @@ async function notificarPlazo(plazoId) {
     `Estimado/a cliente, le recordamos que el plazo "${plazo.titulo}" de su caso ${caso.numero_caso} - ${caso.titulo} vence el ${fechaPlazo}${horaPlazo}. Por favor, tome las acciones necesarias. Atentamente, LexConsilium Consultores.`;
 }
 
+async function waNotificarPlazo(plazoId) {
+  const plazos = await ipcRenderer.invoke('getPlazos');
+  const plazo = plazos.find(p => p.id === plazoId);
+  if (!plazo) return;
+  const casos = await ipcRenderer.invoke('getCasos');
+  const caso = casos.find(c => c.id === plazo.caso_id);
+  if (!caso || !caso.cliente_id) {
+    alert('El caso no tiene un cliente asignado.');
+    return;
+  }
+  const clientes = await ipcRenderer.invoke('getClientes');
+  const cliente = clientes.find(c => c.id === caso.cliente_id);
+  if (!cliente) return;
+  const fechaPlazo = formatDate(plazo.fecha_limite);
+  const horaPlazo = plazo.hora ? ` a las ${plazo.hora}` : '';
+  const mensaje = formatearMensajeCliente(
+    cliente,
+    'AVISO DE PLAZO',
+    `Le recordamos que el plazo *"${plazo.titulo}"* de su caso *${caso.numero_caso} - ${caso.titulo}* vence el ${fechaPlazo}${horaPlazo}.`,
+    'Por favor, tome las acciones necesarias o comuníquese con su abogado.'
+  );
+  const res = await enviarWhatsAppCliente(cliente, mensaje);
+  const estado = res && res.success ? 'Enviado' : 'Fallido';
+  const canal = res && res.success ? 'WhatsApp' : '';
+  await ipcRenderer.invoke('addNotificacion', {
+    caso_id: caso.id, cliente_id: cliente.id, tipo: 'Plazo', mensaje,
+    telefono: cliente.telefono, email: cliente.email || null, canal, estado
+  });
+  if (res && res.success) {
+    alert(`✓ Mensaje de WhatsApp enviado a ${cliente.nombre} (+${cliente.telefono})`);
+  } else {
+    alert(`No se pudo enviar por WhatsApp: ${res ? res.error : 'error'}`);
+  }
+}
+
 // ==================== SEGUIMIENTO ====================
 async function loadSeguimientoList() {
   const casos = await ipcRenderer.invoke('getCasos');
@@ -902,6 +957,8 @@ async function openNotifModal(casoId = null, clienteId = null) {
   await loadClientesSelect('notifCliente');
   document.getElementById('notifTipo').value = 'Personalizado';
   document.getElementById('notifEmail').value = '';
+  document.getElementById('notifTelefono').value = '';
+  document.getElementById('notifCanal').value = 'ambos';
   document.getElementById('notifMensaje').value = '';
   if (casoId) {
     document.getElementById('notifCaso').value = casoId;
@@ -932,6 +989,9 @@ async function cargarEmailCliente() {
   if (cliente && cliente.email) {
     document.getElementById('notifEmail').value = cliente.email;
   }
+  if (cliente && cliente.telefono) {
+    document.getElementById('notifTelefono').value = cliente.telefono;
+  }
 }
 
 async function plantillaNotificacion() {
@@ -958,26 +1018,54 @@ async function sendNotificacion(e) {
   const casoId = document.getElementById('notifCaso').value || null;
   const clienteId = document.getElementById('notifCliente').value || null;
   const email = document.getElementById('notifEmail').value;
+  const telefono = document.getElementById('notifTelefono').value;
+  const canal = document.getElementById('notifCanal').value || 'ambos';
   const mensaje = document.getElementById('notifMensaje').value;
   const caso = casoId ? (await ipcRenderer.invoke('getCasos')).find(c => c.id == casoId) : null;
   const asunto = caso ? `LEX - ${tipo} - ${caso.titulo}` : `LEX - ${tipo}`;
-  const res = await ipcRenderer.invoke('enviarEmail', email, asunto, mensaje);
-  let estado;
-  if (res.success) {
-    estado = 'Enviado';
-  } else {
-    if (confirm(`No se pudo enviar el correo:\n${res.error}\n\n¿Abrir el programa de correo para hacerlo manualmente?`)) {
-      window.open(`mailto:${email}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(mensaje)}`);
-      estado = 'Manual';
-    } else {
-      return;
+  const canalCorreo = canal === 'ambos' || canal === 'correo';
+  const canalWhatsApp = canal === 'ambos' || canal === 'whatsapp';
+
+  let estadoCorreo = null, canalCorreoUsado = null, resWA = null;
+  if (canalCorreo && email) {
+    const res = await ipcRenderer.invoke('enviarEmail', email, asunto, mensaje);
+    if (res.success) {
+      estadoCorreo = 'Enviado';
+      canalCorreoUsado = res.canal || 'Outlook';
+    } else if (canal !== 'ambos') {
+      if (confirm(`No se pudo enviar el correo:\n${res.error}\n\n¿Abrir el programa de correo para hacerlo manualmente?`)) {
+        window.open(`mailto:${email}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(mensaje)}`);
+        estadoCorreo = 'Manual';
+      } else {
+        return;
+      }
     }
   }
+  if (canalWhatsApp && telefono) {
+    resWA = await ipcRenderer.invoke('enviarWhatsApp', telefono, mensaje);
+  }
+
+  if (!estadoCorreo && estadoCorreo !== 'Manual' && !(resWA && resWA.success)) {
+    alert('No se pudo enviar por ningún canal. Revisa el correo/WhatsApp configurados.');
+    return;
+  }
+
   await ipcRenderer.invoke('addNotificacion', {
-    caso_id: casoId, cliente_id: clienteId, tipo, mensaje, email, canal: res.canal || '', estado
+    caso_id: casoId, cliente_id: clienteId, tipo, mensaje,
+    email: canalCorreo ? email : null,
+    telefono: canalWhatsApp ? telefono : null,
+    canal: canalCorreoUsado || (resWA && resWA.success ? 'WhatsApp' : ''),
+    estado: (estadoCorreo === 'Manual') ? 'Manual' : 'Enviado'
   });
   closeModal('notifModal');
   loadNotificaciones();
+  if (canalCorreo && canalWhatsApp && estadoCorreo && resWA && resWA.success) {
+    alert(`✓ Notificación enviada por correo (${canalCorreoUsado}) y WhatsApp.`);
+  } else if (canalCorreo && estadoCorreo) {
+    alert(`✓ Correo enviado (${canalCorreoUsado || 'Outlook/SMTP'}).`);
+  } else if (resWA && resWA.success) {
+    alert('✓ Mensaje enviado por WhatsApp.');
+  }
 }
 
 async function reenviarNotificacion(id, email, asunto, mensaje) {
@@ -1058,9 +1146,9 @@ async function loadFacturas() {
     return new Date(f.fecha_vencimiento) < new Date();
   }).length;
 
-  document.getElementById('totalFacturado').textContent = '$' + totalFac.toLocaleString('es-CL', { minimumFractionDigits: 0 });
-  document.getElementById('totalCobrado').textContent = '$' + totalPagado.toLocaleString('es-CL', { minimumFractionDigits: 0 });
-  document.getElementById('saldoPendiente').textContent = '$' + totalSaldo.toLocaleString('es-CL', { minimumFractionDigits: 0 });
+  document.getElementById('totalFacturado').textContent = formatoCLP(totalFac);
+  document.getElementById('totalCobrado').textContent = formatoCLP(totalPagado);
+  document.getElementById('saldoPendiente').textContent = formatoCLP(totalSaldo);
   document.getElementById('facturasVencidas').textContent = vencidas;
 
   tbody.innerHTML = facturas.map(f => {
@@ -1072,13 +1160,14 @@ async function loadFacturas() {
       <td>${escapeHtml(f.cliente_nombre || '-')}</td>
       <td>${escapeHtml(f.caso_titulo || '-')}</td>
       <td style="max-width: 180px;">${escapeHtml(f.concepto || '')}</td>
-      <td>$${(f.monto || 0).toLocaleString('es-CL', { maximumFractionDigits: 0 })}</td>
-      <td class="color-green">$${(f.pagado || 0).toLocaleString('es-CL', { maximumFractionDigits: 0 })}</td>
-      <td class="color-${saldo > 0 ? (vencida ? 'red' : 'yellow') : 'green'}"><strong>$${saldo.toLocaleString('es-CL', { maximumFractionDigits: 0 })}</strong></td>
+      <td>${formatoCLP(f.monto || 0)}</td>
+      <td class="color-green">${formatoCLP(f.pagado || 0)}</td>
+      <td class="color-${saldo > 0 ? (vencida ? 'red' : 'yellow') : 'green'}"><strong>${formatoCLP(saldo)}</strong></td>
       <td>${f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : '-'}${vencida ? ' ⚠️' : ''}</td>
       <td><span class="badge badge-${estadoClass}">${f.estado}</span></td>
       <td>
-        ${saldo > 0 ? `<button class="btn-icon" onclick="recordarCobro(${f.id})" title="Enviar recordatorio de cobro">📧</button>` : ''}
+        ${saldo > 0 ? `<button class="btn-icon" onclick="recordarCobro(${f.id})" title="Enviar recordatorio de cobro por correo">📧</button>
+        <button class="btn-icon" onclick="waRecordarCobro(${f.id})" title="Enviar recordatorio de cobro por WhatsApp">📱</button>` : ''}
         <button class="btn-icon" onclick="openFacturaModal(${f.id})" title="Editar factura">✏️</button>
         <button class="btn-icon" onclick="openPagoModal(${f.id})" title="Registrar Pago">💵</button>
         <button class="btn-icon" onclick="deleteFactura(${f.id})" title="Eliminar">🗑️</button>
@@ -1121,6 +1210,53 @@ async function recordarCobro(id) {
   }
 }
 
+async function waRecordarCobro(id) {
+  const res = await ipcRenderer.invoke('getCuentasPorCobrar');
+  const row = res.find(r => r.id === id);
+  if (!row) return;
+  const clientes = await ipcRenderer.invoke('getClientes');
+  const cliente = clientes.find(c => c.id === row.cliente_id);
+  if (!cliente) return;
+  if (!cliente.telefono) {
+    alert('El cliente no tiene número de teléfono registrado.');
+    return;
+  }
+  const saldo = row.saldo || 0;
+  const fmt = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 });
+  const venc = row.fecha_vencimiento
+    ? new Date(row.fecha_vencimiento).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
+    : 'sin fecha de vencimiento';
+  const mensaje = formatearMensajeCliente(
+    cliente,
+    'RECORDATORIO DE PAGO',
+    `Le recordamos que la factura *N° ${row.numero}* se encuentra pendiente de pago:`,
+    `- Concepto: ${row.concepto || '-'}`,
+    `- Monto total: $${fmt.format(row.monto || 0)}`,
+    `- Saldo pendiente: $${fmt.format(saldo)}`,
+    `- Vencimiento: ${venc}`,
+    '',
+    'Para coordinar el pago o resolver cualquier duda, contacte a su abogado a la brevedad.'
+  );
+  const envio = await enviarWhatsAppCliente(cliente, mensaje);
+  const estado = envio && envio.success ? 'Enviado' : 'Fallido';
+  const canal = envio && envio.success ? 'WhatsApp' : '';
+  await ipcRenderer.invoke('addNotificacion', {
+    caso_id: row.caso_id ? parseInt(row.caso_id) : null,
+    cliente_id: row.cliente_id ? parseInt(row.cliente_id) : null,
+    tipo: 'Recordatorio de Pago',
+    mensaje,
+    telefono: cliente.telefono,
+    email: cliente.email || null,
+    canal,
+    estado
+  });
+  if (envio && envio.success) {
+    alert(`📱 Recordatorio de cobro enviado por WhatsApp a ${cliente.nombre} (+${cliente.telefono})`);
+  } else {
+    alert(`No se pudo enviar el recordatorio por WhatsApp: ${envio ? envio.error : 'error'}`);
+  }
+}
+
 async function loadCartera() {
   const rows = await ipcRenderer.invoke('getCuentasPorCobrar');
   const el = document.getElementById('carteraLista');
@@ -1132,9 +1268,9 @@ async function loadCartera() {
         <strong>${escapeHtml(r.cliente_nombre || 'Sin cliente')}</strong>
         <div style="font-size:12px; color:#94a3b8;">${escapeHtml(r.numero)} · ${escapeHtml(r.concepto || '')}${r.vencida ? ' <span class="badge badge-error">VENCIDA</span>' : ''}</div>
       </div>
-      <strong style="color:${r.vencida ? '#ef4444' : '#eab308'};">$${(r.saldo || 0).toLocaleString('es-CL', { maximumFractionDigits: 0 })}</strong>
+      <strong style="color:${r.vencida ? '#ef4444' : '#eab308'};">${formatoCLP(r.saldo || 0)}</strong>
     </div>`).join('') + `
-    <div style="display:flex; justify-content:space-between; padding-top:12px;"><strong>TOTAL POR COBRAR</strong><strong>$${total.toLocaleString('es-CL', { maximumFractionDigits: 0 })}</strong></div>`
+    <div style="display:flex; justify-content:space-between; padding-top:12px;"><strong>TOTAL POR COBRAR</strong><strong>${formatoCLP(total)}</strong></div>`
     : '<p class="empty-state" style="padding:16px; color:#6b7280;">Todo cobrado. No hay saldos pendientes.</p>';
 }
 
@@ -1157,7 +1293,7 @@ async function openFacturaModal(facturaId) {
       autofillFacturaCliente();
       document.getElementById('facturaCliente').value = f.cliente_id || '';
       document.getElementById('facturaConcepto').value = f.concepto || '';
-      document.getElementById('facturaMonto').value = f.monto || '';
+      document.getElementById('facturaMonto').value = f.monto ? Number(f.monto).toLocaleString('es-CL') : '';
       document.getElementById('facturaVencimiento').value = (f.fecha_vencimiento || '').substring(0, 10);
       document.getElementById('facturaEstado').value = f.estado || 'Pendiente';
       document.getElementById('facturaModalTitle').textContent = 'Editar Factura ' + f.numero;
@@ -1177,7 +1313,7 @@ function autofillFacturaCliente() {
 
 async function saveFactura(e) {
   e.preventDefault();
-  const monto = parseFloat(document.getElementById('facturaMonto').value) || 0;
+  const monto = parsearMontoCLP(document.getElementById('facturaMonto').value);
   if (monto <= 0) { alert('El monto debe ser mayor a cero.'); return; }
   const id = document.getElementById('facturaId').value;
   const factura = {
@@ -1222,9 +1358,9 @@ async function openPagoModal(facturaId) {
   document.getElementById('pagoReferencia').value = '';
   const saldo = (factura.monto || 0) - (factura.pagado || 0);
   document.getElementById('pagoFacturaInfo').innerHTML = 
-    `Factura <strong>N° ${factura.numero}</strong> · ${escapeHtml(factura.cliente_nombre || '')} · Monto: <strong>$${(factura.monto||0).toLocaleString('es-CL',{maximumFractionDigits:0})}</strong> · Saldo: <strong class="color-${saldo>0?'red':'green'}">$${saldo.toLocaleString('es-CL',{maximumFractionDigits:0})}</strong>`;
+    `Factura <strong>N° ${factura.numero}</strong> · ${escapeHtml(factura.cliente_nombre || '')} · Monto: <strong>${formatoCLP(factura.monto || 0)}</strong> · Saldo: <strong class="color-${saldo>0?'red':'green'}">${formatoCLP(saldo)}</strong>`;
   document.getElementById('pagosLista').innerHTML = pagos.length
-    ? pagos.map(p => `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(59,130,246,0.1);"><span>${formatDate(p.fecha)} · ${escapeHtml(p.metodo || '')} · <small>${escapeHtml(p.referencia || '')}</small></span><span><strong>$${p.monto.toLocaleString('es-CL',{maximumFractionDigits:0})}</strong> <button class="btn-icon" onclick="eliminarPago(${p.id})" title="Eliminar pago">🗑️</button></span></div>`).join('')
+    ? pagos.map(p => `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(59,130,246,0.1);"><span>${formatDate(p.fecha)} · ${escapeHtml(p.metodo || '')} · <small>${escapeHtml(p.referencia || '')}</small></span><span><strong>${formatoCLP(p.monto)}</strong> <button class="btn-icon" onclick="eliminarPago(${p.id})" title="Eliminar pago">🗑️</button></span></div>`).join('')
     : '<p class="empty-state" style="padding:16px; text-align:center; color:#6b7280;">Sin pagos registrados aún.</p>';
   document.getElementById('pagoModal').classList.add('active');
 }
@@ -1250,10 +1386,10 @@ async function openHistorialPagos() {
       <td>${formatDate(p.fecha)}</td>
       <td>${escapeHtml(p.metodo || '-')}</td>
       <td><small>${escapeHtml(p.referencia || '-')}</small></td>
-      <td class="color-green"><strong>$$${(p.monto || 0).toLocaleString('es-CL', { maximumFractionDigits: 0 })}</strong></td>
+      <td class="color-green"><strong>${formatoCLP(p.monto || 0)}</strong></td>
     </tr>`).join('') + `<tr>
       <td colspan="5" style="text-align:right;"><strong>Total cobrado</strong></td>
-      <td class="color-green"><strong>$$${total.toLocaleString('es-CL', { maximumFractionDigits: 0 })}</strong></td>
+      <td class="color-green"><strong>${formatoCLP(total)}</strong></td>
     </tr>`;
   }
   document.getElementById('historialPagosModal').classList.add('active');
@@ -1264,10 +1400,10 @@ async function savePago(e) {
   const facturaId = parseInt(document.getElementById('pagoFacturaId').value);
   const facturas = await ipcRenderer.invoke('getFacturas');
   const factura = facturas.find(f => f.id === facturaId);
-  let monto = parseFloat(document.getElementById('pagoMonto').value);
+  let monto = parsearMontoCLP(document.getElementById('pagoMonto').value);
   const saldo = (factura.monto || 0) - (factura.pagado || 0);
   if (monto > saldo) {
-    if (!confirm(`El monto ($$${monto.toLocaleString('es-CL')}) supera el saldo ($$${saldo.toLocaleString('es-CL')}). ¿Registrar de todos modos?`)) return;
+    if (!confirm(`El monto (${formatoCLP(monto)}) supera el saldo (${formatoCLP(saldo)}). ¿Registrar de todos modos?`)) return;
   }
   const pago = {
     factura_id: facturaId,
@@ -1476,6 +1612,7 @@ async function loadConfiguracion() {
   if (document.getElementById('smtpUser')) document.getElementById('smtpUser').value = config.user || '';
   if (document.getElementById('smtpPass')) document.getElementById('smtpPass').value = config.pass || '';
   if (document.getElementById('smtpFrom')) document.getElementById('smtpFrom').value = config.from || '';
+  await cargarEstadoWhatsApp();
   const adminSection = document.getElementById('adminUsersSection');
   if (isAdmin()) {
     await loadUsuarios();
@@ -1608,9 +1745,79 @@ async function testSMTPConfig() {
   await actualizarEstadoSMTP();
 }
 
+// ==================== WHATSAPP WEB ====================
+async function cargarEstadoWhatsApp() {
+  const res = await ipcRenderer.invoke('getWhatsAppEstado');
+  const estadoEl = document.getElementById('waEstado');
+  const btnDesc = document.getElementById('waDesconectarBtn');
+  const qrCont = document.getElementById('waQrContainer');
+  if (!estadoEl) return;
+  if (res.conectado) {
+    estadoEl.innerHTML = `<span class="badge badge-ok">Conectado</span> WhatsApp vinculado · Número: +${escapeHtml(res.numero || '')}`;
+    if (btnDesc) btnDesc.style.display = 'inline-block';
+    if (qrCont) qrCont.style.display = 'none';
+  } else if (res.estado === 'QR' || res.estado === 'Conectando' || res.estado === 'Autenticado') {
+    estadoEl.innerHTML = `<span class="badge badge-proceso">${escapeHtml(res.estado)}</span> Escaneando el código QR...`;
+    if (btnDesc) btnDesc.style.display = 'none';
+  } else {
+    estadoEl.innerHTML = `<span class="badge badge-warn">${escapeHtml(res.estado)}</span> Conecta tu WhatsApp para enviar mensajes a los clientes.`;
+    if (btnDesc) btnDesc.style.display = 'none';
+  }
+}
+
+function mostrarErrorWhatsApp(msg) {
+  const errEl = document.getElementById('waErrores');
+  if (!errEl) return;
+  errEl.textContent = msg;
+  errEl.style.display = 'block';
+  setTimeout(() => { errEl.style.display = 'none'; }, 12000);
+}
+
+async function conectarWhatsApp() {
+  const res = await ipcRenderer.invoke('conectarWhatsApp');
+  if (!res.success && res.error) mostrarErrorWhatsApp(res.error);
+  await cargarEstadoWhatsApp();
+}
+
+async function desconectarWhatsApp() {
+  const res = await ipcRenderer.invoke('desconectarWhatsApp');
+  const qrCont = document.getElementById('waQrContainer');
+  if (qrCont) qrCont.style.display = 'none';
+  await cargarEstadoWhatsApp();
+}
+
+function formatearMensajeCliente(cliente, asunto, ...lineas) {
+  const saludo = `*L E X* · ${asunto}\n\nEstimado/a ${cliente.nombre},`;
+  return [saludo, '', ...lineas, '', 'Atentamente, LexConsilium Consultores.'].join('\n');
+}
+
+async function enviarWhatsAppCliente(cliente, mensaje) {
+  if (!cliente || !cliente.telefono) {
+    alert('El cliente no tiene número de teléfono registrado.');
+    return null;
+  }
+  const res = await ipcRenderer.invoke('enviarWhatsApp', cliente.telefono, mensaje);
+  return res;
+}
+
 // ==================== HELPERS ====================
 const selectCasosRegistrados = new Set();
 const selectClientesRegistrados = new Set();
+
+function formatearMontoCLP(input) {
+  if (!input) return;
+  const soloDigitos = String(input.value).replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+  input.value = soloDigitos ? Number(soloDigitos).toLocaleString('es-CL') : '';
+}
+
+function parsearMontoCLP(valor) {
+  if (!valor) return 0;
+  return parseInt(String(valor).replace(/\D/g, ''), 10) || 0;
+}
+
+function formatoCLP(monto) {
+  return '$' + Number(monto || 0).toLocaleString('es-CL', { maximumFractionDigits: 0 });
+}
 
 async function loadClientesSelect(selectId = 'casoCliente') {
   selectClientesRegistrados.add(selectId);
