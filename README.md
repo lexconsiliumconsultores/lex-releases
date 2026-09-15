@@ -2,7 +2,7 @@
 
 Aplicación de escritorio (Electron) para estudios de abogados. Gestión de casos, clientes, plazos, facturas, seguimiento, documentación legal, notificaciones por correo (Outlook) y actualizaciones automáticas vía GitHub.
 
-**Versión actual:** 1.6.6
+**Versión actual:** 1.6.7
 
 ---
 
@@ -13,7 +13,7 @@ Aplicación de escritorio (Electron) para estudios de abogados. Gestión de caso
 | Código fuente | Subido a GitHub (repo privado) |
 | Control de versiones | Git + tags semánticos (v1.6.3) |
 | Instalador Windows | ✅ Generado (NSIS + portable) |
-| Última release | ✅ v1.6.6 publicada (2026-09-10) |
+| Última release | ✅ v1.6.7 publicada (2026-09-15) |
 | Actualizaciones automáticas | ✅ electron-updater + GitHub Releases |
 | Repositorio | `https://github.com/lexconsiliumconsultores/lex` |
 
@@ -150,7 +150,8 @@ Start-Process "C:\Users\CASA\Desktop\TODOS LOS PROYECTOS\PROYECTO 5\LEX\node_mod
 
 ### Facturación
 - Facturas con cliente, monto en **CLP** (pesos chilenos), estados Pendiente/Pagada
-- **Recordatorio de cobro 📧**: botón por factura con saldo pendiente para enviar al cliente un correo de recordatorio de pago (con monto, saldo y vencimiento) vía Outlook/SMTP; queda registrado en Notificaciones como *Recordatorio de Pago*
+- Inputs de montos con **formato automático de miles** en CLP (`.`, sin decoradores al guardar)
+- **Recordatorio de cobro 📧**: botón por factura con saldo pendiente para enviar al cliente un correo o **WhatsApp 📱** de recordatorio de pago (con monto, saldo y vencimiento) vía Outlook/SMTP o WhatsApp; queda registrado en Notificaciones como *Recordatorio de Pago*
 
 ### Documentación Legal
 - Tipos: Contrato, Poder, Demanda, Contestación, Otros
@@ -159,8 +160,11 @@ Start-Process "C:\Users\CASA\Desktop\TODOS LOS PROYECTOS\PROYECTO 5\LEX\node_mod
 ### Plazos Legales
 - Categorías: Prescripción, Caducidad, Apelación, Revisión, etc.
 
-### Notificaciones (Correo)
+### Notificaciones (Correo + WhatsApp)
 - **Tipos:** Agendamiento / Cita, Audiencia, Vencimiento de Plazo, Estado del Caso, Solicitud de Documentos, Personalizado
+- **Canal desplegable:** Correo / WhatsApp / Ambos (teléfono y email autollenados desde el cliente)
+- **WhatsApp Web gratis (QR):** panel en Configuración → WhatsApp, QR escaneable una sola vez, sesión guardada (`LocalAuth` en `%APPDATA%\lex\whatsapp-session`), estado de conexión y botón desconectar
+- **📱 Recordatorios por WhatsApp** en Cuentas por Cobrar y Plazos (mismo formato que los correos)
 - Plantillas automáticas, envío por **Outlook** (primario) o **SMTP** (respaldo)
 - Historial con estado de envío y reenvío
 - Icono **👁️** por fila para ver el mensaje completo enviado (asunto, cliente, caso, estado y texto íntegro)
@@ -225,6 +229,7 @@ Salida en `dist_instalador/`. Para versionado correcto: subir la versión en `pa
 
 | Versión | Fecha | Contenido |
 |---------|-------|-----------|
+| 1.6.7 | 2026-09-15 | **WhatsApp Web gratis**: panel **Configuración → WhatsApp** con QR escaneable (sesión guardada con LocalAuth), estado de conexión y botón desconectar; los envíos quedan registrados como Notificaciones con canal `WhatsApp`. **Envíos por WhatsApp** en Cuentas por Cobrar (📱 recordatorio de cobro por factura/caso) y Plazos (📱 aviso de vencimiento). **Modal de Notificación con canal**: desplegable Correo / WhatsApp / Ambos con teléfono+email autollenados. **Dinero en CLP**: inputs de montos con formato automático de miles (`formatearMontoCLP`/`parsearMontoCLP`) y corrección del doble `$` |
 | 1.6.6 | 2026-09-10 | **Notificaciones solo envío**: se elimina el rastreo de la bandeja de entrada (respuestas de cliente, badge y verificación); el correo solo se envía. **Icono 👁️** en cada notificación para ver el mensaje completo. **Recordatorio de cobro 📧** por factura (envía monto/saldo/vencimiento al cliente y queda registrado). **Outlook automático**: se quita la tarjeta y el modal de conexión de Configuración; la sesión guardada se renueva sola y el envío usa Outlook o SMTP. **Sincronización total**: crear/editar un caso o cliente actualiza al instante todos los menús del programa |
 | 1.6.5 | 2026-09-10 | **Rendimiento**: persistencia debounce + escritura asíncrona (la BD ya no se exporta completa en cada operación). **Respuestas de cliente**: vigilancia automática de la bandeja Outlook cada 5 min, notificación "Respuesta de Cliente" con vista previa, badge contador y aviso en pantalla (permiso `Mail.Read`, requiere reconectar). **Visor interno de documentos** (PDF, imágenes y texto con botón 👁️) |
 | 1.6.4 | 2026-09-10 | **Auditoría de funcionalidad habilitada**: config LexAI accesible desde el chat, conexión Outlook restaurada en Configuración, CRM de facturación completo (editar facturas + estado, filtros, cartera por cliente, eliminar pagos, historial global). **Notificador de actualizaciones mejorado**: barra de progreso, pulso visual, detección de descarga estancada con botón Reintentar. **Publicación automática** `npm run dist:publish` (`lex-setup-<v>.exe` / `lex-portable-<v>.exe`). Icono 256×256 confirmado |
