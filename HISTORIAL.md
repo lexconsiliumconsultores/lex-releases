@@ -1,7 +1,8 @@
-# LEX — Historial de sesión (retomar el 14-09-2026)
+# LEX — Historial de sesión (17-09-2026)
 
 ## Estado actual
-- Última versión en desarrollo: **v1.6.7** (WhatsApp Web + dinero CLP). No publicada aún.
+- **v1.6.7 publicada** (2026-09-15): Release de GitHub con 4 assets (`lex-setup-1.6.7.exe`, `.blockmap`, `lex-portable-1.6.7.exe`, `latest.yml`). Tag `v1.6.7` en HEAD tras README.
+- Última versión en desarrollo: **v1.6.7** (WhatsApp Web + dinero CLP). Bugs/mejoras futuras → v1.6.8.
 - Las pruebas de WhatsApp (QR) se hicieron con la versión **estable de `whatsapp-web.js` 1.26.1 + Chrome del sistema** (headless, sin descargar Chromium) → QR generado correctamente. La versión inestable `1.26.1-alpha.0` no arrancó el navegador, por eso se usó la estable.
 - **Nota sesión WhatsApp**: vive en `%APPDATA%\lex\whatsapp-session` (`LocalAuth`). El cliente se destruye limpiamente al salir (`window-all-closed` espera a `dbWriting`).
 
