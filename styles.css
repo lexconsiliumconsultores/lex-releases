@@ -2326,6 +2326,24 @@ body::before {
   padding: 4px;
 }
 
+.update-banner-cancel {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #94a3b8;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.update-banner-cancel:hover {
+  border-color: rgba(59, 130, 246, 0.6);
+  color: #e2e8f0;
+}
+
 .update-banner-close:hover {
   color: #f87171;
 }

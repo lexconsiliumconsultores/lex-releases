@@ -1591,6 +1591,8 @@ function setupAutoUpdater() {
   let updaterStallTimer = null;
   let updaterStallNotified = false;
   let updateAvailableTime = 0;
+  let updaterRestartCanceled = false;
+  let updaterRestartTimer = null;
 
   const stopStallWatch = () => {
     if (updaterStallTimer) clearInterval(updaterStallTimer);
@@ -1615,6 +1617,7 @@ function setupAutoUpdater() {
     updateAvailableTime = Date.now();
     updaterLastProgress = null;
     updaterStallNotified = false;
+    updaterRestartCanceled = false;
     stopStallWatch();
     updaterStallTimer = setInterval(checkUpdaterStalled, 10000);
     if (Notification.isSupported()) {
@@ -1641,19 +1644,16 @@ function setupAutoUpdater() {
 
   autoUpdater.on('update-downloaded', (info) => {
     stopStallWatch();
+    updaterRestartCanceled = false;
     if (mainWindow) mainWindow.webContents.send('update-downloaded', info.version);
-    const choice = dialog.showMessageBoxSync(mainWindow, {
-      type: 'info',
-      title: 'Actualización lista',
-      message: `LEX ${info.version} se descargó correctamente.`,
-      detail: '¿Desea reiniciar la aplicación para aplicar la actualización?',
-      buttons: ['Reiniciar ahora', 'Más tarde'],
-      defaultId: 0,
-      cancelId: 1
-    });
-    if (choice === 0) {
-      autoUpdater.quitAndInstall();
-    }
+    // Instalación automática: LEX se reinicia solo en 15 segundos a menos que el usuario lo cancele.
+    if (updaterRestartTimer) clearTimeout(updaterRestartTimer);
+    updaterRestartTimer = setTimeout(() => {
+      updaterRestartTimer = null;
+      if (!updaterRestartCanceled && mainWindow && !mainWindow.isDestroyed()) {
+        autoUpdater.quitAndInstall();
+      }
+    }, 15000);
   });
 
   autoUpdater.on('update-not-available', () => {
@@ -1692,6 +1692,26 @@ app.on('window-all-closed', async () => {
 ipcMain.handle('restartApp', () => {
   app.relaunch();
   app.exit(0);
+});
+
+ipcMain.handle('installNow', () => {
+  if (!app.isPackaged) return { success: false, error: 'No empaquetada.' };
+  updaterRestartCanceled = false;
+  if (updaterRestartTimer) {
+    clearTimeout(updaterRestartTimer);
+    updaterRestartTimer = null;
+  }
+  autoUpdater.quitAndInstall();
+  return { success: true };
+});
+
+ipcMain.handle('cancelAutoRestart', () => {
+  updaterRestartCanceled = true;
+  if (updaterRestartTimer) {
+    clearTimeout(updaterRestartTimer);
+    updaterRestartTimer = null;
+  }
+  return { success: true };
 });
 
 ipcMain.handle('retryUpdateCheck', () => {

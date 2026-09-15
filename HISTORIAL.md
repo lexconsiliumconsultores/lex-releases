@@ -1,8 +1,8 @@
 # LEX — Historial de sesión (retomar 16-09-2026)
 
 ## Estado actual (cierre del 15-09-2026)
-- **v1.6.7 publicada** (2026-09-15): Release de GitHub con 4 assets (`lex-setup-1.6.7.exe`, `.blockmap`, `lex-portable-1.6.7.exe`, `latest.yml`). Tag `v1.6.7` apuntando a HEAD (incluye README actualizado). README documenta v1.6.7 (WhatsApp + CLP).
-- Última versión en desarrollo: **v1.6.7** (WhatsApp Web + dinero CLP). Bugs/mejoras futuras → v1.6.8.
+- **v1.6.8 publicada** (2026-09-15): actualización **auto-instalable**. Release de GitHub con 4 assets (`lex-setup-1.6.8.exe`, `.blockmap`, `lex-portable-1.6.8.exe`, `latest.yml`). Incluye: fix del `</div>` extra en `index.html` que dejaba el menú/contenido fuera del contenedor visible, y actualización que se instala automáticamente (reinicio en 15s con opción "Más tarde").
+- Última versión en desarrollo: **v1.6.8** (fix HTML + auto-instalación). Bugs/mejoras futuras → v1.6.9.
 - **App Android en curso — ARRANCÓ CON SUPABASE (fase 1 lista)**:
   - `supabase/schema.sql` creado y pusheado: replica las 12 tablas de lex.db en PostgreSQL (id BIGINT identity, montos NUMERIC(14,2), TIMESTAMPTZ), con índices, INSERT del admin por defecto, RLS habilitado con política `app_full_access` (todas las tablas).
   - `@supabase/supabase-js@^2.116.0` instalado en `package.json` (npm tardó ~2 min; usar background con log).
@@ -10,6 +10,10 @@
   - Comando útil para probar conexión: `node -e "const {createClient}=require('@supabase/supabase-js'); ..."` con URL+key.
 - Las pruebas de WhatsApp (QR) se hicieron con la versión **estable de `whatsapp-web.js` 1.26.1 + Chrome del sistema** (headless, sin descargar Chromium) → QR generado correctamente. La versión inestable `1.26.1-alpha.0` no arrancó el navegador, por eso se usó la estable.
 - **Nota sesión WhatsApp**: vive en `%APPDATA%\lex\whatsapp-session` (`LocalAuth`). El cliente se destruye limpiamente al salir (`window-all-closed` espera a `dbWriting`).
+
+## Qué incluye v1.6.8
+- **Instalación automática**: al descargarse una actualización, LEX se reinicia solo en **15 segundos** para instalarla (banner con cuenta regresiva y botón "Reiniciar ahora"). Botón "⏸ Más tarde" cancela el reinicio automático y aplica la actualización al cerrar LEX (`autoInstallOnAppQuit`). Diálogo modal de confirmación eliminado.
+- **Fix pantalla vacía**: se eliminó un `</div>` extra en `index.html` (barra lateral) que cerraba `appContainer` antes de tiempo; el menú y el contenido principal ahora quedan dentro del contenedor visible.
 
 ## Qué incluye v1.6.7
 - **WhatsApp Web conectado por QR (costo $0)**: panel en **Configuración → WhatsApp** con QR escaneable (una vez, sesión guardada), estado de conexión, botón desconectar, y registro como *Notificación* con canal `WhatsApp`.
@@ -21,7 +25,8 @@
 ## Historial de versiones
 - **v1.6.5**: rendimiento (debounce persistencia + respuestas), visor interno de documentos.
 - **v1.6.6**: (versión previa) notificaciones solo envío, outlet automático, recordatorio de cobro por correo.
-- **v1.6.7**: lo descrito arriba.
+- **v1.6.7**: WhatsApp Web + dinero CLP (descrito arriba).
+- **v1.6.8**: fix pantalla vacía (HTML) + instalación automática de actualizaciones.
 
 ## Pendiente — APP ANDROID (EN CURSO, Supabase elegido)
 - Usuario quiere: **mismo acceso que el escritorio** + **datos 100% sincronizados** PC↔móvil. Evaluado: **Supabase** (Postgres + API + login + permisos, free) → elegido.

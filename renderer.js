@@ -5,7 +5,7 @@ let currentUser = null;
 let updateBannerDismissed = false;
 
 // ==================== AVISOS DE ACTUALIZACIÓN ====================
-function showUpdateBanner(message, btnText, btnAction) {
+function showUpdateBanner(message, btnText, btnAction, cancelAction) {
   if (updateBannerDismissed) return;
   let banner = document.getElementById('updateBanner');
   if (!banner) {
@@ -20,6 +20,7 @@ function showUpdateBanner(message, btnText, btnAction) {
       <div class="update-banner-bar"><div class="update-banner-bar-fill" id="updateBarFill"></div><span class="update-banner-pct" id="updateBarPct">0%</span></div>
       <div class="update-banner-actions">
         ${btnText ? `<button class="update-banner-btn" id="updateBannerBtn">${btnText}</button>` : ''}
+        ${cancelAction ? `<button class="update-banner-cancel" id="updateBannerCancel">⏸ Más tarde</button>` : ''}
         <button class="update-banner-close" id="updateBannerClose">✕</button>
       </div>
     </div>
@@ -29,6 +30,8 @@ function showUpdateBanner(message, btnText, btnAction) {
   if (closeBtn) closeBtn.onclick = () => { updateBannerDismissed = true; banner.classList.remove('active'); };
   const btn = document.getElementById('updateBannerBtn');
   if (btn && btnAction) btn.onclick = btnAction;
+  const cancelBtn = document.getElementById('updateBannerCancel');
+  if (cancelBtn && cancelAction) cancelBtn.onclick = cancelAction;
 }
 
 function aplicarProgresoUpdate(p) {
@@ -55,7 +58,24 @@ ipcRenderer.on('update-progress', (e, p) => {
 
 ipcRenderer.on('update-downloaded', (e, version) => {
   updateBannerDismissed = false;
-  showUpdateBanner(`Versión ${version} descargada. Reinicia LEX para aplicar los cambios.`, 'Reiniciar', () => ipcRenderer.invoke('restartApp'));
+  let segundos = 15;
+  const bannerMsg = () => `Versión ${version} descargada. LEX se reiniciará en ${segundos}s para instalarla.`;
+  showUpdateBanner(
+    bannerMsg(),
+    'Reiniciar ahora',
+    () => ipcRenderer.invoke('installNow'),
+    () => {
+      if (countdownInt) clearInterval(countdownInt);
+      ipcRenderer.invoke('cancelAutoRestart');
+      showUpdateBanner(`Versión ${version} descargada. Se instalará al cerrar LEX.`, 'Reiniciar ahora', () => ipcRenderer.invoke('installNow'), null);
+    }
+  );
+  const countdownInt = setInterval(() => {
+    segundos -= 1;
+    if (segundos <= 0) { clearInterval(countdownInt); return; }
+    const msgEl = document.querySelector('.update-banner-msg');
+    if (msgEl) msgEl.textContent = bannerMsg();
+  }, 1000);
   aplicarProgresoUpdate({ percent: 100 });
   setTimeout(() => aplicarProgresoUpdate({ percent: 100 }), 100);
 });
