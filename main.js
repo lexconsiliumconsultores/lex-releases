@@ -3,8 +3,6 @@ const path = require('path');
 const initSqlJs = require('sql.js');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
-const qrcode = require('qrcode');
-const { Client, LocalAuth } = require('whatsapp-web.js');
 const { autoUpdater } = require('electron-updater');
 
 let mainWindow;
@@ -738,166 +736,6 @@ ipcMain.handle('testSMTP', async () => {
     return { success: false, error: err.message };
   }
 });
-
-// ==================== WHATSAPP WEB (envío automático gratuito) ====================
-const CHROME_PATHS = [
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
-];
-
-function encontrarChrome() {
-  for (const p of CHROME_PATHS) {
-    if (fs.existsSync(p)) return p;
-  }
-  return null;
-}
-
-let waClient = null;
-let waConectando = false;
-let waPromesa = null;
-
-function getWAEstado() {
-  if (waClient && waClient.info && waClient.info.wid) {
-    return { conectado: true, numero: waClient.info.wid.user || '', estado: 'Conectado' };
-  }
-  if (waConectando || waPromesa) return { conectado: false, estado: 'Conectando' };
-  return { conectado: false, estado: 'Desconectado' };
-}
-
-function waEnviarEstado() {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('whatsapp-estado', getWAEstado());
-  }
-}
-
-async function crearClienteWA() {
-  const chrome = encontrarChrome();
-  const dataPath = path.join(app.getPath('userData'), 'whatsapp-session');
-  const client = new Client({
-    authStrategy: new LocalAuth({ dataPath }),
-    puppeteer: chrome
-      ? { executablePath: chrome, headless: true, args: ['--no-sandbox', '--disable-gpu'] }
-      : undefined
-  });
-
-  client.on('qr', async (qr) => {
-    try {
-      const dataUrl = await qrcode.toDataURL(qr);
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('whatsapp-qr', dataUrl);
-      }
-    } catch (e) { /* sin QR */ }
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('whatsapp-estado', { conectado: false, estado: 'QR' });
-    }
-  });
-
-  client.on('authenticated', () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('whatsapp-estado', { conectado: false, estado: 'Autenticado' });
-    }
-  });
-
-  client.on('ready', () => {
-    waConectando = false;
-    waPromesa = null;
-    waEnviarEstado();
-  });
-
-  client.on('auth_failure', () => {
-    waConectando = false;
-    waPromesa = null;
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('whatsapp-estado', { conectado: false, estado: 'Sesión expirada' });
-      mainWindow.webContents.send('whatsapp-error', 'La sesión de WhatsApp expiró. Vuelve a escanear el código QR.');
-    }
-  });
-
-  client.on('disconnected', (reason) => {
-    waConectando = false;
-    waPromesa = null;
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('whatsapp-estado', { conectado: false, estado: 'Desconectado' });
-      mainWindow.webContents.send('whatsapp-error', 'WhatsApp se desconectó: ' + String(reason || 'desconocido'));
-    }
-  });
-
-  client.on('error', (err) => {
-    waConectando = false;
-    waPromesa = null;
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('whatsapp-error', String((err && err.message) || err));
-    }
-  });
-
-  return client;
-}
-
-async function conectarWA() {
-  if (waClient && waClient.info && waClient.info.wid) return { success: true };
-  if (waPromesa) return { success: true };
-  waConectando = true;
-  await waEnviarEstado();
-  waPromesa = (async () => {
-    try {
-      const c = await crearClienteWA();
-      waClient = c;
-      await c.initialize();
-      return { success: true };
-    } catch (err) {
-      waConectando = false;
-      waPromesa = null;
-      return { success: false, error: String((err && err.message) || err) };
-    }
-  })();
-  return { success: true, estado: 'Conectando' };
-}
-
-async function desconectarWA() {
-  waConectando = false;
-  const c = waClient;
-  waClient = null;
-  waPromesa = null;
-  if (c) {
-    try { await c.destroy(); } catch (e) { /* ya desconectado */ }
-  }
-  waEnviarEstado();
-  return { success: true };
-}
-
-function normalizarTelefonoWA(tel) {
-  if (!tel) return null;
-  let t = String(tel).replace(/\D/g, '');
-  if (t.length < 10) return null;
-  if (t.length === 10 && t.startsWith('0')) t = '58' + t.substring(1);
-  if (t.startsWith('04')) t = '58' + t.substring(1);
-  if (t.startsWith('+')) t = t.substring(1);
-  return t;
-}
-
-async function enviarWhatsApp(telefono, mensaje) {
-  if (!waClient || !waClient.info || !waClient.info.wid) {
-    return { success: false, error: 'WhatsApp no conectado. Escanea el código QR en Configuración.' };
-  }
-  const num = normalizarTelefonoWA(telefono);
-  if (!num) return { success: false, error: 'Número de teléfono inválido.' };
-  try {
-    const chatId = num + '@c.us';
-    const res = await waClient.sendMessage(chatId, String(mensaje));
-    if (!res || !res.id) return { success: false, error: 'WhatsApp no devolvió confirmación de envío.' };
-    waEnviarEstado();
-    return { success: true, canal: 'WhatsApp' };
-  } catch (err) {
-    return { success: false, error: String((err && err.message) || err) };
-  }
-}
-
-ipcMain.handle('getWhatsAppEstado', () => getWAEstado());
-ipcMain.handle('conectarWhatsApp', () => conectarWA());
-ipcMain.handle('desconectarWhatsApp', () => desconectarWA());
-ipcMain.handle('enviarWhatsApp', (event, telefono, mensaje) => enviarWhatsApp(telefono, mensaje));
 
 // ==================== MICROSOFT OUTLOOK (GRAPH API) ====================
 const GRAPH_BASE = 'https://graph.microsoft.com/v1.0';
@@ -1682,10 +1520,6 @@ app.on('window-all-closed', async () => {
   }
   saveDbNowSync();
   if (db) db.close();
-  if (waClient) {
-    try { waClient.destroy(); } catch (e) { /* ignorar */ }
-    waClient = null;
-  }
   if (process.platform !== 'darwin') app.quit();
 });
 

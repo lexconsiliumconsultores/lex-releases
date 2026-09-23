@@ -66,9 +66,7 @@
     "@supabase/supabase-js": "^2.116.0",
     "electron-updater": "^6.3.9",
     "nodemailer": "^9.0.6",
-    "qrcode": "^1.5.4",
-    "sql.js": "^1.10.0",
-    "whatsapp-web.js": "^1.26.1-alpha.0"
+    "sql.js": "^1.10.0"
   },
   "devDependencies": {
     "electron": "^28.3.3",
