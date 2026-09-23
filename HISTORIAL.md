@@ -1,15 +1,21 @@
-# LEX — Historial de sesión (retomar 16-09-2026)
+# LEX — Historial de sesión (retomar 24-09-2026)
 
-## Estado actual (cierre del 15-09-2026)
-- **v1.6.8 publicada** (2026-09-15): actualización **auto-instalable**. Release de GitHub con 4 assets (`lex-setup-1.6.8.exe`, `.blockmap`, `lex-portable-1.6.8.exe`, `latest.yml`). Incluye: fix del `</div>` extra en `index.html` que dejaba el menú/contenido fuera del contenedor visible, y actualización que se instala automáticamente (reinicio en 15s con opción "Más tarde").
-- Última versión en desarrollo: **v1.6.8** (fix HTML + auto-instalación). Bugs/mejoras futuras → v1.6.9.
+## Estado actual (cierre del 23-09-2026)
+- **v1.6.8 publicada** (2026-09-15): actualización **auto-instalable**. Release de GitHub con 4 assets (`lex-setup-1.6.8.exe`, `.blockmap`, `lex-portable-1.6.8.exe`, `latest.yml`). Incluye: fix del `</div>` extra en `index.html` + auto-instalación (reinicio 15s con "Más tarde").
+- **v1.6.9 en curso — ELIMINACIÓN DE WHATSAPP (23-09-2026) — BUILD LISTO, RELEASE PENDIENTE**:
+  - Motivo: QR de WhatsApp nunca conectó (`whatsapp-web.js@1.26.1-alpha.0`). Usuario pidió **eliminar toda notificación WhatsApp, dejar solo Outlook**.
+  - Cambios commit `ddc24ae` + `8da9cc5`: `main.js` sin `qrcode`/`whatsapp-web.js` (eliminado bloque WA 740-900, handlers y cleanup), `renderer.js` sin listeners/waNotificarPlazo/waRecordarCobro y lógica canal WhatsApp (solo `enviarEmail` Outlook/SMTP), `index.html` sin card QR ni select canal/teléfono, `package.json` sin `qrcode`/`whatsapp-web.js`, versión bump `1.6.8→1.6.9`.
+  - `npm run dist` ejecutado OK (23-09-2026): generó `dist_instalador/lex-setup-1.6.9.exe`, `.blockmap`, `lex-portable-1.6.9.exe`. Tag `v1.6.9` pusheado a `origin`. **Pendiente mañana (24-09):** crear Release `v1.6.9` con `gh release create` (subir 3 assets + `latest.yml`) para que le llegue la actualización auto-instalable. Comando: `gh release create v1.6.9 --title "LEX 1.6.9" --notes "Eliminar WhatsApp..." dist_instalador/lex-setup-1.6.9.exe dist_instalador/lex-setup-1.6.9.exe.blockmap dist_instalador/lex-portable-1.6.9.exe dist_instalador/latest.yml`
+  - Notificaciones ahora solo por `Outlook` (Graph API) con fallback `SMTP` (`enviarEmail` `main.js:715`).
 - **App Android en curso — ARRANCÓ CON SUPABASE (fase 1 lista)**:
-  - `supabase/schema.sql` creado y pusheado: replica las 12 tablas de lex.db en PostgreSQL (id BIGINT identity, montos NUMERIC(14,2), TIMESTAMPTZ), con índices, INSERT del admin por defecto, RLS habilitado con política `app_full_access` (todas las tablas).
-  - `@supabase/supabase-js@^2.116.0` instalado en `package.json` (npm tardó ~2 min; usar background con log).
-  - **PENDIENTE para mañana:** 1) Crear proyecto en supabase.com (nombre 'lex', free tier, ~2 min), copiar desde Settings→API el **Project URL + anon key + service_role key**. 2) Ejecutar `supabase/schema.sql` en el SQL Editor. 3) Conectar main.js a Supabase en lugar de SQLite (el adaptador reemplaza `runQuery`/`queryOne`/`queryAll`; `runQuery` debe devolver `{lastId}` → `RETURNING id`). 4) Migrar datos de lex.db una vez. 5) Verificar GET/POST contra el proyecto.
-  - Comando útil para probar conexión: `node -e "const {createClient}=require('@supabase/supabase-js'); ..."` con URL+key.
-- Las pruebas de WhatsApp (QR) se hicieron con la versión **estable de `whatsapp-web.js` 1.26.1 + Chrome del sistema** (headless, sin descargar Chromium) → QR generado correctamente. La versión inestable `1.26.1-alpha.0` no arrancó el navegador, por eso se usó la estable.
-- **Nota sesión WhatsApp**: vive en `%APPDATA%\lex\whatsapp-session` (`LocalAuth`). El cliente se destruye limpiamente al salir (`window-all-closed` espera a `dbWriting`).
+  - `supabase/schema.sql` creado y pusheado: replica 12 tablas de lex.db en PostgreSQL (BIGINT identity, NUMERIC(14,2), TIMESTAMPTZ), índices, admin, RLS `app_full_access`.
+  - `@supabase/supabase-js@^2.116.0` instalado.
+  - **PENDIENTE para mañana:** 1) Crear proyecto supabase.com (nombre 'lex', free tier), copiar **Project URL + anon key + service_role**. 2) Ejecutar `supabase/schema.sql` en SQL Editor. 3) Conectar main.js a Supabase (reemplazar `runQuery`/`queryOne`/`queryAll` → `RETURNING id`). 4) Migrar lex.db una vez. 5) Verificar GET/POST.
+- WhatsApp histórico: pruebas con `whatsapp-web.js 1.26.1` estable + Chrome headless dieron QR OK, pero `1.26.1-alpha.0` falló conexión → eliminado en v1.6.9. Sesión antigua en `%APPDATA%\lex\whatsapp-session` puede borrarse.
+
+## Qué incluye v1.6.9 (en curso, 23-09-2026)
+- **Eliminar WhatsApp**: quitado QR, cliente `whatsapp-web.js`, botones 📱 en Plazos y Cuentas por Cobrar, y selectores de canal WhatsApp. Notificaciones solo por **Outlook** (Graph API + SMTP).
+- **Versión bump** `1.6.8→1.6.9` (`package.json:3`, `index.html:33/109`), build `lex-setup-1.6.9.exe` listo, tag `v1.6.9` pusheado.
 
 ## Qué incluye v1.6.8
 - **Instalación automática**: al descargarse una actualización, LEX se reinicia solo en **15 segundos** para instalarla (banner con cuenta regresiva y botón "Reiniciar ahora"). Botón "⏸ Más tarde" cancela el reinicio automático y aplica la actualización al cerrar LEX (`autoInstallOnAppQuit`). Diálogo modal de confirmación eliminado.
@@ -27,6 +33,7 @@
 - **v1.6.6**: (versión previa) notificaciones solo envío, outlet automático, recordatorio de cobro por correo.
 - **v1.6.7**: WhatsApp Web + dinero CLP (descrito arriba).
 - **v1.6.8**: fix pantalla vacía (HTML) + instalación automática de actualizaciones.
+- **v1.6.9**: eliminar WhatsApp (solo Outlook), fix QR fallido — build listo 23-09, release pendiente.
 
 ## Pendiente — APP ANDROID (EN CURSO, Supabase elegido)
 - Usuario quiere: **mismo acceso que el escritorio** + **datos 100% sincronizados** PC↔móvil. Evaluado: **Supabase** (Postgres + API + login + permisos, free) → elegido.
