@@ -4,6 +4,7 @@ const initSqlJs = require('sql.js');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 const { autoUpdater } = require('electron-updater');
+const supaAdapter = require('./supabase/dbAdapter');
 
 let mainWindow;
 let db;
@@ -304,7 +305,13 @@ function queryOne(sql, params = []) {
 function runQuery(sql, params = []) {
   db.run(sql, params);
   scheduleDbSave();
-  return { changes: db.getRowsModified(), lastId: queryOne('SELECT last_insert_rowid() as id').id };
+  const localRes = { changes: db.getRowsModified(), lastId: queryOne('SELECT last_insert_rowid() as id').id };
+  // Dual-write a Supabase en segundo plano (no bloquea UI)
+  if (supaAdapter.isEnabled()) {
+    // No await: fire-and-forget para no bloquear
+    supaAdapter.runQuery(sql, params).catch(e => console.warn('[Supabase sync runQuery falló, queda solo local]', e.message));
+  }
+  return localRes;
 }
 
 // Configuración (pares clave-valor)
@@ -1510,6 +1517,23 @@ function setupAutoUpdater() {
 
 app.whenReady().then(async () => {
   await initDatabase();
+  // Conectar a Supabase en segundo plano (sincronización PC ↔ móvil)
+  try { await supaAdapter.initSupabase(); } catch(e) { console.warn('[Supabase] init falló', e.message); }
+  // Pull periódico desde Supabase para ver cambios del móvil (cada 60s)
+  if (supaAdapter.isEnabled()) {
+    setInterval(async () => {
+      try {
+        const pool = require('./supabase/dbAdapter');
+        // Pull simple: si Supabase tiene más filas que local, avisar (sync completo se hace on-demand)
+        const remoteCasos = await pool.queryAll('SELECT COUNT(*) as c FROM casos', []);
+        const localCasos = queryOne('SELECT COUNT(*) as c FROM casos');
+        if (remoteCasos && remoteCasos[0] && localCasos && remoteCasos[0].c > localCasos.c) {
+          console.log('[Supabase sync] Detectado nuevo caso en móvil, recargando...');
+          // Aquí se podría hacer merge completo; por ahora log
+        }
+      } catch(e) {}
+    }, 60000);
+  }
   createWindow();
   setupAutoUpdater();
 });

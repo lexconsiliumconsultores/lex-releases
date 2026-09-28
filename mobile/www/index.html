@@ -1,0 +1,1205 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LEX - Sistema de Gestión Jurídica</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-logo">
+          <span class="login-icon">⚖</span>
+          <h1>LEX</h1>
+          <p>Sistema de Gestión Jurídica</p>
+        </div>
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>Usuario</label>
+            <input type="text" id="loginUsuario" placeholder="Ingresa tu usuario" required>
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="loginPassword" placeholder="Ingresa tu contraseña" required>
+          </div>
+          <div id="loginError" class="login-error" style="display: none;"></div>
+          <button type="submit" class="btn btn-primary login-btn">Iniciar Sesión</button>
+        </form>
+<div class="login-footer">
+          <p>LexConsilium Consultores</p>
+          <p class="version">v1.6.9</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container" id="appContainer" style="display: none;">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <span class="logo-icon">⚖</span>
+        <div class="logo-text">
+          <h1>LEX</h1>
+          <span class="logo-subtitle">GESTIÓN JURÍDICA</span>
+        </div>
+      </div>
+      <nav class="nav-menu">
+        <p class="menu-label">MENÚ PRINCIPAL</p>
+        <button class="nav-btn active" data-section="dashboard">
+          <span class="nav-icon">📊</span>
+          Dashboard
+        </button>
+        <button class="nav-btn" data-section="casos">
+          <span class="nav-icon">📁</span>
+          Casos
+        </button>
+        <button class="nav-btn" data-section="clientes">
+          <span class="nav-icon">👥</span>
+          Clientes
+        </button>
+        <button class="nav-btn" data-section="documentos">
+          <span class="nav-icon">📄</span>
+          Documentos
+        </button>
+        <button class="nav-btn" data-section="plazos">
+          <span class="nav-icon">📅</span>
+          Plazos
+        </button>
+        <button class="nav-btn" data-section="seguimiento">
+          <span class="nav-icon">📝</span>
+          Seguimiento
+        </button>
+        <button class="nav-btn" data-section="facturacion">
+          <span class="nav-icon">💰</span>
+          Cuentas por Cobrar
+        </button>
+        <button class="nav-btn" data-section="doclegales">
+          <span class="nav-icon">📜</span>
+          Documentos Legales
+        </button>
+        <button class="nav-btn" data-section="plazoslegales">
+          <span class="nav-icon">⏳</span>
+          Plazos Legales
+        </button>
+        <button class="nav-btn" data-section="notificaciones">
+          <span class="nav-icon">💬</span>
+          Notificaciones
+        </button>
+        <button class="nav-btn" data-section="reportes">
+          <span class="nav-icon">📈</span>
+          Reportes
+        </button>
+        <button class="nav-btn" data-section="configuracion">
+          <span class="nav-icon">⚙️</span>
+          Configuración
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="avatar">CM</div>
+          <div class="user-info">
+            <span class="user-name">LexConsilium</span>
+            <span class="user-role">ADMINISTRADOR</span>
+          </div>
+        </div>
+        <button class="btn btn-secondary logout-btn" onclick="handleLogout()" style="width: 100%; margin-top: 12px; font-size: 12px; padding: 8px;">🚪 Cerrar Sesión</button>
+        <span class="version">v1.6.9</span>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Dashboard Section -->
+      <section id="dashboard" class="section lux active">
+        <div class="lux-bg">
+          <div class="lux-orb orb-1"></div>
+          <div class="lux-orb orb-2"></div>
+          <div class="lux-orb orb-3"></div>
+        </div>
+        <div class="section-header">
+          <div class="header-titles">
+            <h1>Página Principal</h1>
+            <p>Resumen operativo del estudio</p>
+          </div>
+          <div class="header-user-actions">
+            <div class="avatar-group">
+              <div class="avatar-small">CM</div>
+              <span class="user-dropdown">LexConsilium</span>
+            </div>
+            <span class="user-role-header">Administrador</span>
+          </div>
+        </div>
+
+        <!-- KPI Cards de lujo -->
+        <div class="lux-stats">
+          <div class="lux-card tilt">
+            <div class="lux-card-glow"></div>
+            <div class="lux-card-top">
+              <span class="lux-icon">📁</span>
+              <span class="lux-chip">REGISTRADOS</span>
+            </div>
+            <span class="lux-value" id="totalCasos">0</span>
+            <span class="lux-label">TOTAL CASOS</span>
+            <div class="lux-bar"><span style="width: 70%"></span></div>
+            <a href="#" class="lux-link" onclick="navigateTo('casos')">VER CASOS →</a>
+          </div>
+          <div class="lux-card lux-card-emerald tilt">
+            <div class="lux-card-glow"></div>
+            <div class="lux-card-top">
+              <span class="lux-icon">✅</span>
+              <span class="lux-chip">EN PROCESO</span>
+            </div>
+            <span class="lux-value" id="casosActivos">0</span>
+            <span class="lux-label">CASOS ACTIVOS</span>
+            <div class="lux-bar"><span style="width: 55%"></span></div>
+            <a href="#" class="lux-link" onclick="navigateTo('casos')">VER ACTIVOS →</a>
+          </div>
+          <div class="lux-card tilt">
+            <div class="lux-card-glow"></div>
+            <div class="lux-card-top">
+              <span class="lux-icon">👥</span>
+              <span class="lux-chip">REGISTRADOS</span>
+            </div>
+            <span class="lux-value" id="totalClientes">0</span>
+            <span class="lux-label">CLIENTES</span>
+            <div class="lux-bar"><span style="width: 40%"></span></div>
+            <a href="#" class="lux-link" onclick="navigateTo('clientes')">VER CLIENTES →</a>
+          </div>
+          <div class="lux-card lux-card-dark tilt">
+            <div class="lux-card-glow"></div>
+            <div class="lux-card-top">
+              <span class="lux-icon">🏛️</span>
+            </div>
+            <div class="lux-status">
+              <span class="status-dot green"></span>
+              <span class="status-text green">ÓPTIMO</span>
+            </div>
+            <span class="lux-label">SALUD DEL ESTUDIO</span>
+            <span class="lux-subtext">RENDIMIENTO OPERATIVO</span>
+            <a href="#" class="lux-link" onclick="navigateTo('reportes')">VER ESTADÍSTICAS →</a>
+          </div>
+        </div>
+
+        <!-- Radar de Vencimientos -->
+        <div class="lux-panel">
+          <div class="lux-panel-header">
+            <div>
+              <h3>⏰ Radar de Vencimientos <span class="lux-panel-badge">48h</span></h3>
+              <p>Alertas preventivas de plazos procesales</p>
+            </div>
+          </div>
+          <div class="lux-panel-body" id="radarContent">
+            <div class="radar-empty">
+              <span class="radar-icon">📡</span>
+              <h4>Radar despejado</h4>
+              <p>No hay plazos procesales ni vencimientos pendientes para las próximas 48 horas.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agenda & Acciones Rápidas -->
+        <div class="lux-grid-2">
+          <div class="lux-panel">
+            <div class="lux-panel-header">
+              <div>
+                <h3>🕐 Agenda de Hoy</h3>
+                <p>Compromisos del día (LEX + Outlook)</p>
+              </div>
+              <span class="badge badge-activo" id="agendaCount">0 Eventos</span>
+            </div>
+            <div id="proximosPlazos" class="list-container">
+              <div class="empty-state">
+                <span class="empty-state-icon">📅</span>
+                <h4>Sin compromisos hoy</h4>
+                <p>No hay plazos o audiencias programadas para hoy.</p>
+              </div>
+            </div>
+          </div>
+          <div class="lux-panel">
+            <div class="lux-panel-header">
+              <div>
+                <h3>⚡ Acciones Rápidas</h3>
+                <p>Atajo directo a las tareas más frecuentes</p>
+              </div>
+            </div>
+            <div class="quick-actions">
+              <button class="quick-action-btn" onclick="navigateTo('clientes'); setTimeout(() => openClienteModal(), 300)">
+                <span class="qa-icon">➕</span>
+                <span class="qa-text">Registrar Cliente</span>
+                <span class="qa-arrow">→</span>
+              </button>
+              <button class="quick-action-btn" onclick="navigateTo('plazos'); setTimeout(() => openPlazoModal(), 300)">
+                <span class="qa-icon">📅</span>
+                <span class="qa-text">Programar Plazo</span>
+                <span class="qa-arrow">→</span>
+              </button>
+              <button class="quick-action-btn" onclick="navigateTo('notificaciones'); setTimeout(() => openNotifModal(), 300)">
+                <span class="qa-icon">📧</span>
+                <span class="qa-text">Enviar Notificación</span>
+                <span class="qa-arrow">→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Casos Section -->
+      <section id="casos" class="section">
+        <div class="section-header">
+          <h2>Gestión de Casos</h2>
+          <div class="header-actions">
+            <input type="text" id="searchCasos" placeholder="Buscar casos..." class="search-input">
+            <button class="btn btn-primary" onclick="openCasoModal()">+ Nuevo Caso</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>N° Caso</th>
+                <th>Título</th>
+                <th>Cliente</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Abogado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="casosTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Clientes Section -->
+      <section id="clientes" class="section">
+        <div class="section-header">
+          <h2>Base de Clientes</h2>
+          <div class="header-actions">
+            <input type="text" id="searchClientes" placeholder="Buscar clientes..." class="search-input">
+            <button class="btn btn-primary" onclick="openClienteModal()">+ Nuevo Cliente</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Cédula/RIF</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Dirección</th>
+                <th>Registro</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="clientesTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Documentos Section -->
+      <section id="documentos" class="section">
+        <div class="section-header">
+          <h2>Documentos</h2>
+          <button class="btn btn-primary" onclick="openDocumentoModal()">+ Subir Documento</button>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Caso</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="documentosTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Plazos Section -->
+      <section id="plazos" class="section">
+        <div class="section-header">
+          <h2>Calendario y Plazos</h2>
+          <button class="btn btn-primary" onclick="openPlazoModal()">+ Nuevo Plazo</button>
+        </div>
+        <div class="card" style="margin-bottom: 16px;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3>📅 Agenda (sincronizada con Outlook)</h3>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" onclick="cambiarMesCalendario(-1)">◀</button>
+              <span id="calendarioMesActual" class="badge badge-activo" style="min-width: 140px; text-align: center;">Cargando...</span>
+              <button class="btn btn-secondary btn-sm" onclick="cambiarMesCalendario(1)">▶</button>
+            </div>
+          </div>
+          <div id="calendarioAgenda" class="calendario-agenda"></div>
+          <p class="setting-note" style="font-size: 12px; margin-top: 10px;">Todos los plazos creados aquí se sincronizan automáticamente con el Calendario de Outlook.</p>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Plazo</th>
+                <th>Caso</th>
+                <th>Fecha Límite</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Notas</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="plazosTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Seguimiento Section -->
+      <section id="seguimiento" class="section">
+        <div class="section-header">
+          <h2>Seguimiento de Casos</h2>
+          <p class="setting-note">Historial de notas y avances por caso</p>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>N° Caso</th>
+                <th>Título</th>
+                <th>Última Nota</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="seguimientoTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Cuentas por Cobrar Section -->
+      <section id="facturacion" class="section">
+        <div class="section-header">
+          <h2>Cuentas por Cobrar</h2>
+          <div class="header-actions">
+            <button class="btn btn-secondary" onclick="openHistorialPagos()">📜 Historial de Pagos</button>
+            <button class="btn btn-primary" onclick="openFacturaModal()">+ Nueva Factura</button>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom: 16px;">
+          <h3>💰 Resumen de Cobros</h3>
+          <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-top: 12px;">
+            <div class="stat-card" style="background: rgba(59,130,246,0.1);">
+              <div class="stat-info"><span class="stat-label">TOTAL FACTURADO</span><span class="stat-value" id="totalFacturado" style="font-size: 22px;">0</span></div>
+            </div>
+            <div class="stat-card" style="background: rgba(239,68,68,0.1);">
+              <div class="stat-info"><span class="stat-label">SALDO PENDIENTE</span><span class="stat-value" id="saldoPendiente" style="font-size: 22px;">0</span></div>
+            </div>
+            <div class="stat-card" style="background: rgba(34,197,94,0.1);">
+              <div class="stat-info"><span class="stat-label">COBRADO</span><span class="stat-value" id="totalCobrado" style="font-size: 22px;">0</span></div>
+            </div>
+            <div class="stat-card" style="background: rgba(249,115,22,0.1);">
+              <div class="stat-info"><span class="stat-label">FACTURAS VENCIDAS</span><span class="stat-value" id="facturasVencidas" style="font-size: 22px;">0</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom: 16px;">
+          <h3>💵 Cartera por Cliente</h3>
+          <div id="carteraLista"></div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 12px;">
+          <select id="facturasFiltro" onchange="loadFacturas()">
+            <option value="todas">Todas las facturas</option>
+            <option value="pendientes">Solo pendientes</option>
+            <option value="pagadas">Solo pagadas</option>
+          </select>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>N°</th>
+                <th>Cliente</th>
+                <th>Caso</th>
+                <th>Concepto</th>
+                <th>Monto</th>
+                <th>Pagado</th>
+                <th>Saldo</th>
+                <th>Vencimiento</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="facturasTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Documentos Legales Section -->
+      <section id="doclegales" class="section">
+        <div class="section-header">
+          <h2>Generador de Documentos Legales</h2>
+          <button class="btn btn-primary" onclick="openGeneradorModal()">+ Generar Documento</button>
+        </div>
+        <div class="card" style="margin-bottom: 16px;">
+          <h3>📜 Tipos de Documentos</h3>
+          <p class="setting-note">Plantillas automáticas para redactar escritos legales con los datos del cliente y caso.</p>
+          <div class="type-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px;">
+            <div class="type-card" onclick="openGeneradorModal('demanda')" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 16px; cursor: pointer; text-align: center;">
+              <span style="font-size: 32px;">⚖️</span>
+              <h4 style="margin-top: 8px;">Demanda</h4>
+              <p style="font-size: 12px; color: #94a3b8;">Redacción de escritos de demanda</p>
+            </div>
+            <div class="type-card" onclick="openGeneradorModal('poder')" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); border-radius: 12px; padding: 16px; cursor: pointer; text-align: center;">
+              <span style="font-size: 32px;">🪪</span>
+              <h4 style="margin-top: 8px;">Poder</h4>
+              <p style="font-size: 12px; color: #94a3b8;">Poder de representación legal</p>
+            </div>
+            <div class="type-card" onclick="openGeneradorModal('contrato')" style="background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.3); border-radius: 12px; padding: 16px; cursor: pointer; text-align: center;">
+              <span style="font-size: 32px;">📄</span>
+              <h4 style="margin-top: 8px;">Contrato</h4>
+              <p style="font-size: 12px; color: #94a3b8;">Contrato de servicios profesionales</p>
+            </div>
+            <div class="type-card" onclick="openGeneradorModal('inspeccion')" style="background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.3); border-radius: 12px; padding: 16px; cursor: pointer; text-align: center;">
+              <span style="font-size: 32px;">🔍</span>
+              <h4 style="margin-top: 8px;">Inspección</h4>
+              <p style="font-size: 12px; color: #94a3b8;">Solicitud de inspección judicial</p>
+            </div>
+            <div class="type-card" onclick="openGeneradorModal('testimonial')" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 16px; cursor: pointer; text-align: center;">
+              <span style="font-size: 32px;">👥</span>
+              <h4 style="margin-top: 8px;">Pruebas</h4>
+              <p style="font-size: 12px; color: #94a3b8;">Solicitud de pruebas testimoniales</p>
+            </div>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Documento</th>
+                <th>Tipo</th>
+                <th>Caso</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="docLegalesTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Plazos Legales Section -->
+      <section id="plazoslegales" class="section">
+        <div class="section-header">
+          <h2>Calendario de Plazos Legales</h2>
+        </div>
+        <div class="card" style="margin-bottom: 16px;">
+          <h3>⏳ Guía de Plazos Procesales</h3>
+          <p class="setting-note">Plazos establecidos en la legislación venezolana por materia. Selecciona un plazo para agregarlo al calendario de un caso.</p>
+          <div class="form-row" style="margin-top: 8px;">
+            <div class="form-group">
+              <label>Materia</label>
+              <select id="plazosLegalMateria" onchange="renderPlazosLegales()">
+                <option value="civil">Civil</option>
+                <option value="penal">Penal</option>
+                <option value="laboral">Laboral</option>
+                <option value="administrativo">Contencioso Administrativo</option>
+                <option value="mercantil">Mercantil</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Caso (para agregar)</label>
+              <select id="plazoLegalCaso"><option value="">Seleccionar caso...</option></select>
+            </div>
+          </div>
+          <div id="plazosLegalesList" class="list-container" style="margin-top: 12px;"></div>
+        </div>
+      </section>
+
+      <!-- Notificaciones Section -->
+      <section id="notificaciones" class="section">
+        <div class="section-header">
+          <h2>Notificaciones por Correo</h2>
+          <div class="header-actions">
+            <button class="btn btn-primary" onclick="openNotifModal()">+ Nueva Notificación</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Cliente</th>
+                <th>Caso</th>
+                <th>Email</th>
+                <th>Mensaje</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="notificacionesTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Reportes Section -->
+      <section id="reportes" class="section">
+        <div class="section-header">
+          <h2>Reportes y Estadísticas</h2>
+        </div>
+        <div class="reportes-grid">
+          <div class="card">
+            <h3>Distribución por Tipo</h3>
+            <div id="reporteTipo" class="reporte-content"></div>
+          </div>
+          <div class="card">
+            <h3>Distribución por Estado</h3>
+            <div id="reporteEstado" class="reporte-content"></div>
+          </div>
+          <div class="card full-width">
+            <h3>Resumen General</h3>
+            <div id="reporteResumen" class="reporte-content"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Configuración Section -->
+      <section id="configuracion" class="section">
+        <div class="section-header">
+          <h2>Configuración del Sistema</h2>
+        </div>
+        <div id="adminUsersSection" class="card" style="max-width: 640px; margin-top: 16px;">
+          <h3>Gestión de Usuarios</h3>
+          <p class="setting-note">Administra los usuarios del sistema y sus permisos.</p>
+          <div class="table-container" style="margin-top: 16px;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Nombre</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="usuariosTable"></tbody>
+            </table>
+          </div>
+          <div class="form-actions" style="margin-top: 16px;">
+            <button class="btn btn-primary" onclick="openUsuarioModal()">+ Nuevo Usuario</button>
+          </div>
+        </div>
+        <div class="card" style="max-width: 640px; margin-top: 16px;">
+          <h3>Cerrar Sesión</h3>
+          <p class="setting-note">Cierra tu sesión actual y vuelve a la pantalla de login.</p>
+          <div class="form-actions" style="padding: 0; border: none;">
+            <button class="btn btn-secondary" onclick="handleLogout()">Cerrar Sesión</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Caso -->
+  <div id="casoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="casoModalTitle">Nuevo Caso</h3>
+        <button class="modal-close" onclick="closeModal('casoModal')">&times;</button>
+      </div>
+      <form id="casoForm" onsubmit="saveCaso(event)">
+        <input type="hidden" id="casoId">
+        <div class="form-group">
+          <label>Número de Caso (Automático)</label>
+          <input type="text" id="casoNumero" readonly>
+        </div>
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" id="casoTitulo" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cliente</label>
+            <select id="casoCliente" required></select>
+          </div>
+          <div class="form-group">
+            <label>Tipo</label>
+            <select id="casoTipo" required>
+              <option value="">Seleccionar...</option>
+              <option value="Civil">Civil</option>
+              <option value="Penal">Penal</option>
+              <option value="Laboral">Laboral</option>
+              <option value="Mercantil">Mercantil</option>
+              <option value="Familia">Familia</option>
+              <option value="Administrativo">Administrativo</option>
+              <option value="Constitucional">Constitucional</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="casoEstado">
+              <option value="Activo">Activo</option>
+              <option value="En Proceso">En Proceso</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Cerrado">Cerrado</option>
+              <option value="Archivado">Archivado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Abogado</label>
+            <input type="text" id="casoAbogado">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea id="casoDescripcion" rows="3"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('casoModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Cliente -->
+  <div id="clienteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="clienteModalTitle">Nuevo Cliente</h3>
+        <button class="modal-close" onclick="closeModal('clienteModal')">&times;</button>
+      </div>
+      <form id="clienteForm" onsubmit="saveCliente(event)">
+        <input type="hidden" id="clienteId">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre / Razón Social</label>
+            <input type="text" id="clienteNombre" required>
+          </div>
+          <div class="form-group">
+            <label>Cédula / RIF</label>
+            <input type="text" id="clienteCedula">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" id="clienteTelefono">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="clienteEmail">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Dirección</label>
+          <textarea id="clienteDireccion" rows="2"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('clienteModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Documento -->
+  <div id="documentoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Subir Documento</h3>
+        <button class="modal-close" onclick="closeModal('documentoModal')">&times;</button>
+      </div>
+      <form id="documentoForm" onsubmit="saveDocumento(event)">
+        <div class="form-group">
+          <label>Caso</label>
+          <select id="docCaso" required></select>
+        </div>
+        <div class="form-group">
+          <label>Nombre del Documento</label>
+          <input type="text" id="docNombre" required>
+        </div>
+        <div class="form-group">
+          <label>Tipo</label>
+          <select id="docTipo">
+            <option value="Escrito">Escrito</option>
+            <option value="Prueba">Prueba</option>
+            <option value="Contrato">Contrato</option>
+            <option value="Poder">Poder</option>
+            <option value="Sentencia">Sentencia</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Archivo</label>
+          <div class="file-input">
+            <input type="text" id="docRuta" readonly placeholder="Seleccionar archivo...">
+            <button type="button" class="btn btn-secondary" onclick="selectFile()">Examinar</button>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('documentoModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Visor Interno de Documentos -->
+  <div id="visorDocModal" class="modal">
+    <div class="modal-content" style="width: 900px; max-width: 94vw; height: 86vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <h3 id="visorDocTitulo">Visor de Documento</h3>
+        <button class="modal-close" onclick="closeModal('visorDocModal')">&times;</button>
+      </div>
+      <div id="visorDocContenido" style="flex: 1; overflow: auto; background: #0f172a; border-radius: 8px; margin: 0 24px 24px;"></div>
+    </div>
+  </div>
+
+  <!-- Modal Plazo -->
+  <div id="plazoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="plazoModalTitle">Nuevo Plazo</h3>
+        <button class="modal-close" onclick="closeModal('plazoModal')">&times;</button>
+      </div>
+      <form id="plazoForm" onsubmit="savePlazo(event)">
+        <input type="hidden" id="plazoId">
+        <div class="form-group">
+          <label>Caso</label>
+          <select id="plazoCaso" required></select>
+        </div>
+        <div class="form-group">
+          <label>Título del Plazo</label>
+          <input type="text" id="plazoTitulo" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Fecha Límite</label>
+            <input type="date" id="plazoFecha" required>
+          </div>
+          <div class="form-group">
+            <label>Hora</label>
+            <input type="time" id="plazoHora">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="plazoEstado">
+            <option value="Pendiente">Pendiente</option>
+            <option value="En Proceso">En Proceso</option>
+            <option value="Completado">Completado</option>
+            <option value="Vencido">Vencido</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Notas</label>
+          <textarea id="plazoNotas" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="setting-checkbox">
+            <input type="checkbox" id="plazoNotificar">
+            📧 Notificar al cliente por correo al agendar
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('plazoModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Notificación por Correo -->
+  <div id="notifModal" class="modal">
+    <div class="modal-content notif-modal">
+      <div class="modal-header">
+        <h3>Enviar Notificación por Correo</h3>
+        <button class="modal-close" onclick="closeModal('notifModal')">&times;</button>
+      </div>
+      <form id="notifForm" onsubmit="sendNotificacion(event)">
+        <div class="form-group">
+          <label>Tipo de Notificación</label>
+          <select id="notifTipo" onchange="plantillaNotificacion()">
+            <option value="Personalizado">Personalizado</option>
+            <option value="Agendamiento">Agendamiento / Cita</option>
+            <option value="Audiencia">Audiencia / Fecha Judicial</option>
+            <option value="Plazo">Vencimiento de Plazo</option>
+            <option value="Estado">Estado del Caso</option>
+            <option value="Solicitud">Solicitud de Documentos</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Caso</label>
+            <select id="notifCaso" onchange="cargarClienteCaso()"></select>
+          </div>
+          <div class="form-group">
+            <label>Cliente</label>
+            <select id="notifCliente" onchange="cargarEmailCliente()"></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email del Cliente</label>
+          <input type="email" id="notifEmail" placeholder="cliente@correo.com" required>
+        </div>
+        <div class="form-group">
+          <label>Mensaje</label>
+          <textarea id="notifMensaje" rows="6" required placeholder="Escribe o selecciona una plantilla..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('notifModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Enviar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Ver Notificación -->
+  <div id="verNotificacionModal" class="modal">
+    <div class="modal-content" style="width: 640px; max-width: 94vw;">
+      <div class="modal-header">
+        <h3 id="verNotifTitulo">Notificación</h3>
+        <button class="modal-close" onclick="closeModal('verNotificacionModal')">&times;</button>
+      </div>
+      <div id="verNotifDetalle" class="setting-note" style="margin: 16px 24px 0; padding-bottom: 10px; border-bottom: 1px solid rgba(59,130,246,0.12);"></div>
+      <div id="verNotifMensaje" style="margin: 16px 24px 24px; padding: 16px; background: #0f172a; border-radius: 8px; color: #e2e8f0; white-space: pre-wrap; word-break: break-word; font-size: 13px; line-height: 1.6; max-height: 60vh; overflow: auto;"></div>
+    </div>
+  </div>
+
+  <!-- Chatbot IA -->
+  <div class="chatbot-float" id="chatbotFloat" onclick="toggleChat()">
+    <span class="chatbot-fab" id="chatbotFab">🤖</span>
+  </div>
+
+  <div class="chat-window" id="chatWindow">
+<div class="chat-header">
+        <div class="chat-header-info">
+          <span class="chat-avatar">🤖</span>
+          <div>
+            <h3>LexAI</h3>
+            <span class="chat-status">● En línea · Asistente Jurídico</span>
+          </div>
+        </div>
+        <div class="chat-header-actions">
+          <button class="chat-header-btn" onclick="nuevaConversacion()" title="Nueva conversación">➕</button>
+          <button class="chat-header-btn" onclick="abrirHistorialConversaciones()" title="Historial de conversaciones">📚</button>
+          <button class="chat-header-btn" onclick="openIAConfig()" title="Configuración de LexAI">⚙️</button>
+          <button class="chat-close" onclick="toggleChat()">✕</button>
+        </div>
+      </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-msg bot">
+        <span>🤖</span>
+        <div class="chat-bubble">¡Hola! Soy LexAI, tu asistente jurídico. Pregúntame sobre derechos, plazos procesales, redacción de escritos o cualquier tema legal. 🇻🇪⚖️</div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chatInput" placeholder="Escribe tu consulta jurídica..." onkeypress="if(event.key==='Enter')sendChat()">
+      <button class="chat-send" onclick="sendChat()">➤</button>
+    </div>
+  </div>
+
+  <!-- Modal Seguimiento -->
+  <div id="seguimientoModal" class="modal">
+    <div class="modal-content" style="width: 700px;">
+      <div class="modal-header">
+        <h3 id="seguimientoCasoTitle">Seguimiento</h3>
+        <button class="modal-close" onclick="closeModal('seguimientoModal')">&times;</button>
+      </div>
+      <div class="seguimiento-notas" id="seguimientoNotas" style="max-height: 300px; overflow-y: auto; padding: 20px 24px; border-bottom: 1px solid rgba(59,130,246,0.15);"></div>
+      <form id="seguimientoForm" onsubmit="saveSeguimiento(event)">
+        <input type="hidden" id="seguimientoCasoId">
+        <div class="form-group" style="margin-top: 18px;">
+          <label>Nueva Nota</label>
+          <textarea id="seguimientoNota" rows="3" required placeholder="Escribe un avance..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('seguimientoModal')">Cerrar</button>
+          <button type="submit" class="btn btn-primary">Agregar Nota</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Factura -->
+  <div id="facturaModal" class="modal">
+    <div class="modal-content" style="width: 560px;">
+      <div class="modal-header">
+        <h3 id="facturaModalTitle">Nueva Factura</h3>
+        <button class="modal-close" onclick="closeModal('facturaModal')">&times;</button>
+      </div>
+      <form id="facturaForm" onsubmit="saveFactura(event)">
+        <input type="hidden" id="facturaId">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Caso</label>
+            <select id="facturaCaso" onchange="autofillFacturaCliente()"></select>
+          </div>
+          <div class="form-group">
+            <label>Cliente</label>
+            <select id="facturaCliente" required></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Concepto</label>
+          <input type="text" id="facturaConcepto" required placeholder="Honorarios profesionales por...">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Monto (CLP)</label>
+            <input type="text" id="facturaMonto" inputmode="numeric" required placeholder="0" oninput="formatearMontoCLP(this)">
+          </div>
+          <div class="form-group">
+            <label>Fecha de Vencimiento</label>
+            <input type="date" id="facturaVencimiento">
+          </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="facturaEstado">
+              <option value="Pendiente">Pendiente</option>
+              <option value="Parcial">Parcial</option>
+              <option value="Pagada">Pagada</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('facturaModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="facturaSubmitBtn">Crear Factura</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Pagos -->
+  <div id="pagoModal" class="modal">
+    <div class="modal-content" style="width: 700px;">
+      <div class="modal-header">
+        <h3>Registrar Pago</h3>
+        <button class="modal-close" onclick="closeModal('pagoModal')">&times;</button>
+      </div>
+      <p class="setting-note" id="pagoFacturaInfo" style="margin: 0 24px 16px;"></p>
+      <div id="pagosLista" style="max-height: 200px; overflow-y: auto; padding: 0 24px; border-bottom: 1px solid rgba(59,130,246,0.15);"></div>
+      <form id="pagoForm" onsubmit="savePago(event)">
+        <input type="hidden" id="pagoFacturaId">
+        <div class="form-row" style="margin-top: 16px;">
+          <div class="form-group">
+            <label>Monto del Pago (CLP)</label>
+            <input type="text" id="pagoMonto" inputmode="numeric" required placeholder="0" oninput="formatearMontoCLP(this)">
+          </div>
+          <div class="form-group">
+            <label>Método</label>
+            <select id="pagoMetodo">
+              <option value="Efectivo">Efectivo</option>
+              <option value="Transferencia">Transferencia</option>
+              <option value="Punto de Venta">Punto de Venta</option>
+              <option value="Depósito">Depósito</option>
+              <option value="Cheque">Cheque</option>
+              <option value="Zelle">Zelle</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Referencia</label>
+          <input type="text" id="pagoReferencia" placeholder="N° de referencia/transacción">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('pagoModal')">Cerrar</button>
+          <button type="submit" class="btn btn-primary">Registrar Pago</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Historial Global de Pagos -->
+  <div id="historialPagosModal" class="modal">
+    <div class="modal-content" style="width: 720px;">
+      <div class="modal-header">
+        <h3>📜 Historial Global de Pagos</h3>
+        <button class="modal-close" onclick="closeModal('historialPagosModal')">&times;</button>
+      </div>
+      <div class="table-container" style="max-height: 60vh; overflow-y: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Factura</th>
+              <th>Cliente</th>
+              <th>Fecha</th>
+              <th>Método</th>
+              <th>Referencia</th>
+              <th>Monto</th>
+            </tr>
+          </thead>
+          <tbody id="historialPagosTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Generador Documentos Legales -->
+  <div id="generadorModal" class="modal">
+    <div class="modal-content" style="width: 760px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h3 id="generadorModalTitle">Generar Documento Legal</h3>
+        <button class="modal-close" onclick="closeModal('generadorModal')">&times;</button>
+      </div>
+      <form id="generadorForm" onsubmit="generarDocLegal(event)">
+        <input type="hidden" id="genTipo">
+        <input type="hidden" id="genCasoId">
+        <div class="form-row" style="margin-top: 16px;">
+          <div class="form-group">
+            <label>Tipo de Documento</label>
+            <select id="genTipoSelect" onchange="selectTipoGenerador()">
+              <option value="demanda">Demanda</option>
+              <option value="poder">Poder</option>
+              <option value="contrato">Contrato de Servicios</option>
+              <option value="inspeccion">Inspección Judicial</option>
+              <option value="testimonial">Pruebas / Exhorto</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Caso</label>
+            <select id="genCasoSelect" onchange="autoFillGenerador()"></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Abogado (poder/contrato)</label>
+            <input type="text" id="genAbogado" placeholder="Nombre del abogado">
+          </div>
+          <div class="form-group">
+            <label>N° IPSA</label>
+            <input type="text" id="genIpsa" placeholder="N° de inscripción">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Contraparte (demanda)</label>
+            <input type="text" id="genContraparte" placeholder="Nombre del demandado">
+          </div>
+          <div class="form-group">
+            <label>Tribunal</label>
+            <input type="text" id="genTribunal" placeholder="Ej: Juzgado Primero de Primera Instancia">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Objeto / Asunto</label>
+          <textarea id="genObjeto" rows="2" placeholder="Descripción breve del asunto"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Documento Generado</label>
+          <textarea id="genContenido" rows="16" style="font-family: monospace; font-size: 12px; white-space: pre-wrap;"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('generadorModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Generar y Guardar Documento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Visualizar Documento Generado -->
+  <div id="verDocModal" class="modal">
+    <div class="modal-content" style="width: 760px; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <h3 id="verDocTitulo">Documento</h3>
+        <button class="modal-close" onclick="closeModal('verDocModal')">&times;</button>
+      </div>
+      <textarea id="verDocContenido" spellcheck="false" style="flex: 1; margin: 16px 24px 0; min-height: 400px; font-family: monospace; font-size: 13px; white-space: pre-wrap; resize: none;"></textarea>
+      <div class="form-actions" style="margin: 16px 24px;">
+        <button type="button" class="btn btn-secondary" onclick="imprimirDocumento()">🖨️ Imprimir</button>
+        <button type="button" class="btn btn-secondary" onclick="copiarDocumento()">📋 Copiar</button>
+        <button type="button" class="btn btn-primary" onclick="guardarDocModal()">💾 Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Configuración IA -->
+  <div id="iaConfigModal" class="modal">
+    <div class="modal-content" style="width: 560px;">
+      <div class="modal-header">
+        <h3>Configuración de IA (Gemini)</h3>
+        <button class="modal-close" onclick="closeModal('iaConfigModal')">&times;</button>
+      </div>
+      <form id="iaConfigForm" onsubmit="saveIAConfig(event)">
+        <div class="form-group" style="margin-top: 20px;">
+          <label>API Key de Google Gemini</label>
+          <input type="password" id="iaApiKey" placeholder="AIzaSy..." required>
+          <p class="setting-note" style="font-size: 12px; margin-top: 6px;">Consíguela gratis en <strong>ai.google.dev</strong></p>
+        </div>
+        <div class="form-group">
+          <label>Modelo</label>
+          <select id="iaModelo">
+            <option value="gemini-3.6-flash">Gemini 3.6 Flash (Rápido - recomendado)</option>
+            <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro (Preciso)</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('iaConfigModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar y Activar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Usuario -->
+  <div id="usuarioModal" class="modal">
+    <div class="modal-content" style="width: 500px;">
+      <div class="modal-header">
+        <h3 id="usuarioModalTitle">Nuevo Usuario</h3>
+        <button class="modal-close" onclick="closeModal('usuarioModal')">&times;</button>
+      </div>
+      <form id="usuarioForm" onsubmit="saveUsuario(event)">
+        <input type="hidden" id="usuarioId">
+        <div class="form-group">
+          <label>Nombre de Usuario</label>
+          <input type="text" id="usuarioUsuario" required placeholder="Ej: juan.lopez">
+        </div>
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input type="text" id="usuarioNombre" required placeholder="Ej: Juan López">
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="usuarioPassword" placeholder="Dejar vacío para no cambiar">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Rol</label>
+            <select id="usuarioRol" required>
+              <option value="asistente">Asistente</option>
+              <option value="abogado">Abogado</option>
+              <option value="administrador">Administrador</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="usuarioActivo" required>
+              <option value="1">Activo</option>
+              <option value="0">Inactivo</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('usuarioModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="js/ipc-shim.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>

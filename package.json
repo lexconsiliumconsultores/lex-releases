@@ -62,10 +62,14 @@
     }
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.116.0",
     "electron-updater": "^6.3.9",
     "nodemailer": "^9.0.6",
+    "pg": "^8.23.0",
     "sql.js": "^1.10.0"
   },
   "devDependencies": {

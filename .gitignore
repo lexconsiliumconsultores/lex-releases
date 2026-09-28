@@ -20,6 +20,9 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# Editor
-.vscode/
-.idea/
+# Supabase secretos (no subir a GitHub)
+supabase/supabase-config.json
+supabase/*config*.json
+.env
+supabase/test-connection.js
+supabase/run-schema*.js
