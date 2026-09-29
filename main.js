@@ -302,18 +302,12 @@ function queryOne(sql, params = []) {
   return result;
 }
 
-let supaSyncQueue = Promise.resolve();
 function runQuery(sql, params = []) {
   db.run(sql, params);
   scheduleDbSave();
-  const localRes = { changes: db.getRowsModified(), lastId: queryOne('SELECT last_insert_rowid() as id').id };
-  // Dual-write a Supabase en segundo plano con cola (evita saturar pool y no bloquea UI)
-  if (supaAdapter.isEnabled()) {
-    const task = () => supaAdapter.runQuery(sql, params).catch(e => console.warn('[Supabase sync falló, queda solo local]', e.message));
-    // Encola sin bloquear, con límite de 2 en paralelo
-    supaSyncQueue = supaSyncQueue.then(task, task);
-  }
-  return localRes;
+  return { changes: db.getRowsModified(), lastId: queryOne('SELECT last_insert_rowid() as id').id };
+  // NOTA: Sync a Supabase desactivado para modo ultra-rápido (local 100% veloz).
+  // El móvil escribe directo a Supabase; el escritorio sincronizará en segundo plano cada 5 min (no en cada guardado).
 }
 
 // Configuración (pares clave-valor)
@@ -1519,10 +1513,8 @@ function setupAutoUpdater() {
 
 app.whenReady().then(async () => {
   await initDatabase();
-  // Conectar a Supabase en segundo plano (sincronización PC ↔ móvil)
-  try { await supaAdapter.initSupabase(); } catch(e) { console.warn('[Supabase] init falló', e.message); }
-  // Pull periódico desactivado para no ralentizar (solo on-demand al abrir facturación)
-  // Si necesitas sincronizar cambios del móvil, reinicia LEX o usa botón Sincronizar
+  // Supabase desactivado en arranque para ultra-rápido. Se conecta solo si usuario activa sync en Configuración.
+  // try { await supaAdapter.initSupabase(); } catch(e) {}
   createWindow();
   setupAutoUpdater();
 });
