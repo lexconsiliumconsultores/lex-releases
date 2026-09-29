@@ -1,6 +1,10 @@
-# LEX — Historial de sesión (cierre 28-09-2026)
+# LEX — Historial de sesión (cierre 29-09-2026 — pendiente 1.7.1)
 
-## Estado actual (cierre del 28-09-2026) ✅
+## Estado actual (cierre del 29-09-2026) ⏳ 1.7.1 pendiente build
+- **v1.7.0 PUBLICADA pero con bug JS al iniciar** (29-09 04:04): `supabase/dbAdapter.js` no estaba en `build.files` de `package.json:20`, el exe instalado arrojaba `Cannot find module` al iniciar. Con `npm start` sí funciona. Fix aplicado en `v1.7.1` (commit `9964379`): añadido `supabase/**/*` a `files`, bump `1.7.0→1.7.1`, tag `v1.7.1` pusheado.
+- **v1.7.1 BUILD PENDIENTE (29-09 01:00-04:00)**: `npm run dist` se pega en `signing with signtool.exe` (portable) por `pg`+`sharp`+`capacitor` (413 paquetes). Intento con `signAndEditExecutable:false` y `forceCodeSigning:false` aún firma `__uninstaller`/`portable`. Último intento proceso `2680` colgado. **Mañana:** build limpio `npx electron-builder --win --publish never` (6-7 min) y `gh release create v1.7.1` con 4 assets. Workaround inmediato: `npm start` en `C:\...\LEX` ya abre ultra rápido sin freeze.
+- **Fix freeze ultra rápido ya en código (master `ac1c44c`)**: `main.js:305` dual-write Supabase desactivado (antes congelaba 3-5s tras cada guardado, pool max 5 + poll 60s). Ahora local 100% veloz. `renderer.js:1647` `formatearMontoCLP` preserva cursor, `main.js:949` `updateFactura` guarda `caso/cliente/fecha` (antes no dejaba editar $$ en Cuenta por Pagar).
+- **v1.6.9/1.7.0 publicadas OK**: 1.6.9 y 1.7.0 en https://github.com/lexconsiliumconsultores/lex/releases (1.7.0 con bug, 1.7.1 lo corrige).
 - **v1.6.9 PUBLICADA (28-09-2026)**: `gh release create v1.6.9` ejecutado con 4 assets (`lex-setup-1.6.9.exe` 82MB, `.blockmap`, `lex-portable-1.6.9.exe`, `latest.yml`). URL: https://github.com/lexconsiliumconsultores/lex/releases/tag/v1.6.9 — auto-actualización operativa (15s + "Más tarde").
 - **v1.6.9 ELIMINACIÓN DE WHATSAPP (23-09-2026) — COMPLETADA**:
   - Motivo: QR de WhatsApp nunca conectó (`whatsapp-web.js@1.26.1-alpha.0`). Usuario pidió **eliminar toda notificación WhatsApp, dejar solo Outlook**.
@@ -35,18 +39,25 @@
 - **v1.6.8**: fix pantalla vacía (HTML) + instalación automática de actualizaciones.
 - **v1.6.9**: eliminar WhatsApp (solo Outlook), fix QR fallido — build 23-09, **publicada 28-09** con auto-actualización.
 
-## APP ANDROID — FASE 2-3 COMPLETADA (28-09-2026)
-- **Sincronización PC↔móvil 100% operativa vía Supabase** (`vfxbnuhacqvyebualfhv.supabase.co`, pooler sa-east-1, RLS `app_full_access`).
-- **Móvil Capacitor scaffolded:** `mobile/` con `@capacitor/core@8.5.2` + `@capacitor/android`, `capacitor.config.json` (`com.cmr.lex.mobile`, webDir `www`), `mobile/www` con `index.html`+`styles.css`+`renderer.js` (patch `window.ipcRenderer`) + `js/ipc-shim.js` (30+ handlers Supabase: login, casos, clientes, plazos, facturas, pagos, estadísticas, notificaciones, IA Gemini) + CDN `supabase-js` UMD. `npx cap add android` OK, `npx cap sync` OK, proyecto Gradle en `mobile/android`.
+## APP ANDROID — FASE 2-3 COMPLETADA (28-09) + PENDIENTE 29-09
+- **Sincronización PC↔móvil 100% operativa vía Supabase** (`vfxbnuhacqvyebualfhv.supabase.co`, pooler sa-east-1, RLS `app_full_access`), pero **desktop sync desactivado temporalmente** (`main.js:305` ultra rápido) para no congelar. Móvil escribe directo a Supabase, desktop local. **Pendiente mañana:** reactivar sync en 2º plano con cola debounce + botón Sincronizar manual (no en cada `runQuery`).
+- **Móvil Capacitor:** `mobile/` scaffold OK, `npx cap add android` OK, `assembleDebug` OK 28-09 (4.1MB `app-debug.apk` 22:15). **Pendiente:** `assembleRelease` firmado + subir a Release o Play Store, probar en dispositivo físico.
 - Arquitectura por fases:
   1. ✅ **Hecho:** `supabase/schema.sql` + `@supabase/supabase-js` + `pg@8.23.0`
-  2. ✅ **Hecho 28-09:** Proyecto Supabase creado, schema ejecutado (12 tablas), `main.js` + `supabase/dbAdapter.js` dual-write, migración `lex.db` → Supabase verificada.
-  3. ✅ **Hecho 28-09:** App Android Capacitor `mobile/` con shim `ipcRenderer` → Supabase directo (sin Electron), reutiliza UI web adaptada a táctil.
+  2. ✅ **Hecho 28-09:** Proyecto Supabase creado, schema ejecutado (12 tablas), migración `lex.db` → Supabase verificada.
+  3. ✅ **Hecho 28-09:** App Android Capacitor `mobile/` con shim `ipcRenderer` → Supabase directo.
   4. ✅ Login por usuario/rol ya funciona en ambas (tabla `usuarios` compartida).
-  5. [ ] Pendiente: `mobile/android/gradlew assembleDebug` (gradle build APK), instalar en dispositivo, notificaciones push.
+  5. [ ] Pendiente mañana: reactivar sync desktop no bloqueante + APK release firmado.
+
+## Pendiente mañana (30-09) — checklist ultra rápido
+1. [ ] Build limpio `v1.7.1` (`npx electron-builder --win --publish never` 6 min, con `supabase` en files) y `gh release create v1.7.1` (4 assets) — para que exe instalado no arroje JS y llegue ultra rápido
+2. [ ] Probar Cuenta por Pagar: editar monto con cursor preservado + verificar no se pega tras guardar (ya en `npm start`)
+3. [ ] Reactivar Supabase sync desktop en 2º plano (no por cada guardado) + botón Sincronizar
+4. [ ] APK `assembleRelease` firmado + probar en móvil
 
 ## Comandos útiles
-- Build instaladores: `npm run dist`
-- Publicación manual (tras tag): `gh release create vX.Y.Z --repo lexconsiliumconsultores/lex --title "LEX X.Y.Z" --notes "..." "<abs>\lex-setup-X.Y.Z.exe" "<abs>\lex-setup-X.Y.Z.exe.blockmap" "<abs>\lex-portable-X.Y.Z.exe" "<abs>\latest.yml"`
+- Build instaladores: `npm run dist` (6-7 min, si se pega en signing usa `forceCodeSigning:false`)
+- Publicación: `gh release create vX.Y.Z --repo lexconsiliumconsultores/lex --title "LEX X.Y.Z" --notes "..." "dist_instalador/lex-setup-X.Y.Z.exe" "dist_instalador/lex-setup-X.Y.Z.exe.blockmap" "dist_instalador/lex-portable-X.Y.Z.exe" "dist_instalador/latest.yml"`
 - Validar JS: `node --check main.js` y `node --check renderer.js`
-- BD local: `%APPDATA%\lex\lex.db`
+- BD local: `%APPDATA%\lex\lex.db` — Supabase: `https://vfxbnuhacqvyebualfhv.supabase.co`
+- Workaround hoy: `npm start` en `C:\...\LEX` abre sin error y sin freeze

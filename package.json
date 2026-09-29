@@ -12,6 +12,7 @@
   "author": "LexConsilium Consultores",
   "license": "ISC",
   "build": {
+    "forceCodeSigning": false,
     "appId": "com.cmr.lex",
     "productName": "LEX - Gestión Jurídica",
     "directories": {
@@ -34,6 +35,7 @@
       "releaseType": "release"
     },
     "win": {
+      "signAndEditExecutable": false,
       "artifactName": "lex-setup-${version}.${ext}",
       "target": [
         {
