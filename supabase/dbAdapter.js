@@ -26,8 +26,10 @@ async function initSupabase() {
     user: `postgres.${cfg.projectRef}`,
     password: cfg.dbPassword,
     ssl: { rejectUnauthorized: false },
-    max: 5,
-    idleTimeoutMillis: 30000
+    max: 2,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 3000,
+    query_timeout: 3000
   });
   try {
     const c = await pool.connect();

@@ -117,7 +117,7 @@
       const {data,error}=await supabase.from('facturas').insert({numero:nextNum,caso_id:factura.caso_id||null,cliente_id:factura.cliente_id||null,concepto:factura.concepto,monto:factura.monto||0,estado:factura.estado||'Pendiente',fecha_vencimiento:factura.fecha_vencimiento||null}).select('id').single();
       if(error) return {success:false,error:error.message}; return {changes:1,lastId:data.id};
     },
-    updateFactura: async (factura) => { const {error}=await supabase.from('facturas').update({concepto:factura.concepto,monto:factura.monto,estado:factura.estado}).eq('id',factura.id); return error?{success:false,error:error.message}:{success:true}; },
+    updateFactura: async (factura) => { const {error}=await supabase.from('facturas').update({caso_id:factura.caso_id||null,cliente_id:factura.cliente_id||null,concepto:factura.concepto,monto:factura.monto,estado:factura.estado,fecha_vencimiento:factura.fecha_vencimiento||null}).eq('id',factura.id); return error?{success:false,error:error.message}:{success:true}; },
     deleteFactura: async (id) => { await supabase.from('pagos').delete().eq('factura_id',id); const {error}=await supabase.from('facturas').delete().eq('id',id); return error?{success:false,error:error.message}:{success:true}; },
     getPagos: async (facturaId) => { const {data}=await supabase.from('pagos').select('*, facturas(numero)').eq('factura_id',facturaId).order('fecha',{ascending:false}); return (data||[]).map(p=>({...p,factura_num:p.facturas?.numero||''})); },
     getPagosTodos: async () => {

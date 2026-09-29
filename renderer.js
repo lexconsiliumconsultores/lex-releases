@@ -1646,8 +1646,16 @@ const selectClientesRegistrados = new Set();
 
 function formatearMontoCLP(input) {
   if (!input) return;
+  const start = input.selectionStart || 0;
+  const oldLen = input.value.length;
   const soloDigitos = String(input.value).replace(/\D/g, '').replace(/^0+(?=\d)/, '');
-  input.value = soloDigitos ? Number(soloDigitos).toLocaleString('es-CL') : '';
+  const formatted = soloDigitos ? Number(soloDigitos).toLocaleString('es-CL') : '';
+  input.value = formatted;
+  // Preservar cursor (evita salto al final que impedía editar)
+  const newLen = formatted.length;
+  const diff = newLen - oldLen;
+  const newPos = Math.max(0, start + diff);
+  try { input.setSelectionRange(newPos, newPos); } catch {}
 }
 
 function parsearMontoCLP(valor) {
