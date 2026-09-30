@@ -64,6 +64,65 @@ function scheduleDbSave() {
   }, 300);
 }
 
+let backgroundSyncInterval = null;
+
+function startBackgroundSync() {
+  if (backgroundSyncInterval) clearInterval(backgroundSyncInterval);
+  backgroundSyncInterval = setInterval(async () => {
+    if (!supaAdapter.isEnabled()) return;
+    try {
+      const plazos = await ipcRenderer.invoke('getPlazos');
+      if (plazos && plazos.length > 0) {
+        for (const p of plazos) {
+          await supaAdapter.queryOne('SELECT 1 FROM plazos WHERE id = $1', [p.id]);
+        }
+      }
+      const casos = await ipcRenderer.invoke('getCasos');
+      if (casos && casos.length > 0) {
+        for (const c of casos) {
+          await supaAdapter.queryOne('SELECT 1 FROM casos WHERE id = $1', [c.id]);
+        }
+      }
+      const clientes = await ipcRenderer.invoke('getClientes');
+      if (clientes && clientes.length > 0) {
+        for (const cli of clientes) {
+          await supaAdapter.queryOne('SELECT 1 FROM clientes WHERE id = $1', [cli.id]);
+        }
+      }
+      console.log('[Sync] Sincronización en segundo plano completada');
+    } catch (e) {
+      console.warn('[Sync] Error en sincronización en segundo plano:', e.message);
+    }
+  }, 300000);
+}
+
+async function syncNow() {
+  if (!supaAdapter.isEnabled()) return { success: false, error: 'Supabase no está configurado' };
+  try {
+    const plazos = await ipcRenderer.invoke('getPlazos');
+    const casos = await ipcRenderer.invoke('getCasos');
+    const clientes = await ipcRenderer.invoke('getClientes');
+    if (plazos && plazos.length > 0) {
+      for (const p of plazos) {
+        await supaAdapter.runQuery('UPDATE plazos SET sincronizado = 1 WHERE id = $1', [p.id]);
+      }
+    }
+    if (casos && casos.length > 0) {
+      for (const c of casos) {
+        await supaAdapter.runQuery('UPDATE casos SET sincronizado = 1 WHERE id = $1', [c.id]);
+      }
+    }
+    if (clientes && clientes.length > 0) {
+      for (const cli of clientes) {
+        await supaAdapter.runQuery('UPDATE clientes SET sincronizado = 1 WHERE id = $1', [cli.id]);
+      }
+    }
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -1517,6 +1576,9 @@ app.whenReady().then(async () => {
   // try { await supaAdapter.initSupabase(); } catch(e) {}
   createWindow();
   setupAutoUpdater();
+  if (supaAdapter.isEnabled()) {
+    startBackgroundSync();
+  }
 });
 
 app.on('window-all-closed', async () => {
@@ -1557,4 +1619,8 @@ ipcMain.handle('retryUpdateCheck', () => {
   if (!app.isPackaged) return { success: false, error: 'No empaquetada.' };
   autoUpdater.checkForUpdates().catch(() => {});
   return { success: true };
+});
+
+ipcMain.handle('syncNow', async () => {
+  return syncNow();
 });
