@@ -61,3 +61,14 @@
 - Validar JS: `node --check main.js` y `node --check renderer.js`
 - BD local: `%APPDATA%\lex\lex.db` â€” Supabase: `https://vfxbnuhacqvyebualfhv.supabase.co`
 - Workaround hoy: `npm start` en `C:\...\LEX` abre sin error y sin freeze
+# LEX — Historial sesión 05-10-2026 (v1.7.6 + campo ID Trámite)
+
+## Estado actual (cierre 05-10-2026, 1.7.6 PUBLICADA)
+- **v1.7.6 publicada** (commit 58ceab9, tag v1.7.6, release en GitHub con latest.yml + lex-setup-1.7.6.exe + lex-portable-1.7.6.exe):
+  - **Sync bidireccional de borrados**: tablas locales eliminados y sync_known; orrarRegistro() registra deletes y syncNow() los sube a Supabase y borra local lo eliminado en otro dispositivo. deleteRow() en supabase/dbAdapter.js.
+  - **Campo nuevo id_tramite en clientes**: formulario (desktop y móvil), columnas en tablas, INSERT/UPDATE en main.js, ipc-shim y supabase/schema.sql.
+- **Supabase**: ejecutado ALTER TABLE clientes ADD COLUMN id_tramite TEXT; ?
+- **Pendiente mañana**: generar APK Android. No hay APK en el repo. Config Capacitor está en mobile/capacitor.config.json (no en la raíz). Para hacerla: en mobile/ correr 
+px cap sync android y luego gradlew assembleDebug dentro de mobile/android/. Ojo: 
+px cap sync desde la raíz falla ("android platform has not been added yet") porque el config está en mobile/.
+- Build PC probado: dist_instalador/lex-setup-1.7.6.exe / lex-portable-1.7.6.exe disponibles.
