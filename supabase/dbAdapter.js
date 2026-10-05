@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const { Pool } = require('pg');
 
-let pool = null;
 let enabled = false;
+let cfg = null;
+let cloudColumns = {};
 
 function loadConfig() {
   try {
@@ -13,76 +13,62 @@ function loadConfig() {
   } catch { return null; }
 }
 
+function headers(extra) {
+  return Object.assign({ apikey: cfg.key, Authorization: 'Bearer ' + cfg.key }, extra || {});
+}
+
 async function initSupabase() {
-  const cfg = loadConfig();
-  if (!cfg || !cfg.projectRef || !cfg.dbPassword) {
-    console.log('[Supabase] No configurado (supabase-config.json no encontrado)');
+  cfg = loadConfig();
+  if (!cfg || !cfg.url || !cfg.key) {
+    console.log('[Supabase] No configurado (supabase-config.json no encontrado o incompleto)');
     return false;
   }
-  pool = new Pool({
-    host: 'aws-0-sa-east-1.pooler.supabase.com',
-    port: 6543,
-    database: 'postgres',
-    user: `postgres.${cfg.projectRef}`,
-    password: cfg.dbPassword,
-    ssl: { rejectUnauthorized: false },
-    max: 2,
-    idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 3000,
-    query_timeout: 3000
-  });
   try {
-    const c = await pool.connect();
-    await c.query('SELECT 1');
-    c.release();
+    const res = await fetch(cfg.url + '/rest/v1/', { headers: headers(), signal: AbortSignal.timeout(6000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const spec = await res.json();
+    cloudColumns = {};
+    for (const [table, def] of Object.entries(spec.definitions || {})) {
+      cloudColumns[table] = Object.keys(def.properties || {});
+    }
     enabled = true;
-    console.log('[Supabase] Conectado pooler sa-east-1:6543 ->', cfg.url);
+    console.log('[Supabase] Conectado REST ->', cfg.url);
     return true;
   } catch (e) {
-    console.warn('[Supabase] No se pudo conectar, usando BD local:', e.message);
+    console.warn('[Supabase] Sin conexion, modo local:', e.message);
     enabled = false;
-    try { await pool.end(); } catch {}
-    pool = null;
     return false;
   }
 }
 
-function isEnabled() { return enabled && pool; }
+function isEnabled() { return enabled; }
 
-// Convierte "?" placeholders de sql.js a "$1,$2..." de pg
-function toPg(sql, params) {
-  let idx = 0;
-  const pgSql = sql.replace(/\?/g, () => `$${++idx}`);
-  return { pgSql, pgParams: params };
+async function pullRows(table) {
+  const res = await fetch(`${cfg.url}/rest/v1/${table}?select=*`, { headers: headers(), signal: AbortSignal.timeout(15000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
 }
 
-async function queryAll(sql, params=[]) {
-  if (!isEnabled()) return null;
-  const { pgSql, pgParams } = toPg(sql, params);
-  const res = await pool.query(pgSql, pgParams);
-  return res.rows;
-}
-
-async function queryOne(sql, params=[]) {
-  if (!isEnabled()) return null;
-  const { pgSql, pgParams } = toPg(sql, params);
-  const res = await pool.query(pgSql, pgParams);
-  return res.rows[0] || null;
-}
-
-async function runQuery(sql, params=[]) {
-  if (!isEnabled()) return null;
-  const trimmed = sql.trim().toUpperCase();
-  const isInsert = trimmed.startsWith('INSERT');
-  const { pgSql, pgParams } = toPg(sql, params);
-  // Para INSERT, intentar RETURNING id si no lo tiene
-  let finalSql = pgSql;
-  if (isInsert && !/RETURNING/i.test(pgSql)) {
-    finalSql = pgSql.replace(/;?\s*$/, ' RETURNING id');
+async function pushRows(table, rows, conflictCol = 'id') {
+  if (!rows || !rows.length) return 0;
+  const cols = cloudColumns[table];
+  let clean = rows;
+  if (cols && cols.length) {
+    clean = rows.map(r => {
+      const o = {};
+      for (const k of Object.keys(r)) if (cols.includes(k)) o[k] = r[k];
+      return o;
+    }).filter(o => Object.keys(o).length);
   }
-  const res = await pool.query(finalSql, pgParams);
-  const lastId = res.rows && res.rows[0] ? res.rows[0].id : null;
-  return { changes: res.rowCount, lastId: lastId, rows: res.rows };
+  if (!clean.length) return 0;
+  const res = await fetch(`${cfg.url}/rest/v1/${table}?on_conflict=${conflictCol}`, {
+    method: 'POST',
+    headers: headers({ 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }),
+    body: JSON.stringify(clean),
+    signal: AbortSignal.timeout(20000)
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+  return clean.length;
 }
 
-module.exports = { initSupabase, isEnabled, queryAll, queryOne, runQuery, loadConfig };
+module.exports = { initSupabase, isEnabled, pullRows, pushRows, loadConfig };

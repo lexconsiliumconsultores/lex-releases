@@ -68,58 +68,54 @@ let backgroundSyncInterval = null;
 
 function startBackgroundSync() {
   if (backgroundSyncInterval) clearInterval(backgroundSyncInterval);
-  backgroundSyncInterval = setInterval(async () => {
-    if (!supaAdapter.isEnabled()) return;
-    try {
-      const plazos = await ipcRenderer.invoke('getPlazos');
-      if (plazos && plazos.length > 0) {
-        for (const p of plazos) {
-          await supaAdapter.queryOne('SELECT 1 FROM plazos WHERE id = $1', [p.id]);
-        }
-      }
-      const casos = await ipcRenderer.invoke('getCasos');
-      if (casos && casos.length > 0) {
-        for (const c of casos) {
-          await supaAdapter.queryOne('SELECT 1 FROM casos WHERE id = $1', [c.id]);
-        }
-      }
-      const clientes = await ipcRenderer.invoke('getClientes');
-      if (clientes && clientes.length > 0) {
-        for (const cli of clientes) {
-          await supaAdapter.queryOne('SELECT 1 FROM clientes WHERE id = $1', [cli.id]);
-        }
-      }
-      console.log('[Sync] Sincronización en segundo plano completada');
-    } catch (e) {
-      console.warn('[Sync] Error en sincronización en segundo plano:', e.message);
-    }
-  }, 300000);
+  backgroundSyncInterval = setInterval(() => { syncNow().catch(() => {}); }, 300000);
 }
 
+// Orden por dependencias (FK): padres primero. config va aparte (PK = clave).
+const SYNC_TABLES = ['usuarios', 'clientes', 'casos', 'plazos', 'seguimiento', 'documentos', 'facturas', 'pagos', 'notificaciones', 'documentos_generados', 'conversaciones_chat', 'config'];
+
 async function syncNow() {
-  if (!supaAdapter.isEnabled()) return { success: false, error: 'Supabase no está configurado' };
+  if (!supaAdapter.isEnabled()) return { success: false, error: 'Supabase no configurado o sin conexión' };
+  const resumen = { bajados: 0, subidos: 0, errores: [] };
   try {
-    const plazos = await ipcRenderer.invoke('getPlazos');
-    const casos = await ipcRenderer.invoke('getCasos');
-    const clientes = await ipcRenderer.invoke('getClientes');
-    if (plazos && plazos.length > 0) {
-      for (const p of plazos) {
-        await supaAdapter.runQuery('UPDATE plazos SET sincronizado = 1 WHERE id = $1', [p.id]);
+    // 1) Pull: insertar localmente las filas de la nube que no existan local
+    for (const t of SYNC_TABLES) {
+      let rows;
+      try { rows = await supaAdapter.pullRows(t); } catch (e) { resumen.errores.push(`pull ${t}: ${e.message}`); continue; }
+      const keyCol = t === 'config' ? 'clave' : 'id';
+      const localCols = queryAll(`PRAGMA table_info(${t})`).map(c => c.name);
+      if (!localCols.length) continue;
+      for (const row of rows) {
+        const key = row[keyCol];
+        if (key == null) continue;
+        if (queryOne(`SELECT ${keyCol} FROM ${t} WHERE ${keyCol}=?`, [key])) continue;
+        const cols = Object.keys(row).filter(c => localCols.includes(c));
+        if (!cols.length) continue;
+        const vals = cols.map(c => {
+          const v = row[c];
+          if (typeof v === 'boolean') return v ? 1 : 0;
+          if (v !== null && typeof v === 'object') return JSON.stringify(v);
+          return v;
+        });
+        try {
+          db.run(`INSERT INTO ${t} (${cols.join(',')}) VALUES (${cols.map(() => '?').join(',')})`, vals);
+          resumen.bajados++;
+        } catch (e) { resumen.errores.push(`insert ${t}: ${e.message}`); }
       }
     }
-    if (casos && casos.length > 0) {
-      for (const c of casos) {
-        await supaAdapter.runQuery('UPDATE casos SET sincronizado = 1 WHERE id = $1', [c.id]);
-      }
+    // 2) Push: upsert de todas las filas locales a la nube
+    for (const t of SYNC_TABLES) {
+      const rows = queryAll(`SELECT * FROM ${t}`);
+      if (!rows.length) continue;
+      const conflictCol = t === 'config' ? 'clave' : 'id';
+      try { resumen.subidos += await supaAdapter.pushRows(t, rows, conflictCol); }
+      catch (e) { resumen.errores.push(`push ${t}: ${e.message}`); }
     }
-    if (clientes && clientes.length > 0) {
-      for (const cli of clientes) {
-        await supaAdapter.runQuery('UPDATE clientes SET sincronizado = 1 WHERE id = $1', [cli.id]);
-      }
-    }
-    return { success: true };
+    scheduleDbSave();
+    console.log('[Sync] OK bajados:', resumen.bajados, 'subidos:', resumen.subidos, resumen.errores.length ? 'errores: ' + resumen.errores.join(' | ') : '');
+    return { success: true, ...resumen };
   } catch (e) {
-    return { success: false, error: e.message };
+    return { success: false, error: e.message, ...resumen };
   }
 }
 
@@ -1572,13 +1568,15 @@ function setupAutoUpdater() {
 
 app.whenReady().then(async () => {
   await initDatabase();
-  // Supabase desactivado en arranque para ultra-rápido. Se conecta solo si usuario activa sync en Configuración.
-  // try { await supaAdapter.initSupabase(); } catch(e) {}
   createWindow();
   setupAutoUpdater();
-  if (supaAdapter.isEnabled()) {
-    startBackgroundSync();
-  }
+  // Conexión Supabase en 2º plano (no bloquea el arranque); si conecta, sync cada 5 min
+  supaAdapter.initSupabase().then(ok => {
+    if (ok) {
+      startBackgroundSync();
+      syncNow().catch(() => {});
+    }
+  }).catch(() => {});
 });
 
 app.on('window-all-closed', async () => {
