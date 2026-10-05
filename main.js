@@ -65,10 +65,22 @@ function scheduleDbSave() {
 }
 
 let backgroundSyncInterval = null;
+let syncDebounceTimer = null;
+let syncRunning = false;
 
 function startBackgroundSync() {
   if (backgroundSyncInterval) clearInterval(backgroundSyncInterval);
-  backgroundSyncInterval = setInterval(() => { syncNow().catch(() => {}); }, 300000);
+  backgroundSyncInterval = setInterval(() => { syncNow().catch(() => {}); }, 60000);
+}
+
+// Tras cada guardado local, sube cambios a la nube 10s después (sin bloquear UI)
+function scheduleSyncPush() {
+  if (!supaAdapter.isEnabled()) return;
+  if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+  syncDebounceTimer = setTimeout(() => {
+    syncDebounceTimer = null;
+    syncNow().catch(() => {});
+  }, 10000);
 }
 
 // Orden por dependencias (FK): padres primero. config va aparte (PK = clave).
@@ -76,6 +88,8 @@ const SYNC_TABLES = ['usuarios', 'clientes', 'casos', 'plazos', 'seguimiento', '
 
 async function syncNow() {
   if (!supaAdapter.isEnabled()) return { success: false, error: 'Supabase no configurado o sin conexión' };
+  if (syncRunning) return { success: false, error: 'Sync en curso' };
+  syncRunning = true;
   const resumen = { bajados: 0, subidos: 0, errores: [] };
   try {
     // 1) Pull: insertar localmente las filas de la nube que no existan local
@@ -116,6 +130,8 @@ async function syncNow() {
     return { success: true, ...resumen };
   } catch (e) {
     return { success: false, error: e.message, ...resumen };
+  } finally {
+    syncRunning = false;
   }
 }
 
@@ -360,9 +376,8 @@ function queryOne(sql, params = []) {
 function runQuery(sql, params = []) {
   db.run(sql, params);
   scheduleDbSave();
+  scheduleSyncPush();
   return { changes: db.getRowsModified(), lastId: queryOne('SELECT last_insert_rowid() as id').id };
-  // NOTA: Sync a Supabase desactivado para modo ultra-rápido (local 100% veloz).
-  // El móvil escribe directo a Supabase; el escritorio sincronizará en segundo plano cada 5 min (no en cada guardado).
 }
 
 // Configuración (pares clave-valor)
