@@ -26,3 +26,4 @@ supabase/*config*.json
 .env
 supabase/test-connection.js
 supabase/run-schema*.js
+RESPALDO_KEYSTORE_LEX/

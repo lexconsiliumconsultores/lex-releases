@@ -30,13 +30,18 @@
         </form>
 <div class="login-footer">
           <p>LexConsilium Consultores</p>
-          <p class="version">v1.7.6</p>
+          <p class="version">v1.7.7</p>
         </div>
       </div>
     </div>
   </div>
 
   <div class="app-container" id="appContainer" style="display: none;">
+    <div class="mobile-topbar">
+      <button class="hamburger-btn" id="hamburgerBtn">☰</button>
+      <span class="mobile-title">LEX</span>
+    </div>
+    <div class="drawer-overlay" id="drawerOverlay"></div>
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="logo">
@@ -106,7 +111,7 @@
           </div>
         </div>
         <button class="btn btn-secondary logout-btn" onclick="handleLogout()" style="width: 100%; margin-top: 12px; font-size: 12px; padding: 8px;">🚪 Cerrar Sesión</button>
-        <span class="version">v1.7.6</span>
+        <span class="version">v1.7.7</span>
       </div>
     </aside>
 
@@ -1205,6 +1210,22 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="js/ipc-shim.js"></script>
+  <script>
+    document.getElementById('hamburgerBtn').addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.add('open');
+      document.getElementById('drawerOverlay').classList.add('visible');
+    });
+    document.getElementById('drawerOverlay').addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.remove('open');
+      this.classList.remove('visible');
+    });
+    document.querySelectorAll('.nav-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.remove('open');
+        document.getElementById('drawerOverlay').classList.remove('visible');
+      });
+    });
+  </script>
   <script src="renderer.js"></script>
 </body>
 </html>

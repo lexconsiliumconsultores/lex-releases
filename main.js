@@ -86,6 +86,10 @@ function scheduleSyncPush() {
 // Orden por dependencias (FK): padres primero. config va aparte (PK = clave).
 const SYNC_TABLES = ['usuarios', 'clientes', 'casos', 'plazos', 'seguimiento', 'documentos', 'facturas', 'pagos', 'notificaciones', 'documentos_generados', 'conversaciones_chat', 'config'];
 
+function withTimeout(p, ms, label) {
+  return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout ' + label)), ms))]);
+}
+
 async function syncNow() {
   if (!supaAdapter.isEnabled()) return { success: false, error: 'Supabase no configurado o sin conexión' };
   if (syncRunning) return { success: false, error: 'Sync en curso' };
@@ -96,7 +100,7 @@ async function syncNow() {
     for (const del of queryAll('SELECT tabla, ref_id FROM eliminados')) {
       const keyCol = del.tabla === 'config' ? 'clave' : 'id';
       try {
-        await supaAdapter.deleteRow(del.tabla, keyCol, del.ref_id);
+        await withTimeout(supaAdapter.deleteRow(del.tabla, keyCol, del.ref_id), 20000, 'delete');
         db.run('DELETE FROM eliminados WHERE tabla=? AND ref_id=?', [del.tabla, del.ref_id]);
         resumen.borradosNube++;
       } catch (e) { resumen.errores.push(`delete-nube ${del.tabla}/${del.ref_id}: ${e.message}`); }
@@ -104,7 +108,7 @@ async function syncNow() {
     // 1) Pull: insertar filas nuevas de la nube + detectar borrados remotos
     for (const t of SYNC_TABLES) {
       let rows;
-      try { rows = await supaAdapter.pullRows(t); } catch (e) { resumen.errores.push(`pull ${t}: ${e.message}`); continue; }
+      try { rows = await withTimeout(supaAdapter.pullRows(t), 20000, 'pull'); } catch (e) { resumen.errores.push(`pull ${t}: ${e.message}`); continue; }
       const keyCol = t === 'config' ? 'clave' : 'id';
       const localCols = queryAll(`PRAGMA table_info(${t})`).map(c => c.name);
       if (!localCols.length) continue;
@@ -147,7 +151,7 @@ async function syncNow() {
       const rows = queryAll(`SELECT * FROM ${t}`);
       if (!rows.length) continue;
       const conflictCol = t === 'config' ? 'clave' : 'id';
-      try { resumen.subidos += await supaAdapter.pushRows(t, rows, conflictCol); }
+      try { resumen.subidos += await withTimeout(supaAdapter.pushRows(t, rows, conflictCol), 30000, 'push'); }
       catch (e) { resumen.errores.push(`push ${t}: ${e.message}`); }
     }
     scheduleDbSave();

@@ -61,14 +61,23 @@
 - Validar JS: `node --check main.js` y `node --check renderer.js`
 - BD local: `%APPDATA%\lex\lex.db` â€” Supabase: `https://vfxbnuhacqvyebualfhv.supabase.co`
 - Workaround hoy: `npm start` en `C:\...\LEX` abre sin error y sin freeze
-# LEX — Historial sesión 05-10-2026 (v1.7.6 + campo ID Trámite)
+# LEX ï¿½ Historial sesiï¿½n 05-10-2026 (v1.7.6 + campo ID Trï¿½mite)
 
 ## Estado actual (cierre 05-10-2026, 1.7.6 PUBLICADA)
 - **v1.7.6 publicada** (commit 58ceab9, tag v1.7.6, release en GitHub con latest.yml + lex-setup-1.7.6.exe + lex-portable-1.7.6.exe):
   - **Sync bidireccional de borrados**: tablas locales eliminados y sync_known; orrarRegistro() registra deletes y syncNow() los sube a Supabase y borra local lo eliminado en otro dispositivo. deleteRow() en supabase/dbAdapter.js.
-  - **Campo nuevo id_tramite en clientes**: formulario (desktop y móvil), columnas en tablas, INSERT/UPDATE en main.js, ipc-shim y supabase/schema.sql.
+  - **Campo nuevo id_tramite en clientes**: formulario (desktop y mï¿½vil), columnas en tablas, INSERT/UPDATE en main.js, ipc-shim y supabase/schema.sql.
 - **Supabase**: ejecutado ALTER TABLE clientes ADD COLUMN id_tramite TEXT; ?
-- **Pendiente mañana**: generar APK Android. No hay APK en el repo. Config Capacitor está en mobile/capacitor.config.json (no en la raíz). Para hacerla: en mobile/ correr 
+- **Pendiente maï¿½ana**: generar APK Android. No hay APK en el repo. Config Capacitor estï¿½ en mobile/capacitor.config.json (no en la raï¿½z). Para hacerla: en mobile/ correr 
 px cap sync android y luego gradlew assembleDebug dentro de mobile/android/. Ojo: 
-px cap sync desde la raíz falla ("android platform has not been added yet") porque el config está en mobile/.
+px cap sync desde la raï¿½z falla ("android platform has not been added yet") porque el config estï¿½ en mobile/.
 - Build PC probado: dist_instalador/lex-setup-1.7.6.exe / lex-portable-1.7.6.exe disponibles.
+
+# LEX â€” Historial sesiÃ³n 05-10-2026 tarde (v1.7.7, APK firmada, responsive mÃ³vil)
+
+## Estado actual (cierre 05-10-2026, 1.7.7 PUBLICADA)
+- **v1.7.7**: timeout de 20-30s en llamadas Supabase (main.js withTimeout para pull/push/delete; ipc-shim.js withTimeout 12s + cachÃ© localStorage de gets). Fix: app no se congela al guardar con red lenta.
+- **APK Android firmada** (`app-release.apk`, keystore propio en mobile/android/app/lex-release.keystore, respaldo en RESPALDO_KEYSTORE_LEX/). versionCode 2, versionName 1.7.7.
+- **Mobile responsive**: topbar con hamburger + drawer (mobile/www/index.html, styles.css). Capacitor usa JDK 21 (org.gradle.java.home en gradle.properties).
+- **Nota APK**: no hay auto-update para Android; la actualizaciÃ³n de APK se instala a mano (app-release.apk firmada con la misma clave â†’ se puede instalar encima).
+

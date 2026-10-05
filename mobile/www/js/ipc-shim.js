@@ -194,11 +194,27 @@
     eliminarConversacion: async (id) => { const {error}=await supabase.from('conversaciones_chat').delete().eq('id',id); return error?{success:false,error:error.message}:{success:true}; },
   };
 
+  function withTimeout(p, ms) {
+    return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+  }
+  function cacheKey(channel, args) { return 'lexcache_' + channel + '_' + JSON.stringify(args); }
+
   window.ipcRenderer = {
     invoke: async (channel, ...args) => {
       const fn=handlers[channel];
       if(!fn){ console.warn('channel no implementado móvil:',channel); return null; }
-      return await fn(...args);
+      const isGet = /^(get|list|search)/.test(channel);
+      try {
+        const res = await withTimeout(fn(...args), 12000);
+        if (isGet) { try { localStorage.setItem(cacheKey(channel, args), JSON.stringify(res)); } catch {} }
+        return res;
+      } catch (e) {
+        if (isGet) {
+          try { const c = localStorage.getItem(cacheKey(channel, args)); if (c) return JSON.parse(c); } catch {}
+          return [];
+        }
+        return { success: false, error: 'Tiempo de espera agotado. Verificá tu conexión e intentá de nuevo.' };
+      }
     },
     on: (channel, cb) => {}
   };
