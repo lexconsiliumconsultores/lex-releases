@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS clientes (
   telefono TEXT,
   email TEXT,
   direccion TEXT,
+  id_tramite TEXT,
   fecha_registro TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -71,4 +71,13 @@ async function pushRows(table, rows, conflictCol = 'id') {
   return clean.length;
 }
 
-module.exports = { initSupabase, isEnabled, pullRows, pushRows, loadConfig };
+async function deleteRow(table, keyCol, value) {
+  const res = await fetch(`${cfg.url}/rest/v1/${table}?${keyCol}=eq.${encodeURIComponent(value)}`, {
+    method: 'DELETE',
+    headers: headers(),
+    signal: AbortSignal.timeout(15000)
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+}
+
+module.exports = { initSupabase, isEnabled, pullRows, pushRows, deleteRow, loadConfig };

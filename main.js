@@ -90,15 +90,27 @@ async function syncNow() {
   if (!supaAdapter.isEnabled()) return { success: false, error: 'Supabase no configurado o sin conexión' };
   if (syncRunning) return { success: false, error: 'Sync en curso' };
   syncRunning = true;
-  const resumen = { bajados: 0, subidos: 0, errores: [] };
+  const resumen = { bajados: 0, subidos: 0, borradosNube: 0, borradosLocal: 0, errores: [] };
   try {
-    // 1) Pull: insertar localmente las filas de la nube que no existan local
+    // 0) Empujar borrados locales a la nube
+    for (const del of queryAll('SELECT tabla, ref_id FROM eliminados')) {
+      const keyCol = del.tabla === 'config' ? 'clave' : 'id';
+      try {
+        await supaAdapter.deleteRow(del.tabla, keyCol, del.ref_id);
+        db.run('DELETE FROM eliminados WHERE tabla=? AND ref_id=?', [del.tabla, del.ref_id]);
+        resumen.borradosNube++;
+      } catch (e) { resumen.errores.push(`delete-nube ${del.tabla}/${del.ref_id}: ${e.message}`); }
+    }
+    // 1) Pull: insertar filas nuevas de la nube + detectar borrados remotos
     for (const t of SYNC_TABLES) {
       let rows;
       try { rows = await supaAdapter.pullRows(t); } catch (e) { resumen.errores.push(`pull ${t}: ${e.message}`); continue; }
       const keyCol = t === 'config' ? 'clave' : 'id';
       const localCols = queryAll(`PRAGMA table_info(${t})`).map(c => c.name);
       if (!localCols.length) continue;
+      const cloudIds = new Set(rows.map(r => String(r[keyCol])));
+      const pendingDel = new Set(queryAll('SELECT ref_id FROM eliminados WHERE tabla=?', [t]).map(r => String(r.ref_id)));
+      // 1a) insertar localmente las filas de la nube que no existan local
       for (const row of rows) {
         const key = row[keyCol];
         if (key == null) continue;
@@ -116,6 +128,19 @@ async function syncNow() {
           resumen.bajados++;
         } catch (e) { resumen.errores.push(`insert ${t}: ${e.message}`); }
       }
+      // 1b) borrado en otro dispositivo: estaba en la nube y ya no está
+      for (const known of queryAll('SELECT ref_id FROM sync_known WHERE tabla=?', [t])) {
+        const id = String(known.ref_id);
+        if (!cloudIds.has(id) && !pendingDel.has(id) && queryOne(`SELECT ${keyCol} FROM ${t} WHERE ${keyCol}=?`, [id])) {
+          try {
+            db.run(`DELETE FROM ${t} WHERE ${keyCol}=?`, [id]);
+            resumen.borradosLocal++;
+          } catch (e) { resumen.errores.push(`delete-local ${t}/${id}: ${e.message}`); }
+        }
+      }
+      // 1c) actualizar registro de ids conocidos en la nube
+      db.run('DELETE FROM sync_known WHERE tabla=?', [t]);
+      for (const id of cloudIds) db.run('INSERT OR IGNORE INTO sync_known (tabla, ref_id) VALUES (?, ?)', [t, id]);
     }
     // 2) Push: upsert de todas las filas locales a la nube
     for (const t of SYNC_TABLES) {
@@ -184,6 +209,7 @@ async function initDatabase() {
       telefono TEXT,
       email TEXT,
       direccion TEXT,
+      id_tramite TEXT,
       fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -348,6 +374,24 @@ async function initDatabase() {
     db.run('ALTER TABLE plazos ADD COLUMN outlook_event_id TEXT');
   }
 
+  const colsClientes = queryAll('PRAGMA table_info(clientes)').map(c => c.name);
+  if (!colsClientes.includes('id_tramite')) {
+    db.run('ALTER TABLE clientes ADD COLUMN id_tramite TEXT');
+  }
+
+  // Tablas de control de sincronización (solo locales, no se suben)
+  db.run(`CREATE TABLE IF NOT EXISTS eliminados (
+    tabla TEXT NOT NULL,
+    ref_id TEXT NOT NULL,
+    fecha TEXT,
+    PRIMARY KEY (tabla, ref_id)
+  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS sync_known (
+    tabla TEXT NOT NULL,
+    ref_id TEXT NOT NULL,
+    PRIMARY KEY (tabla, ref_id)
+  )`);
+
   saveDb();
 }
 
@@ -380,6 +424,12 @@ function runQuery(sql, params = []) {
   return { changes: db.getRowsModified(), lastId: queryOne('SELECT last_insert_rowid() as id').id };
 }
 
+// Registra el borrado para propagarlo a la nube y luego elimina localmente
+function borrarRegistro(tabla, id) {
+  runQuery('INSERT OR REPLACE INTO eliminados (tabla, ref_id, fecha) VALUES (?, ?, ?)', [tabla, String(id), new Date().toISOString()]);
+  runQuery(`DELETE FROM ${tabla} WHERE id=?`, [id]);
+}
+
 // Configuración (pares clave-valor)
 function getConfig(clave) {
   const row = queryOne('SELECT valor FROM config WHERE clave=?', [clave]);
@@ -410,21 +460,21 @@ ipcMain.handle('getClientes', () => {
 
 ipcMain.handle('addCliente', (event, cliente) => {
   return runQuery(
-    'INSERT INTO clientes (nombre, cedula, telefono, email, direccion) VALUES (?, ?, ?, ?, ?)',
-    [cliente.nombre, cliente.cedula, cliente.telefono, cliente.email, cliente.direccion]
+    'INSERT INTO clientes (nombre, cedula, telefono, email, direccion, id_tramite) VALUES (?, ?, ?, ?, ?, ?)',
+    [cliente.nombre, cliente.cedula, cliente.telefono, cliente.email, cliente.direccion, cliente.id_tramite]
   );
 });
 
 ipcMain.handle('updateCliente', (event, cliente) => {
   runQuery(
-    'UPDATE clientes SET nombre=?, cedula=?, telefono=?, email=?, direccion=? WHERE id=?',
-    [cliente.nombre, cliente.cedula, cliente.telefono, cliente.email, cliente.direccion, cliente.id]
+    'UPDATE clientes SET nombre=?, cedula=?, telefono=?, email=?, direccion=?, id_tramite=? WHERE id=?',
+    [cliente.nombre, cliente.cedula, cliente.telefono, cliente.email, cliente.direccion, cliente.id_tramite, cliente.id]
   );
   return { success: true };
 });
 
 ipcMain.handle('deleteCliente', (event, id) => {
-  runQuery('DELETE FROM clientes WHERE id=?', [id]);
+  borrarRegistro('clientes', id);
   return { success: true };
 });
 
@@ -474,7 +524,7 @@ ipcMain.handle('updateCaso', (event, caso) => {
 });
 
 ipcMain.handle('deleteCaso', (event, id) => {
-  runQuery('DELETE FROM casos WHERE id=?', [id]);
+  borrarRegistro('casos', id);
   return { success: true };
 });
 
@@ -494,7 +544,7 @@ ipcMain.handle('addDocumento', (event, doc) => {
 });
 
 ipcMain.handle('deleteDocumento', (event, id) => {
-  runQuery('DELETE FROM documentos WHERE id=?', [id]);
+  borrarRegistro('documentos', id);
   return { success: true };
 });
 
@@ -657,7 +707,7 @@ ipcMain.handle('updatePlazo', async (event, plazo) => {
 
 ipcMain.handle('deletePlazo', (event, id) => {
   const row = queryOne('SELECT outlook_event_id FROM plazos WHERE id=?', [id]);
-  runQuery('DELETE FROM plazos WHERE id=?', [id]);
+  borrarRegistro('plazos', id);
   if (row && row.outlook_event_id && syncPlazosActivo()) {
     borrarEventoOutlook(row.outlook_event_id).catch(() => {});
   }
@@ -732,7 +782,7 @@ ipcMain.handle('addNotificacion', (event, notif) => {
 });
 
 ipcMain.handle('deleteNotificacion', (event, id) => {
-  runQuery('DELETE FROM notificaciones WHERE id=?', [id]);
+  borrarRegistro('notificaciones', id);
   return { success: true };
 });
 
@@ -1034,8 +1084,8 @@ ipcMain.handle('updateFactura', (event, factura) => {
 });
 
 ipcMain.handle('deleteFactura', (event, id) => {
-  runQuery('DELETE FROM pagos WHERE factura_id=?', [id]);
-  runQuery('DELETE FROM facturas WHERE id=?', [id]);
+  queryAll('SELECT id FROM pagos WHERE factura_id=?', [id]).forEach(p => borrarRegistro('pagos', p.id));
+  borrarRegistro('facturas', id);
   return { success: true };
 });
 
@@ -1063,7 +1113,7 @@ ipcMain.handle('addPago', (event, pago) => {
 
 ipcMain.handle('deletePago', (event, id) => {
   const pago = queryOne('SELECT factura_id FROM pagos WHERE id=?', [id]);
-  runQuery('DELETE FROM pagos WHERE id=?', [id]);
+  borrarRegistro('pagos', id);
   if (pago) {
     const total = queryOne('SELECT monto as total FROM facturas WHERE id=?', [pago.factura_id]).total;
     const pagado = queryOne('SELECT COALESCE(SUM(monto),0) as p FROM pagos WHERE factura_id=?', [pago.factura_id]).p;
@@ -1263,7 +1313,7 @@ ipcMain.handle('getDocumentosGenerados', () => {
 });
 
 ipcMain.handle('deleteDocumentoGenerado', (event, id) => {
-  runQuery('DELETE FROM documentos_generados WHERE id=?', [id]);
+  borrarRegistro('documentos_generados', id);
   return { success: true };
 });
 
@@ -1360,7 +1410,7 @@ ipcMain.handle('getConversacion', (event, id) => {
 });
 
 ipcMain.handle('eliminarConversacion', (event, id) => {
-  runQuery('DELETE FROM conversaciones_chat WHERE id=?', [id]);
+  borrarRegistro('conversaciones_chat', id);
   return { success: true };
 });
 
@@ -1423,7 +1473,7 @@ ipcMain.handle('updateUsuario', (event, user) => {
 
 ipcMain.handle('deleteUsuario', (event, id) => {
   if (currentUser && currentUser.id === id) return { success: false, error: 'No puedes eliminar tu propio usuario' };
-  runQuery('DELETE FROM usuarios WHERE id=?', [id]);
+  borrarRegistro('usuarios', id);
   return { success: true };
 });
 

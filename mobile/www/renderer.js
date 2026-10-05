@@ -439,7 +439,7 @@ async function loadClientes() {
 function renderClientes(clientes) {
   const tbody = document.getElementById('clientesTable');
   if (clientes.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No hay clientes registrados</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No hay clientes registrados</td></tr>';
     return;
   }
   tbody.innerHTML = clientes.map(c => `
@@ -449,6 +449,7 @@ function renderClientes(clientes) {
       <td>${escapeHtml(c.telefono) || '-'}</td>
       <td>${escapeHtml(c.email) || '-'}</td>
       <td>${escapeHtml(c.direccion) || '-'}</td>
+      <td>${escapeHtml(c.id_tramite) || '-'}</td>
       <td>${formatDate(c.fecha_registro)}</td>
       <td class="actions">
         <button class="btn btn-secondary btn-sm" onclick="editCliente(${c.id})">✏️</button>
@@ -468,6 +469,7 @@ function openClienteModal(cliente = null) {
   formatearTelefonoCL(telInput);
   document.getElementById('clienteEmail').value = cliente ? cliente.email || '' : '';
   document.getElementById('clienteDireccion').value = cliente ? cliente.direccion || '' : '';
+  document.getElementById('clienteIdTramite').value = cliente ? cliente.id_tramite || '' : '';
   document.getElementById('clienteModal').classList.add('active');
 }
 
@@ -485,7 +487,8 @@ async function saveCliente(e) {
     cedula: document.getElementById('clienteCedula').value,
     telefono: document.getElementById('clienteTelefono').value,
     email: document.getElementById('clienteEmail').value,
-    direccion: document.getElementById('clienteDireccion').value
+    direccion: document.getElementById('clienteDireccion').value,
+    id_tramite: document.getElementById('clienteIdTramite').value
   };
   if (cliente.id) {
     await ipcRenderer.invoke('updateCliente', cliente);

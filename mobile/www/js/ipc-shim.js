@@ -40,8 +40,8 @@
       return error?{success:false,error:error.message}:{success:true};
     },
     getClientes: async () => { const {data}=await supabase.from('clientes').select('*').order('nombre'); return data||[]; },
-    addCliente: async (c) => { const {data,error}=await supabase.from('clientes').insert({nombre:c.nombre,cedula:c.cedula,telefono:c.telefono,email:c.email,direccion:c.direccion}).select('id').single(); if(error) return {success:false,error:error.message}; return {changes:1,lastId:data.id}; },
-    updateCliente: async (c) => { const {error}=await supabase.from('clientes').update({nombre:c.nombre,cedula:c.cedula,telefono:c.telefono,email:c.email,direccion:c.direccion}).eq('id',c.id); return error?{success:false,error:error.message}:{success:true}; },
+    addCliente: async (c) => { const {data,error}=await supabase.from('clientes').insert({nombre:c.nombre,cedula:c.cedula,telefono:c.telefono,email:c.email,direccion:c.direccion,id_tramite:c.id_tramite}).select('id').single(); if(error) return {success:false,error:error.message}; return {changes:1,lastId:data.id}; },
+    updateCliente: async (c) => { const {error}=await supabase.from('clientes').update({nombre:c.nombre,cedula:c.cedula,telefono:c.telefono,email:c.email,direccion:c.direccion,id_tramite:c.id_tramite}).eq('id',c.id); return error?{success:false,error:error.message}:{success:true}; },
     deleteCliente: async (id) => { const {error}=await supabase.from('clientes').delete().eq('id',id); return error?{success:false,error:error.message}:{success:true}; },
     searchClientes: async (q) => { const {data}=await supabase.from('clientes').select('*').or(`nombre.ilike.%${q}%,cedula.ilike.%${q}%,telefono.ilike.%${q}%`).order('nombre'); return data||[]; },
     generarNumeroCaso: async () => {

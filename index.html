@@ -30,7 +30,7 @@
         </form>
 <div class="login-footer">
           <p>LexConsilium Consultores</p>
-          <p class="version">v1.7.5</p>
+          <p class="version">v1.7.6</p>
         </div>
       </div>
     </div>
@@ -106,7 +106,7 @@
           </div>
         </div>
         <button class="btn btn-secondary logout-btn" onclick="handleLogout()" style="width: 100%; margin-top: 12px; font-size: 12px; padding: 8px;">🚪 Cerrar Sesión</button>
-        <span class="version">v1.7.5</span>
+        <span class="version">v1.7.6</span>
       </div>
     </aside>
 
@@ -292,6 +292,7 @@
                 <th>Teléfono</th>
                 <th>Email</th>
                 <th>Dirección</th>
+                <th>ID Trámite</th>
                 <th>Registro</th>
                 <th>Acciones</th>
               </tr>
@@ -702,6 +703,10 @@
         <div class="form-group">
           <label>Dirección</label>
           <textarea id="clienteDireccion" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label>ID de Trámite</label>
+          <input type="text" id="clienteIdTramite">
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" onclick="closeModal('clienteModal')">Cancelar</button>
