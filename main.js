@@ -597,10 +597,11 @@ async function insertarPlazoConSync(plazo) {
   );
   const id = res.lastId;
   if (syncPlazosActivo()) {
-    const ev = await crearEventoParaPlazo({ ...plazo, id });
-    if (ev.success && ev.id) {
-      runQuery('UPDATE plazos SET outlook_event_id=? WHERE id=?', [ev.id, id]);
-    }
+    crearEventoParaPlazo({ ...plazo, id }).then(ev => {
+      if (ev.success && ev.id) {
+        runQuery('UPDATE plazos SET outlook_event_id=? WHERE id=?', [ev.id, id]);
+      }
+    }).catch(() => {});
   }
   return res;
 }
@@ -625,24 +626,26 @@ ipcMain.handle('updatePlazo', async (event, plazo) => {
     );
   }
   if (syncPlazosActivo()) {
-    if (outlookId) {
-      await actualizarEventoOutlook(outlookId, plazo);
-    } else if (plazo.caso_id && plazo.titulo && plazo.fecha_limite) {
-      const ev = await crearEventoParaPlazo(plazo);
-      if (ev.success && ev.id) {
-        runQuery('UPDATE plazos SET outlook_event_id=? WHERE id=?', [ev.id, plazo.id]);
-      }
-    }
+    const promesa = outlookId
+      ? actualizarEventoOutlook(outlookId, plazo)
+      : (plazo.caso_id && plazo.titulo && plazo.fecha_limite)
+        ? crearEventoParaPlazo(plazo).then(ev => {
+            if (ev.success && ev.id) {
+              runQuery('UPDATE plazos SET outlook_event_id=? WHERE id=?', [ev.id, plazo.id]);
+            }
+          })
+        : null;
+    if (promesa) promesa.catch(() => {});
   }
   return { success: true };
 });
 
-ipcMain.handle('deletePlazo', async (event, id) => {
+ipcMain.handle('deletePlazo', (event, id) => {
   const row = queryOne('SELECT outlook_event_id FROM plazos WHERE id=?', [id]);
-  if (row && row.outlook_event_id && syncPlazosActivo()) {
-    await borrarEventoOutlook(row.outlook_event_id);
-  }
   runQuery('DELETE FROM plazos WHERE id=?', [id]);
+  if (row && row.outlook_event_id && syncPlazosActivo()) {
+    borrarEventoOutlook(row.outlook_event_id).catch(() => {});
+  }
   return { success: true };
 });
 
@@ -898,6 +901,9 @@ async function sendMailOutlookDirect(para, asunto, mensaje) {
 }
 
 // ==================== OUTLOOK (envío automático) ====================
+let outlookEventsCache = { key: '', ts: 0, data: null };
+function invalidarCacheOutlook() { outlookEventsCache.ts = 0; }
+
 async function createOutlookEventDirect(ev) {
   const payload = {
     subject: ev.subject,
@@ -910,18 +916,21 @@ async function createOutlookEventDirect(ev) {
   if (ev.location) payload.location = { displayName: ev.location };
   const data = await graphRequest('/me/events', { method: 'POST', body: JSON.stringify(payload) });
   if (data.error) return { success: false, error: data.error };
+  invalidarCacheOutlook();
   return { success: true, id: data.id, webLink: data.webLink };
 }
 
 async function updateOutlookEventDirect(id, cambios) {
   const data = await graphRequest('/me/events/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(cambios) });
   if (data.error) return { success: false, error: data.error };
+  invalidarCacheOutlook();
   return { success: true, id: data.id };
 }
 
 async function deleteOutlookEventDirect(id) {
   const data = await graphRequest('/me/events/' + encodeURIComponent(id), { method: 'DELETE' });
   if (data.error) return { success: false, error: data.error };
+  invalidarCacheOutlook();
   return { success: true };
 }
 
@@ -933,10 +942,14 @@ ipcMain.handle('getOutlookEvents', async (event, startISO, endISO) => {
     d.setDate(d.getDate() + 1);
     fin = d.toISOString();
   }
+  const cacheKey = inicio + '|' + fin;
+  if (outlookEventsCache.data && outlookEventsCache.key === cacheKey && (Date.now() - outlookEventsCache.ts) < 60000) {
+    return outlookEventsCache.data;
+  }
   const ruta = `/me/calendarView?startDateTime=${encodeURIComponent(inicio)}&endDateTime=${encodeURIComponent(fin)}&$orderby=start/dateTime&$select=id,subject,start,end,isAllDay,location,bodyPreview,webLink`;
   const data = await graphRequest(ruta);
   if (data.error) return { success: false, error: data.error };
-  return {
+  const resultado = {
     success: true,
     eventos: (data.value || []).map(e => ({
       id: e.id,
@@ -949,6 +962,8 @@ ipcMain.handle('getOutlookEvents', async (event, startISO, endISO) => {
       isAllDay: !!e.isAllDay
     }))
   };
+  outlookEventsCache = { key: cacheKey, ts: Date.now(), data: resultado };
+  return resultado;
 });
 
 ipcMain.handle('createOutlookEvent', (event, ev) => {

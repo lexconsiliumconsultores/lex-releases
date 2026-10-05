@@ -30,7 +30,7 @@
         </form>
 <div class="login-footer">
           <p>LexConsilium Consultores</p>
-          <p class="version">v1.7.2</p>
+          <p class="version">v1.7.3</p>
         </div>
       </div>
     </div>
@@ -106,7 +106,7 @@
           </div>
         </div>
         <button class="btn btn-secondary logout-btn" onclick="handleLogout()" style="width: 100%; margin-top: 12px; font-size: 12px; padding: 8px;">🚪 Cerrar Sesión</button>
-        <span class="version">v1.7.2</span>
+        <span class="version">v1.7.3</span>
       </div>
     </aside>
 
@@ -692,7 +692,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>Teléfono</label>
-            <input type="text" id="clienteTelefono">
+            <input type="text" id="clienteTelefono" placeholder="+569 12345678" onfocus="if(!this.value)this.value='+569 '" oninput="formatearTelefonoCL(this)">
           </div>
           <div class="form-group">
             <label>Email</label>
@@ -956,7 +956,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>Monto (CLP)</label>
-            <input type="text" id="facturaMonto" inputmode="numeric" required placeholder="0" oninput="formatearMontoCLP(this)">
+            <input type="text" id="facturaMonto" inputmode="numeric" required placeholder="$0" oninput="formatearMontoCLP(this)">
           </div>
           <div class="form-group">
             <label>Fecha de Vencimiento</label>
@@ -993,7 +993,7 @@
         <div class="form-row" style="margin-top: 16px;">
           <div class="form-group">
             <label>Monto del Pago (CLP)</label>
-            <input type="text" id="pagoMonto" inputmode="numeric" required placeholder="0" oninput="formatearMontoCLP(this)">
+            <input type="text" id="pagoMonto" inputmode="numeric" required placeholder="$0" oninput="formatearMontoCLP(this)">
           </div>
           <div class="form-group">
             <label>Método</label>

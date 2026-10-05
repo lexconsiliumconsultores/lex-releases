@@ -463,7 +463,9 @@ function openClienteModal(cliente = null) {
   document.getElementById('clienteId').value = cliente ? cliente.id : '';
   document.getElementById('clienteNombre').value = cliente ? cliente.nombre : '';
   document.getElementById('clienteCedula').value = cliente ? cliente.cedula || '' : '';
-  document.getElementById('clienteTelefono').value = cliente ? cliente.telefono || '' : '';
+  const telInput = document.getElementById('clienteTelefono');
+  telInput.value = cliente && cliente.telefono ? cliente.telefono : '+569 ';
+  formatearTelefonoCL(telInput);
   document.getElementById('clienteEmail').value = cliente ? cliente.email || '' : '';
   document.getElementById('clienteDireccion').value = cliente ? cliente.direccion || '' : '';
   document.getElementById('clienteModal').classList.add('active');
@@ -1189,7 +1191,7 @@ async function openFacturaModal(facturaId) {
       autofillFacturaCliente();
       document.getElementById('facturaCliente').value = f.cliente_id || '';
       document.getElementById('facturaConcepto').value = f.concepto || '';
-      document.getElementById('facturaMonto').value = f.monto ? Number(f.monto).toLocaleString('es-CL') : '';
+      document.getElementById('facturaMonto').value = f.monto ? '$' + Number(f.monto).toLocaleString('es-CL') : '';
       document.getElementById('facturaVencimiento').value = (f.fecha_vencimiento || '').substring(0, 10);
       document.getElementById('facturaEstado').value = f.estado || 'Pendiente';
       document.getElementById('facturaModalTitle').textContent = 'Editar Factura ' + f.numero;
@@ -1649,7 +1651,7 @@ function formatearMontoCLP(input) {
   const start = input.selectionStart || 0;
   const oldLen = input.value.length;
   const soloDigitos = String(input.value).replace(/\D/g, '').replace(/^0+(?=\d)/, '');
-  const formatted = soloDigitos ? Number(soloDigitos).toLocaleString('es-CL') : '';
+  const formatted = soloDigitos ? '$' + Number(soloDigitos).toLocaleString('es-CL') : '';
   input.value = formatted;
   // Preservar cursor (evita salto al final que impedía editar)
   const newLen = formatted.length;
@@ -1657,6 +1659,39 @@ function formatearMontoCLP(input) {
   const newPos = Math.max(0, start + diff);
   try { input.setSelectionRange(newPos, newPos); } catch {}
 }
+
+function formatearTelefonoCL(input) {
+  if (!input) return;
+  const PREF = '+569 ';
+  const start = input.selectionStart || 0;
+  const oldLen = input.value.length;
+  let digits = String(input.value).replace(/[^\d]/g, '');
+  if (digits.startsWith('569')) digits = digits.slice(3);
+  else if (digits.startsWith('56')) digits = digits.slice(2);
+  else if (digits.startsWith('9')) digits = digits.slice(1);
+  digits = digits.slice(0, 8);
+  const formatted = PREF + digits;
+  input.value = formatted;
+  const diff = formatted.length - oldLen;
+  const newPos = Math.max(PREF.length, start + diff);
+  try { input.setSelectionRange(newPos, newPos); } catch {}
+}
+
+// Mayúsculas automáticas en campos de formularios (modales)
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  if (!el || !el.matches || !el.matches('.modal input, .modal textarea')) return;
+  const t = (el.type || 'text').toLowerCase();
+  if (['email', 'password', 'number', 'date', 'time', 'checkbox', 'radio', 'file', 'hidden', 'tel'].includes(t)) return;
+  if (['facturaMonto', 'pagoMonto', 'clienteTelefono', 'usuarioUsuario'].includes(el.id)) return;
+  if (el.id && /email|correo/i.test(el.id)) return;
+  const start = el.selectionStart;
+  const upper = el.value.toUpperCase();
+  if (el.value !== upper) {
+    el.value = upper;
+    try { el.setSelectionRange(start, start); } catch {}
+  }
+});
 
 function parsearMontoCLP(valor) {
   if (!valor) return 0;
