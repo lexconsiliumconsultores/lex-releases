@@ -110,3 +110,21 @@ px cap sync desde la raï¿½z falla ("android platform has not been added yet") po
   - "No se puede cerrar LEX" ocurre si el proceso con la App sigue corriendo cuando NSIS intenta chocarla (NSIS oneClick:false pide cerrarla a mano). Solucion final: oneClick:true.
   - PowerShell `(Get-Content -Raw) -replace | Set-Content` rompe UTF-8; siempre usar node -e con utf8 para editar archivos.
   - El numero "v1.X" del sidebar es texto hardcodeado en index.html (no sale de package.json); actualizarlo en cada bump.
+
+# LEX - Historial sesiones 06-10-2026 (v1.7.11..v1.7.15, cierre)
+
+## Versiones publicadas hoy
+- **v1.7.11**: F5 recarga en .exe, pull-to-refresh en APK (barra + toast "Actualizando…"), dashboard mas compacto (lux-cards padding 12px, valores 30px), banner movil sin skip persistente. PC y Android sincronizados a 1.7.11.
+- **v1.7.12**: conectar/desconectar Outlook con device-code flow (el refresh_token viejo estaba invalido = causa del error "no se puede" al enviar correos). Estado de Outlook visible en Configuracion.
+- **v1.7.13**: icono APK igual al Escritorio (build/icon.png via sharp, todos los mipmaps + foreground). Versiones PC/Android alineadas (versionCode 7).
+- **v1.7.14**: pull-to-refresh mejorado (spinner visible + scroll de main-content), NSIS with oneClick natural. Workaround: desinstalar + instalar limpio para reparar estado del Uninstall/lobby (robocopy manual habia roto el uninstaller consistente). Pending `lex-updater` limpiado manualmente.
+- **v1.7.15**: cola de notificaciones APK -> escritorio. La APK encola correo/recordatorio con estado Pendiente; el escritorio los envia via Outlook/SMTP durante syncNow() (funcion procesarNotificacionesPendientes en main.js) y los marca Enviado/Fallido.
+
+## Problemas resueltos
+- Error "No se puede cerrar LEX" en NSIS: causa eran restos de instalaciones viejas + robocopy (Uninstall viejo inconsistente). Fix: oneClick:true + desinstalar/instalar limpio.
+- Refresh token Outlook vencido: implementado device-code.
+- Powershell Set-Content (UTF8) corrompia acentos; usar node para editar archivos.
+
+## Lecciones aprendidas
+- oneClick:true en NSIS exige proceso app cerrado previamente (dialogo con retry siempre fallara si LEX sigue vivo); el dialogo viejo venia de NSIS oneClick:false manualmente ejecutado.
+- No usar robocopy manuales encima de %LOCALAPPDATA%\Programs\lex sin tocar el Uninstall (rompio la app de update).
