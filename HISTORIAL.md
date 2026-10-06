@@ -81,3 +81,16 @@ px cap sync desde la ra�z falla ("android platform has not been added yet") po
 - **Mobile responsive**: topbar con hamburger + drawer (mobile/www/index.html, styles.css). Capacitor usa JDK 21 (org.gradle.java.home en gradle.properties).
 - **Nota APK**: no hay auto-update para Android; la actualización de APK se instala a mano (app-release.apk firmada con la misma clave → se puede instalar encima).
 
+
+# LEX - Historial sesion 06-10-2026 (v1.7.9, cache movil + focus pago)
+
+## Estado actual (cierre 06-10-2026, v1.7.9 PUBLICADA)
+- **Causa del retraso**: en Android cada "get" (getFacturas, getPagos, getCuentasPorCobrar...) esperaba la respuesta de Supabase antes de mostrar nada; al tocar el boton de registrar pago el modal tardaba en aparecer y la barra/teclado del campo monto se demoraba. En desktop los gets son locales (sql.js) y se sienten inmediatos.
+- **Fix movil (mobile/www/js/ipc-shim.js)**: cache en localStorage con TTL 10s. Las lecturas ("get/list/search") devuelven cache al instante y revalidan en segundo plano (stale-while-revalidate); al ejecutar una escritura (add/update/delete) se invalida todo el cache "lexcache_*" para que la siguiente lectura traiga datos frescos. Si Supabase no responde en 12s se sirve cache viejo (timeout ya existia, ahora con TTL).
+- **Focus automatico al monto**: openPagoModal (renderer.js desktop y mobile/www/renderer.js) hace focus() a #pagoMonto a los 80ms de abrir el modal -> el teclado sale inmediato.
+- **Desktop main.js**: listener de "focus" que dispara syncNow() maximo 1 vez cada 15s (codigo que quedo sin commitear de la sesion interrumpida; ya commiteado en 1.7.9).
+- **Versiones**: package.json 1.7.9, build.gradle versionCode 4 / versionName 1.7.9.
+- **Build PC**: dist_instalador/lex-setup-1.7.9.exe + lex-portable-1.7.9.exe + blockmap + latest.yml. (OJO: el primer "npm run dist" quedo colgado en el paso de firma/signing; se mataron los procesos node y se corrio otra vez con exito.)
+- **Build Android**: app-release.apk firmada (gradlew assembleRelease, JDK 21, ~5 min).
+- **GitHub**: commit 23986ec en master, push OK, release v1.7.9 creada con exe instalador + portable, blockmap, latest.yml y app-release.apk.
+- **Para probar**: instalar el nuevo exe encima del anterior (auto-updater tambien lo descargara); en Android instalar mobile/android/app/build/outputs/apk/release/app-release.apk encima (misma clave de firma, no hay que desinstalar).
