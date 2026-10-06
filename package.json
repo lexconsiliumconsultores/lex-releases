@@ -1,6 +1,6 @@
 {
   "name": "lex",
-  "version": "1.7.9",
+  "version": "1.7.10",
   "description": "Sistema de Gestión de Casos Jurídicos - LexConsilium Consultores",
   "main": "main.js",
   "scripts": {
@@ -57,8 +57,7 @@
       "artifactName": "lex-portable-${version}.${ext}"
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
       "installerHeaderIcon": "build/icon.png",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
