@@ -929,6 +929,58 @@ async function refreshOutlookToken() {
   }
 }
 
+ipcMain.handle('conectarOutlook', async () => {
+  const cfg = getOutlookConfig();
+  try {
+    const res = await fetch(`https://login.microsoftonline.com/${encodeURIComponent(cfg.tenant)}/oauth2/v2.0/devicecode`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ client_id: cfg.client_id, scope: OUTLOOK_SCOPES }).toString()
+    });
+    const data = await res.json();
+    if (!res.ok || !data.device_code) return { success: false, error: data.error_description || data.error || 'Error al obtener código' };
+    return { success: true, user_code: data.user_code, verification_uri: data.verification_uri || 'https://microsoft.com/devicelogin', device_code: data.device_code, interval: data.interval || 5, message: data.message };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('verificarOutlook', async (e, deviceCode, interval) => {
+  const cfg = getOutlookConfig();
+  const start = Date.now();
+  while (Date.now() - start < 900000) {
+    try {
+      const res = await fetch(`https://login.microsoftonline.com/${encodeURIComponent(cfg.tenant)}/oauth2/v2.0/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:device_code', client_id: cfg.client_id, device_code: deviceCode }).toString()
+      });
+      const data = await res.json();
+      if (data.access_token) {
+        setConfig('outlook_access_token', data.access_token);
+        if (data.refresh_token) setConfig('outlook_refresh_token', data.refresh_token);
+        setConfig('outlook_token_expires', String(Date.now() + (data.expires_in || 3600) * 1000));
+        try {
+          const me = await fetch(`${GRAPH_BASE}/me`, { headers: { 'Authorization': 'Bearer ' + data.access_token } }).then(r => r.json());
+          const email = me.mailPrincipalName || me.userPrincipalName || '';
+          if (email) setConfig('outlook_email', email);
+        } catch (_) {}
+        return { success: true };
+      }
+      if (data.error === 'authorization_pending' || data.error === 'slow_down') {
+        await new Promise(r => setTimeout(r, (interval || 5) * 1000));
+        continue;
+      }
+      return { success: false, error: data.error_description || data.error || 'Error' };
+    } catch (err) {
+      await new Promise(r => setTimeout(r, 2000));
+    }
+  }
+  return { success: false, error: 'Tiempo de espera agotado' };
+});
+
+ipcMain.handle('desconectarOutlook', () => { borrarTokensOutlook(); return { success: true }; });
+
+ipcMain.handle('outlookStatus', () => { const t = getOutlookTokens(); return { connected: !!getConfig('outlook_refresh_token'), email: t.email }; });
+
 async function getOutlookAccessToken() {
   const tokens = getOutlookTokens();
   if (tokens.access_token && Date.now() < tokens.expires_at) return tokens.access_token;

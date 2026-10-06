@@ -30,7 +30,7 @@
         </form>
 <div class="login-footer">
           <p>LexConsilium Consultores</p>
-          <p class="version">v1.7.11</p>
+          <p class="version">v1.7.12</p>
         </div>
       </div>
     </div>
@@ -106,7 +106,7 @@
           </div>
         </div>
         <button class="btn btn-secondary logout-btn" onclick="handleLogout()" style="width: 100%; margin-top: 12px; font-size: 12px; padding: 8px;">🚪 Cerrar Sesión</button>
-        <span class="version">v1.7.11</span>
+        <span class="version">v1.7.12</span>
       </div>
     </aside>
 
@@ -593,6 +593,14 @@
           </div>
           <div class="form-actions" style="margin-top: 16px;">
             <button class="btn btn-primary" onclick="openUsuarioModal()">+ Nuevo Usuario</button>
+          </div>
+        </div>
+        <div class="card" style="max-width: 640px; margin-top: 16px;">
+          <h3>Conectar Outlook</h3>
+          <p class="setting-note" id="outlookStatus">Revisa si Outlook está conectado para enviar correos y sincronizar plazos.</p>
+          <div class="form-actions" style="padding: 0; border: none; gap: 8px;">
+            <button class="btn btn-primary" onclick="conectarOutlook()">Conectar Outlook</button>
+            <button class="btn btn-secondary" onclick="desconectarOutlook()">Desconectar</button>
           </div>
         </div>
         <div class="card" style="max-width: 640px; margin-top: 16px;">

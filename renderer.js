@@ -1530,6 +1530,27 @@ async function loadConfiguracion() {
   } else {
     if (adminSection) adminSection.style.display = 'none';
   }
+  try {
+    const out = await ipcRenderer.invoke('outlookStatus');
+    const el = document.getElementById('outlookStatus');
+    if (el) el.textContent = out.connected ? `Conectado como ${out.email || 'Outlook'}` : 'Sin conexión activa (token vencido o nunca conectado). Usa "Conectar Outlook".';
+  } catch (e) {}
+}
+
+async function conectarOutlook() {
+  const res = await ipcRenderer.invoke('conectarOutlook');
+  if (!res.success) { alert('No se pudo iniciar: ' + res.error); return; }
+  const { shell } = require('electron');
+  try { shell.openExternal(res.verification_uri); } catch (e) {}
+  alert(`Abre ${res.verification_uri} e ingresa el código:\n\n${res.user_code}\n\nLuego haz clic en Aceptar para finalizar (hasta 15 min).`);
+  const ok = await ipcRenderer.invoke('verificarOutlook', res.device_code, res.interval);
+  alert(ok.success ? '✅ Outlook conectado.' : '❌ Error: ' + ok.error);
+}
+
+async function desconectarOutlook() {
+  const res = await ipcRenderer.invoke('desconectarOutlook');
+  alert(res.success ? 'Outlook desconectado.' : 'Error al desconectar.');
+  loadConfiguracion();
 }
 
 // ==================== GESTIÓN DE USUARIOS ====================
