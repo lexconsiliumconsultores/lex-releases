@@ -236,38 +236,47 @@ function loadSection(section) {
 
 // ==================== PULL TO REFRESH ====================
 (function initPullToRefresh() {
-  let startY = 0;
-  let active = false;
-  let dist = 0;
+  let startY = 0, active = false, dist = 0;
   let bar = document.getElementById('ptrBar');
   if (!bar) {
     bar = document.createElement('div');
     bar.id = 'ptrBar';
-    bar.style.cssText = 'position:fixed;top:0;left:0;right:0;height:4px;background:#3b82f6;transform:scaleX(0);transform-origin:left;transition:transform .2s;z-index:9999;';
+    bar.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 4px);left:0;right:0;height:5px;background:#3b82f6;transform:scaleX(0);transform-origin:left;transition:transform .15s;z-index:9999;border-radius:3px;';
     document.body.appendChild(bar);
   }
+  let toast = document.getElementById('ptrToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'ptrToast';
+    toast.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:6px 14px;border-radius:999px;font-size:12px;z-index:9999;display:none;';
+    document.body.appendChild(toast);
+  }
+  function elAtTop() {
+    const mc = document.querySelector('.main-content');
+    if (mc && mc.scrollTop > 2) return false;
+    return (window.scrollY || 0) <= 0 && (document.documentElement.scrollTop || 0) <= 0;
+  }
   document.addEventListener('touchstart', (e) => {
-    if ((window.scrollY || 0) <= 0 && (document.documentElement.scrollTop || 0) <= 0) {
-      startY = e.touches[0].clientY;
-      dist = 0;
-      active = true;
-    }
+    if (elAtTop()) { startY = e.touches[0].clientY; dist = 0; active = true; }
   }, { passive: true });
   document.addEventListener('touchmove', (e) => {
     if (!active) return;
     dist = e.touches[0].clientY - startY;
-    if (dist > 30) bar.style.transform = `scaleX(${Math.min(dist / 120, 1)})`;
+    if (dist > 25) bar.style.transform = `scaleX(${Math.min(dist / 110, 1)})`;
   }, { passive: true });
   document.addEventListener('touchend', () => {
-    if (active && dist > 90) {
+    if (active && dist > 70) {
       try {
         const ks = [];
         for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.indexOf('lexcache_') === 0) ks.push(k); }
         ks.forEach(k => localStorage.removeItem(k));
       } catch (e) {}
+      toast.textContent = 'Actualizando…';
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 1200);
       loadSection(currentSection);
     }
-    if (bar) { bar.style.transform = 'scaleX(0)'; }
+    bar.style.transform = 'scaleX(0)';
     active = false; dist = 0;
   });
 })();
