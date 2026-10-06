@@ -73,7 +73,7 @@ function startBackgroundSync() {
   backgroundSyncInterval = setInterval(() => { syncNow().catch(() => {}); }, 180000);
 }
 
-// Tras cada guardado local, sube cambios a la nube 10s después (sin bloquear UI)
+// Tras cada guardado local, sube cambios a la nube 10s despuï¿½s (sin bloquear UI)
 function scheduleSyncPush() {
   if (!supaAdapter.isEnabled()) return;
   if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
@@ -91,7 +91,7 @@ function withTimeout(p, ms, label) {
 }
 
 async function syncNow() {
-  if (!supaAdapter.isEnabled()) return { success: false, error: 'Supabase no configurado o sin conexión' };
+  if (!supaAdapter.isEnabled()) return { success: false, error: 'Supabase no configurado o sin conexiï¿½n' };
   if (syncRunning) return { success: false, error: 'Sync en curso' };
   syncRunning = true;
   const resumen = { bajados: 0, subidos: 0, borradosNube: 0, borradosLocal: 0, errores: [] };
@@ -132,7 +132,7 @@ async function syncNow() {
           resumen.bajados++;
         } catch (e) { resumen.errores.push(`insert ${t}: ${e.message}`); }
       }
-      // 1b) borrado en otro dispositivo: estaba en la nube y ya no está
+      // 1b) borrado en otro dispositivo: estaba en la nube y ya no estï¿½
       for (const known of queryAll('SELECT ref_id FROM sync_known WHERE tabla=?', [t])) {
         const id = String(known.ref_id);
         if (!cloudIds.has(id) && !pendingDel.has(id) && queryOne(`SELECT ${keyCol} FROM ${t} WHERE ${keyCol}=?`, [id])) {
@@ -174,13 +174,20 @@ function createWindow() {
       nodeIntegration: true,
       contextIsolation: false
     },
-    title: 'LEX - Sistema de Gestión Jurídica',
+    title: 'LEX - Sistema de Gestiï¿½n Jurï¿½dica',
     backgroundColor: '#1a1a2e'
   });
 
   mainWindow.loadFile('index.html');
   mainWindow.maximize();
-  
+
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F5' && input.type === 'keyDown') {
+      event.preventDefault();
+      mainWindow.reload();
+    }
+  });
+
   const menu = Menu.buildFromTemplate([]);
   Menu.setApplicationMenu(menu);
 
@@ -383,7 +390,7 @@ async function initDatabase() {
     db.run('ALTER TABLE clientes ADD COLUMN id_tramite TEXT');
   }
 
-  // Tablas de control de sincronización (solo locales, no se suben)
+  // Tablas de control de sincronizaciï¿½n (solo locales, no se suben)
   db.run(`CREATE TABLE IF NOT EXISTS eliminados (
     tabla TEXT NOT NULL,
     ref_id TEXT NOT NULL,
@@ -434,7 +441,7 @@ function borrarRegistro(tabla, id) {
   runQuery(`DELETE FROM ${tabla} WHERE id=?`, [id]);
 }
 
-// Configuración (pares clave-valor)
+// Configuraciï¿½n (pares clave-valor)
 function getConfig(clave) {
   const row = queryOne('SELECT valor FROM config WHERE clave=?', [clave]);
   return row ? row.valor : null;
@@ -482,7 +489,7 @@ ipcMain.handle('deleteCliente', (event, id) => {
   return { success: true };
 });
 
-// Generar número de caso automático
+// Generar nï¿½mero de caso automï¿½tico
 function generarNumeroCaso() {
   const year = new Date().getFullYear();
   const last = queryOne(
@@ -571,7 +578,7 @@ ipcMain.handle('getDocumentoBase64', (event, id) => {
     }
     const stats = fs.statSync(doc.ruta);
     if (stats.size > 25 * 1024 * 1024) {
-      return { success: false, error: 'El archivo supera 25 MB y es demasiado grande para el visor interno. Descárgalo para revisarlo.' };
+      return { success: false, error: 'El archivo supera 25 MB y es demasiado grande para el visor interno. Descï¿½rgalo para revisarlo.' };
     }
     const ext = path.extname(doc.ruta).toLowerCase();
     const mime = MIME_DOCS[ext] || 'application/octet-stream';
@@ -623,7 +630,7 @@ function fechaGarantizada(fecha, hora) {
 
 async function crearEventoParaPlazo(plazo) {
   const guia = fechaGarantizada(plazo.fecha_limite, plazo.hora);
-  if (!guia.fechaBase) return { success: false, error: 'Fecha de plazo inválida' };
+  if (!guia.fechaBase) return { success: false, error: 'Fecha de plazo invï¿½lida' };
   const inicio = new Date(guia.fecha);
   const fin = new Date(inicio.getTime() + 60 * 60 * 1000);
   const caso = plazo.caso_id ? queryOne('SELECT titulo FROM casos WHERE id=?', [plazo.caso_id]) : null;
@@ -730,7 +737,7 @@ ipcMain.handle('addSeguimiento', (event, nota) => {
   );
 });
 
-// Estadísticas
+// Estadï¿½sticas
 ipcMain.handle('getEstadisticas', () => {
   const totalCasos = queryOne('SELECT COUNT(*) as total FROM casos').total;
   const casosActivos = queryOne("SELECT COUNT(*) as total FROM casos WHERE estado='Activo'").total;
@@ -745,7 +752,7 @@ ipcMain.handle('getEstadisticas', () => {
   return { totalCasos, casosActivos, totalClientes, plazosPendientes, plazosVencidos, porTipo, porEstado, notificacionesEnviadas, seguimientos };
 });
 
-// Búsqueda
+// Bï¿½squeda
 ipcMain.handle('searchCasos', (event, query) => {
   const q = `%${query}%`;
   return queryAll(`
@@ -790,7 +797,7 @@ ipcMain.handle('deleteNotificacion', (event, id) => {
   return { success: true };
 });
 
-// Configuración SMTP (correo)
+// Configuraciï¿½n SMTP (correo)
 ipcMain.handle('getSMTPConfig', () => {
   return getSMTPConfig();
 });
@@ -969,7 +976,7 @@ async function sendMailOutlookDirect(para, asunto, mensaje) {
   return { success: true };
 }
 
-// ==================== OUTLOOK (envío automático) ====================
+// ==================== OUTLOOK (envï¿½o automï¿½tico) ====================
 let outlookEventsCache = { key: '', ts: 0, data: null };
 function invalidarCacheOutlook() { outlookEventsCache.ts = 0; }
 
@@ -1159,11 +1166,11 @@ ipcMain.handle('enviarRecordatorioCobro', async (event, facturaId) => {
   const venc = f.fecha_vencimiento
     ? new Date(f.fecha_vencimiento).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
     : 'sin fecha de vencimiento';
-  const asunto = f.caso_titulo ? `LEX - Recordatorio de Pago - ${f.caso_titulo}` : `LEX - Recordatorio de Pago - Factura N° ${f.numero}`;
+  const asunto = f.caso_titulo ? `LEX - Recordatorio de Pago - ${f.caso_titulo}` : `LEX - Recordatorio de Pago - Factura Nï¿½ ${f.numero}`;
   const mensaje = [
     `Estimado/a ${f.cliente_nombre},`,
     '',
-    `Le recordamos que la factura N° ${f.numero} se encuentra pendiente de pago:`,
+    `Le recordamos que la factura Nï¿½ ${f.numero} se encuentra pendiente de pago:`,
     `- Concepto: ${f.concepto || '-'}`,
     `- Monto total: $${fmt.format(f.monto || 0)}`,
     `- Saldo pendiente: $${fmt.format(saldo)}`,
@@ -1193,33 +1200,33 @@ ipcMain.handle('enviarRecordatorioCobro', async (event, facturaId) => {
 function generarDocumentoLegal(tipo, dato) {
   const hoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
   const parte = dato.cliente_nombre || dato.nombre || '[Nombre del Cliente]';
-  const cedula = dato.cliente_cedula || '[Cédula]';
+  const cedula = dato.cliente_cedula || '[Cï¿½dula]';
   const domicilio = dato.cliente_direccion || '[Domicilio]';
   const contraparte = dato.contraparte || '[Nombre de la Contraparte]';
-  const objeto = dato.objeto || '[Descripción del Objeto]';
+  const objeto = dato.objeto || '[Descripciï¿½n del Objeto]';
   const tribunal = dato.tribunal || '[Tribunal]';
-  const caso = dato.caso_titulo || '[N° de Expediente]';
+  const caso = dato.caso_titulo || '[Nï¿½ de Expediente]';
 
   const plantillas = {
-    'demanda': `REPÚBLICA BOLIVARIANA DE VENEZUELA
+    'demanda': `REPï¿½BLICA BOLIVARIANA DE VENEZUELA
 EN SU NOMBRE
 JUZGADO ${tribunal.toUpperCase()}
 
-EXPEDIENTE N°: ${caso}
+EXPEDIENTE Nï¿½: ${caso}
 
-Yo, ${parte}, venezolano(a), mayor de edad, titular de la cédula de identidad N° ${cedula}, domiciliado(a) en ${domicilio}, asistido(a) por abogado(a) en ejercicio, por medio del presente escrito ocurro ante su competente autoridad para interponer formal DEMANDA contra ${contraparte}, por ${objeto}, de conformidad con lo establecido en la ley.
+Yo, ${parte}, venezolano(a), mayor de edad, titular de la cï¿½dula de identidad Nï¿½ ${cedula}, domiciliado(a) en ${domicilio}, asistido(a) por abogado(a) en ejercicio, por medio del presente escrito ocurro ante su competente autoridad para interponer formal DEMANDA contra ${contraparte}, por ${objeto}, de conformidad con lo establecido en la ley.
 
-CAPÍTULO PRIMERO
+CAPï¿½TULO PRIMERO
 DE LOS HECHOS
 
-"Descripción detallada de los hechos que motivan la presente demanda..."
+"Descripciï¿½n detallada de los hechos que motivan la presente demanda..."
 
-CAPÍTULO SEGUNDO
+CAPï¿½TULO SEGUNDO
 DEL DERECHO
 
-"Fundamentos legales que sustentan la pretensión..."
+"Fundamentos legales que sustentan la pretensiï¿½n..."
 
-CAPÍTULO TERCERO
+CAPï¿½TULO TERCERO
 DEL PETITORIO
 
 En virtud de lo antes expuesto, solicito a este Tribunal admita la presente demanda y la sustancie conforme a derecho.
@@ -1228,11 +1235,11 @@ Es justicia que solicito en la ciudad de ${domicilio.split(',')[0] || '[Ciudad]'
 
 ${parte}`,
 
-    'poder': `PODER GENERAL DE REPRESENTACIÓN
+    'poder': `PODER GENERAL DE REPRESENTACIï¿½N
 
-Yo, ${parte}, venezolano(a), mayor de edad, titular de la cédula de identidad N° ${cedula}, domiciliado(a) en ${domicilio}, por medio del presente documento declaro:
+Yo, ${parte}, venezolano(a), mayor de edad, titular de la cï¿½dula de identidad Nï¿½ ${cedula}, domiciliado(a) en ${domicilio}, por medio del presente documento declaro:
 
-Que confiero PODER GENERAL DE REPRESENTACIÓN LITIGIOSA, amplio y bastante cuanto en derecho se requiere, a favor del (de la) abogado(a) ${dato.abogado || '[Nombre del Abogado]'}, inscrito(a) en el INPREABOGADO bajo el N° ${dato.ipsa || '[N° IPSA]'}, para que en mi nombre y representación ejerza toda clase de actuaciones judiciales y extrajudiciales ante los tribunales de la República Bolivariana de Venezuela.
+Que confiero PODER GENERAL DE REPRESENTACIï¿½N LITIGIOSA, amplio y bastante cuanto en derecho se requiere, a favor del (de la) abogado(a) ${dato.abogado || '[Nombre del Abogado]'}, inscrito(a) en el INPREABOGADO bajo el Nï¿½ ${dato.ipsa || '[Nï¿½ IPSA]'}, para que en mi nombre y representaciï¿½n ejerza toda clase de actuaciones judiciales y extrajudiciales ante los tribunales de la Repï¿½blica Bolivariana de Venezuela.
 
 Particularmente queda facultado(a) para: intentar y contestar demandas, desistir, transigir, convenir, solicitar medidas preventivas, promover y evacuar pruebas, interponer recursos y, en general, ejercer todas las facultades que la ley confiere a los apoderados.
 
@@ -1242,52 +1249,52 @@ ${parte}`,
 
     'contrato': `CONTRATO DE SERVICIOS PROFESIONALES
 
-Entre ${parte}, titular de la cédula de identidad N° ${cedula}, en lo sucesivo "EL CLIENTE", y el (la) abogado(a) ${dato.abogado || '[Abogado]'}, inscrito(a) en el INPREABOGADO bajo el N° ${dato.ipsa || '[N° IPSA]'}, en lo sucesivo "EL PROFESIONAL", se celebra el presente contrato de conformidad con las siguientes cláusulas:
+Entre ${parte}, titular de la cï¿½dula de identidad Nï¿½ ${cedula}, en lo sucesivo "EL CLIENTE", y el (la) abogado(a) ${dato.abogado || '[Abogado]'}, inscrito(a) en el INPREABOGADO bajo el Nï¿½ ${dato.ipsa || '[Nï¿½ IPSA]'}, en lo sucesivo "EL PROFESIONAL", se celebra el presente contrato de conformidad con las siguientes clï¿½usulas:
 
-PRIMERA: EL CLIENTE encomienda al PROFESIONAL el patrocinio jurídico en el asunto relativo a: ${objeto}.
+PRIMERA: EL CLIENTE encomienda al PROFESIONAL el patrocinio jurï¿½dico en el asunto relativo a: ${objeto}.
 
-SEGUNDA: EL PROFESIONAL se obliga a prestar sus servicios profesionales con diligencia, lealtad y confidencialidad, informando periódicamente al CLIENTE sobre el estado de su asunto.
+SEGUNDA: EL PROFESIONAL se obliga a prestar sus servicios profesionales con diligencia, lealtad y confidencialidad, informando periï¿½dicamente al CLIENTE sobre el estado de su asunto.
 
-TERCERA: Como contraprestación, el CLIENTE pagará al PROFESIONAL la cantidad de ${dato.honorarios || '[Monto de Honorarios]'} por concepto de honorarios profesionales.
+TERCERA: Como contraprestaciï¿½n, el CLIENTE pagarï¿½ al PROFESIONAL la cantidad de ${dato.honorarios || '[Monto de Honorarios]'} por concepto de honorarios profesionales.
 
 CUARTA: Este poder se otorga en la ciudad de ${domicilio.split(',')[0] || '[Ciudad]'}, a los ${hoy}.
 
 ${parte}\n\n${dato.abogado || '[Abogado]'}`,
 
-    'inspeccion': `SOLICITUD DE INSPECCIÓN JUDICIAL
+    'inspeccion': `SOLICITUD DE INSPECCIï¿½N JUDICIAL
 
-REPÚBLICA BOLIVARIANA DE VENEZUELA
+REPï¿½BLICA BOLIVARIANA DE VENEZUELA
 EN SU NOMBRE
 JUZGADO ${tribunal.toUpperCase()}
 
-EXPEDIENTE N°: ${caso}
+EXPEDIENTE Nï¿½: ${caso}
 
-Yo, ${parte}, venezolano(a), mayor de edad, titular de la cédula de identidad N° ${cedula}, asistido(a) por abogado(a), de este domicilio, ante su competente autoridad ocurro y expongo:
+Yo, ${parte}, venezolano(a), mayor de edad, titular de la cï¿½dula de identidad Nï¿½ ${cedula}, asistido(a) por abogado(a), de este domicilio, ante su competente autoridad ocurro y expongo:
 
-Que de conformidad con el artículo 472 y siguientes del Código de Procedimiento Civil, solicito se sirva practicar INSPECCIÓN JUDICIAL en: ${objeto}.
+Que de conformidad con el artï¿½culo 472 y siguientes del Cï¿½digo de Procedimiento Civil, solicito se sirva practicar INSPECCIï¿½N JUDICIAL en: ${objeto}.
 
-Dicha inspección es necesaria para que conste en autos el estado, características y circunstancias del lugar objeto de la inspección, a los fines de hacer valer mis derechos en el presente juicio.
+Dicha inspecciï¿½n es necesaria para que conste en autos el estado, caracterï¿½sticas y circunstancias del lugar objeto de la inspecciï¿½n, a los fines de hacer valer mis derechos en el presente juicio.
 
-Pido a este Tribunal decrete la práctica de la misma y designe el día y la hora para su evacuación.
+Pido a este Tribunal decrete la prï¿½ctica de la misma y designe el dï¿½a y la hora para su evacuaciï¿½n.
 
 Es justicia que solicito en la ciudad de ${domicilio.split(',')[0] || '[Ciudad]'}, a los ${hoy}.
 
 ${parte}`,
 
-    'testimonial': `SOLICITUD DE EXHIBICIÓN / PRUEBA TESTIMONIAL
+    'testimonial': `SOLICITUD DE EXHIBICIï¿½N / PRUEBA TESTIMONIAL
 
-REPÚBLICA BOLIVARIANA DE VENEZUELA
+REPï¿½BLICA BOLIVARIANA DE VENEZUELA
 EN SU NOMBRE
 JUZGADO ${tribunal.toUpperCase()}
 
-EXPEDIENTE N°: ${caso}
+EXPEDIENTE Nï¿½: ${caso}
 
 Yo, ${parte}, parte actora en el presente juicio, asistido(a) por abogado(a) de este domicilio, ante su competente autoridad ocurro y expongo:
 
-De conformidad con lo establecido en el Código de Procedimiento Civil, solicito la evacuación de las siguientes pruebas relativas al asunto de ${objeto}:
+De conformidad con lo establecido en el Cï¿½digo de Procedimiento Civil, solicito la evacuaciï¿½n de las siguientes pruebas relativas al asunto de ${objeto}:
 
-1. PRUEBA TESTIMONIAL: Se solicita la declaración de los testigos sobre los hechos controvertidos.
-2. EXHIBICIÓN DE DOCUMENTOS: Se solicita a la contraparte la exhibición de los documentos relacionados con el presente asunto.
+1. PRUEBA TESTIMONIAL: Se solicita la declaraciï¿½n de los testigos sobre los hechos controvertidos.
+2. EXHIBICIï¿½N DE DOCUMENTOS: Se solicita a la contraparte la exhibiciï¿½n de los documentos relacionados con el presente asunto.
 
 Pido a este Tribunal admita y sustancie las pruebas solicitadas conforme a derecho.
 
@@ -1332,36 +1339,36 @@ ipcMain.handle('guardarDocumentoGenerado', (event, doc) => {
 // ==================== CALENDARIO DE PLAZOS LEGALES ====================
 const plazosLegales = {
   'civil': [
-    { nombre: 'Contestación de demanda', dias: 20, descripcion: 'Plazo para contestar la demanda en procedimiento ordinario (art. 359 CPC)' },
-    { nombre: 'Apelación de sentencia definitiva', dias: 5, descripcion: 'Plazo para ejercer recurso de apelación (art. 298 CPC)' },
-    { nombre: 'Apelación de sentencia interlocutoria', dias: 5, descripcion: 'Plazo para apelar sentencias interlocutorias (art. 297 CPC)' },
-    { nombre: 'Recurso de casación', dias: 10, descripcion: 'Plazo para interponer recurso de casación (art. 313 CPC)' },
+    { nombre: 'Contestaciï¿½n de demanda', dias: 20, descripcion: 'Plazo para contestar la demanda en procedimiento ordinario (art. 359 CPC)' },
+    { nombre: 'Apelaciï¿½n de sentencia definitiva', dias: 5, descripcion: 'Plazo para ejercer recurso de apelaciï¿½n (art. 298 CPC)' },
+    { nombre: 'Apelaciï¿½n de sentencia interlocutoria', dias: 5, descripcion: 'Plazo para apelar sentencias interlocutorias (art. 297 CPC)' },
+    { nombre: 'Recurso de casaciï¿½n', dias: 10, descripcion: 'Plazo para interponer recurso de casaciï¿½n (art. 313 CPC)' },
     { nombre: 'Solicitud de aclaratoria', dias: 3, descripcion: 'Plazo para solicitar aclaratoria de sentencia (art. 252 CPC)' },
-    { nombre: 'Reconvención', dias: 20, descripcion: 'Término para proponer reconvención (art. 366 CPC)' },
-    { nombre: 'Promoción de pruebas', dias: 15, descripcion: 'Plazo para promover pruebas en juicio ordinario (art. 396 CPC)' }
+    { nombre: 'Reconvenciï¿½n', dias: 20, descripcion: 'Tï¿½rmino para proponer reconvenciï¿½n (art. 366 CPC)' },
+    { nombre: 'Promociï¿½n de pruebas', dias: 15, descripcion: 'Plazo para promover pruebas en juicio ordinario (art. 396 CPC)' }
   ],
   'penal': [
-    { nombre: 'Presentación de imputado', dias: 0, descripcion: 'Audiencia de presentación dentro de las 48 horas siguientes a la aprehensión (art. 236 COPP)' },
-    { nombre: 'Audiencia preliminar', dias: 0, descripcion: 'Se celebrará dentro de los 45 días siguientes a la presentación (COPP)' },
-    { nombre: 'Recurso de casación', dias: 15, descripcion: 'Plazo para recurrir en casación la sentencia (COPP)' },
-    { nombre: 'Apelación de sentencia', dias: 10, descripcion: 'Plazo para interponer apelación contra sentencia definitiva (COPP)' }
+    { nombre: 'Presentaciï¿½n de imputado', dias: 0, descripcion: 'Audiencia de presentaciï¿½n dentro de las 48 horas siguientes a la aprehensiï¿½n (art. 236 COPP)' },
+    { nombre: 'Audiencia preliminar', dias: 0, descripcion: 'Se celebrarï¿½ dentro de los 45 dï¿½as siguientes a la presentaciï¿½n (COPP)' },
+    { nombre: 'Recurso de casaciï¿½n', dias: 15, descripcion: 'Plazo para recurrir en casaciï¿½n la sentencia (COPP)' },
+    { nombre: 'Apelaciï¿½n de sentencia', dias: 10, descripcion: 'Plazo para interponer apelaciï¿½n contra sentencia definitiva (COPP)' }
   ],
   'laboral': [
-    { nombre: 'Contestación de demanda', dias: 5, descripcion: 'Plazo para contestar la demanda laboral (LOPTRA)' },
-    { nombre: 'Audiencia preliminar', dias: 0, descripcion: 'Se fijará dentro de los 10 días hábiles siguientes (LOPTRA)' },
-    { nombre: 'Apelación', dias: 5, descripcion: 'Plazo para apelar sentencia definitiva laboral (LOPTRA)' },
-    { nombre: 'Casación laboral', dias: 10, descripcion: 'Plazo para interponer recurso de casación laboral (LOPTRA)' }
+    { nombre: 'Contestaciï¿½n de demanda', dias: 5, descripcion: 'Plazo para contestar la demanda laboral (LOPTRA)' },
+    { nombre: 'Audiencia preliminar', dias: 0, descripcion: 'Se fijarï¿½ dentro de los 10 dï¿½as hï¿½biles siguientes (LOPTRA)' },
+    { nombre: 'Apelaciï¿½n', dias: 5, descripcion: 'Plazo para apelar sentencia definitiva laboral (LOPTRA)' },
+    { nombre: 'Casaciï¿½n laboral', dias: 10, descripcion: 'Plazo para interponer recurso de casaciï¿½n laboral (LOPTRA)' }
   ],
   'administrativo': [
     { nombre: 'Recurso de nulidad', dias: 180, descripcion: 'Plazo para interponer recurso contencioso administrativo de nulidad (LOPA)' },
-    { nombre: 'Recurso de reconsideración', dias: 25, descripcion: 'Plazo para recurso de reconsideración (art. 94 LOPA)' },
-    { nombre: 'Recurso jerárquico', dias: 25, descripcion: 'Plazo para recurso jerárquico (art. 94 LOPA)' },
-    { nombre: 'Recurso de revisión', dias: 180, descripcion: 'Plazo para recurso de revisión (LOPA)' }
+    { nombre: 'Recurso de reconsideraciï¿½n', dias: 25, descripcion: 'Plazo para recurso de reconsideraciï¿½n (art. 94 LOPA)' },
+    { nombre: 'Recurso jerï¿½rquico', dias: 25, descripcion: 'Plazo para recurso jerï¿½rquico (art. 94 LOPA)' },
+    { nombre: 'Recurso de revisiï¿½n', dias: 180, descripcion: 'Plazo para recurso de revisiï¿½n (LOPA)' }
   ],
   'mercantil': [
-    { nombre: 'Contestación de demanda', dias: 20, descripcion: 'Plazo para contestar en juicio ordinario mercantil' },
-    { nombre: 'Apelación', dias: 5, descripcion: 'Plazo para apelar sentencias mercantiles' },
-    { nombre: 'Casación', dias: 10, descripcion: 'Plazo para recurso de casación' }
+    { nombre: 'Contestaciï¿½n de demanda', dias: 20, descripcion: 'Plazo para contestar en juicio ordinario mercantil' },
+    { nombre: 'Apelaciï¿½n', dias: 5, descripcion: 'Plazo para apelar sentencias mercantiles' },
+    { nombre: 'Casaciï¿½n', dias: 10, descripcion: 'Plazo para recurso de casaciï¿½n' }
   ]
 };
 
@@ -1384,7 +1391,7 @@ ipcMain.handle('generarPlazoDesdeLegal', async (event, plazoInfo) => {
 
 // ==================== CHAT GUARDADO (LEXAI) ====================
 ipcMain.handle('guardarConversacion', (event, conv) => {
-  const titulo = conv.titulo || ('Conversación ' + new Date().toLocaleDateString('es-ES'));
+  const titulo = conv.titulo || ('Conversaciï¿½n ' + new Date().toLocaleDateString('es-ES'));
   const usuario = conv.usuario || 'admin';
   const contenido = JSON.stringify(conv.mensajes || []);
   if (conv.id) {
@@ -1418,7 +1425,7 @@ ipcMain.handle('eliminarConversacion', (event, id) => {
   return { success: true };
 });
 
-// ==================== AUTENTICACIÓN Y USUARIOS ====================
+// ==================== AUTENTICACIï¿½N Y USUARIOS ====================
 ipcMain.handle('login', (event, usuario, password) => {
   const user = queryOne(
     'SELECT * FROM usuarios WHERE usuario=? AND password=? AND activo=1',
@@ -1428,7 +1435,7 @@ ipcMain.handle('login', (event, usuario, password) => {
     currentUser = user;
     return { success: true, user: { id: user.id, usuario: user.usuario, nombre: user.nombre, rol: user.rol } };
   }
-  return { success: false, error: 'Usuario o contraseña incorrectos' };
+  return { success: false, error: 'Usuario o contraseï¿½a incorrectos' };
 });
 
 ipcMain.handle('logout', () => {
@@ -1507,12 +1514,12 @@ ipcMain.handle('saveIAConfig', (event, cfg) => {
 ipcMain.handle('chatIA', async (event, mensaje, historial) => {
   const key = getGeminiKey();
   if (!key) {
-    return { success: false, error: 'IA no configurada. Ingresa tu API key en Configuración.' };
+    return { success: false, error: 'IA no configurada. Ingresa tu API key en Configuraciï¿½n.' };
   }
 
   const systemPrompt = {
     role: 'system',
-    parts: [{ text: 'Eres LexAI, un asistente jurídico experto en derecho venezolano e internacional. Proporciona asesoría legal general, orientación sobre plazos procesales, redacción de escritos básicos y explicación de conceptos legales. Responde siempre en español, de forma clara y profesional. IMPORTANTE: Recuerda que no sustituyes a un abogado real y que los casos pueden requerir asesoría profesional personalizada. Si la consulta requiere un abogado especializado, recomienda contactar al estudio LexConsilium Consultores. Mantén las respuestas concisas y útiles (máximo ~300 palabras por respuesta).' }]
+    parts: [{ text: 'Eres LexAI, un asistente jurï¿½dico experto en derecho venezolano e internacional. Proporciona asesorï¿½a legal general, orientaciï¿½n sobre plazos procesales, redacciï¿½n de escritos bï¿½sicos y explicaciï¿½n de conceptos legales. Responde siempre en espaï¿½ol, de forma clara y profesional. IMPORTANTE: Recuerda que no sustituyes a un abogado real y que los casos pueden requerir asesorï¿½a profesional personalizada. Si la consulta requiere un abogado especializado, recomienda contactar al estudio LexConsilium Consultores. Mantï¿½n las respuestas concisas y ï¿½tiles (mï¿½ximo ~300 palabras por respuesta).' }]
   };
 
   let contents = [];
@@ -1602,8 +1609,8 @@ function setupAutoUpdater() {
     updaterStallTimer = setInterval(checkUpdaterStalled, 10000);
     if (Notification.isSupported()) {
       new Notification({
-        title: 'Nueva versión disponible',
-        body: `LEX ${info.version} está disponible. Se descargará en segundo plano.`
+        title: 'Nueva versiï¿½n disponible',
+        body: `LEX ${info.version} estï¿½ disponible. Se descargarï¿½ en segundo plano.`
       }).show();
     }
     if (mainWindow) mainWindow.webContents.send('update-available', info.version);
@@ -1626,7 +1633,7 @@ function setupAutoUpdater() {
     stopStallWatch();
     updaterRestartCanceled = false;
     if (mainWindow) mainWindow.webContents.send('update-downloaded', info.version);
-    // Instalación automática: LEX se reinicia solo en 15 segundos a menos que el usuario lo cancele.
+    // Instalaciï¿½n automï¿½tica: LEX se reinicia solo en 15 segundos a menos que el usuario lo cancele.
     if (updaterRestartTimer) clearTimeout(updaterRestartTimer);
     updaterRestartTimer = setTimeout(() => {
       updaterRestartTimer = null;
@@ -1654,7 +1661,7 @@ app.whenReady().then(async () => {
   await initDatabase();
   createWindow();
   setupAutoUpdater();
-  // Conexión Supabase en 2º plano (no bloquea el arranque); si conecta, sync cada 5 min
+  // Conexiï¿½n Supabase en 2ï¿½ plano (no bloquea el arranque); si conecta, sync cada 5 min
   supaAdapter.initSupabase().then(ok => {
     if (ok) {
       startBackgroundSync();

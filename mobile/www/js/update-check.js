@@ -2,7 +2,7 @@
 // un aviso si hay una version mas nueva. Al tocar "Descargar" abre el navegador
 // del telefono con el APK mas reciente.
 (function() {
-  const APP_VERSION = '1.7.10';
+  const APP_VERSION = '1.7.11';
   const API_URL = 'https://api.github.com/repos/lexconsiliumconsultores/lex/releases/latest';
   const APK_ASSET = 'app-release.apk';
 
@@ -11,7 +11,6 @@
       if (!rel || !rel.tag_name) return;
       const latest = rel.tag_name.replace(/^v/, '');
       if (latest === APP_VERSION) return;
-      if (localStorage.getItem('lex_skip_update') === latest) return;
       const asset = (rel.assets || []).find(a => a.name === APK_ASSET);
       if (!asset) return;
       const banner = document.createElement('div');
@@ -30,7 +29,6 @@
         window.open(asset.browser_download_url, '_system');
       };
       document.getElementById('apkSkipBtn').onclick = function() {
-        localStorage.setItem('lex_skip_update', latest);
         banner.remove();
       };
     }).catch(() => {});

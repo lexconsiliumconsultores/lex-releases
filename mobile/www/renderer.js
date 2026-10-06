@@ -234,6 +234,44 @@ function loadSection(section) {
   }
 }
 
+// ==================== PULL TO REFRESH ====================
+(function initPullToRefresh() {
+  let startY = 0;
+  let active = false;
+  let dist = 0;
+  let bar = document.getElementById('ptrBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'ptrBar';
+    bar.style.cssText = 'position:fixed;top:0;left:0;right:0;height:4px;background:#3b82f6;transform:scaleX(0);transform-origin:left;transition:transform .2s;z-index:9999;';
+    document.body.appendChild(bar);
+  }
+  document.addEventListener('touchstart', (e) => {
+    if ((window.scrollY || 0) <= 0 && (document.documentElement.scrollTop || 0) <= 0) {
+      startY = e.touches[0].clientY;
+      dist = 0;
+      active = true;
+    }
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!active) return;
+    dist = e.touches[0].clientY - startY;
+    if (dist > 30) bar.style.transform = `scaleX(${Math.min(dist / 120, 1)})`;
+  }, { passive: true });
+  document.addEventListener('touchend', () => {
+    if (active && dist > 90) {
+      try {
+        const ks = [];
+        for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.indexOf('lexcache_') === 0) ks.push(k); }
+        ks.forEach(k => localStorage.removeItem(k));
+      } catch (e) {}
+      loadSection(currentSection);
+    }
+    if (bar) { bar.style.transform = 'scaleX(0)'; }
+    active = false; dist = 0;
+  });
+})();
+
 // ==================== DASHBOARD ====================
 async function loadDashboard() {
   const stats = await ipcRenderer.invoke('getEstadisticas');
