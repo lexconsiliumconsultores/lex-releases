@@ -199,20 +199,37 @@
   }
   function cacheKey(channel, args) { return 'lexcache_' + channel + '_' + JSON.stringify(args); }
 
+  const CACHE_TTL = 10000;
+  function readCache(key){ try{ const raw=localStorage.getItem(key); if(!raw) return null; const p=JSON.parse(raw); if(p&&typeof p==='object'&&'v' in p) return p; return {t:0,v:p}; }catch{ return null; } }
+  function writeCache(key,v){ try{ localStorage.setItem(key, JSON.stringify({t:Date.now(),v})); }catch{} }
+  function clearCache(){ try{ const ks=[]; for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i); if(k&&k.indexOf('lexcache_')===0) ks.push(k);} ks.forEach(k=>localStorage.removeItem(k)); }catch{} }
+
   window.ipcRenderer = {
     invoke: async (channel, ...args) => {
       const fn=handlers[channel];
       if(!fn){ console.warn('channel no implementado móvil:',channel); return null; }
       const isGet = /^(get|list|search)/.test(channel);
-      try {
-        const res = await withTimeout(fn(...args), 12000);
-        if (isGet) { try { localStorage.setItem(cacheKey(channel, args), JSON.stringify(res)); } catch {} }
-        return res;
-      } catch (e) {
-        if (isGet) {
-          try { const c = localStorage.getItem(cacheKey(channel, args)); if (c) return JSON.parse(c); } catch {}
+      const key = cacheKey(channel, args);
+      if (isGet) {
+        const c = readCache(key);
+        if (c && (Date.now() - c.t) < CACHE_TTL) {
+          withTimeout(fn(...args), 12000).then(res => writeCache(key, res)).catch(() => {});
+          return c.v;
+        }
+        try {
+          const res = await withTimeout(fn(...args), 12000);
+          writeCache(key, res);
+          return res;
+        } catch (e) {
+          if (c) return c.v;
           return [];
         }
+      }
+      try {
+        const res = await withTimeout(fn(...args), 12000);
+        clearCache();
+        return res;
+      } catch (e) {
         return { success: false, error: 'Tiempo de espera agotado. Verificá tu conexión e intentá de nuevo.' };
       }
     },

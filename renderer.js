@@ -1273,6 +1273,7 @@ async function openPagoModal(facturaId) {
     ? pagos.map(p => `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(59,130,246,0.1);"><span>${formatDate(p.fecha)} · ${escapeHtml(p.metodo || '')} · <small>${escapeHtml(p.referencia || '')}</small></span><span><strong>${formatoCLP(p.monto)}</strong> <button class="btn-icon" onclick="eliminarPago(${p.id})" title="Eliminar pago">🗑️</button></span></div>`).join('')
     : '<p class="empty-state" style="padding:16px; text-align:center; color:#6b7280;">Sin pagos registrados aún.</p>';
   document.getElementById('pagoModal').classList.add('active');
+  setTimeout(() => { const el = document.getElementById('pagoMonto'); if (el) el.focus(); }, 80);
 }
 
 async function eliminarPago(pagoId) {

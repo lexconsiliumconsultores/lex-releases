@@ -190,6 +190,16 @@ function createWindow() {
       dbSaveTimer = null;
     }
   });
+
+  // Refrescar nube al volver a la ventana y al detectar actividad (max 1 vez cada 15s)
+  let lastFocusSync = 0;
+  mainWindow.on('focus', () => {
+    const now = Date.now();
+    if (now - lastFocusSync > 15000) {
+      lastFocusSync = now;
+      syncNow().catch(() => {});
+    }
+  });
 }
 
 async function initDatabase() {
