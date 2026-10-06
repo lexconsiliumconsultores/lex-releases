@@ -94,3 +94,19 @@ px cap sync desde la raï¿½z falla ("android platform has not been added yet") po
 - **Build Android**: app-release.apk firmada (gradlew assembleRelease, JDK 21, ~5 min).
 - **GitHub**: commit 23986ec en master, push OK, release v1.7.9 creada con exe instalador + portable, blockmap, latest.yml y app-release.apk.
 - **Para probar**: instalar el nuevo exe encima del anterior (auto-updater tambien lo descargara); en Android instalar mobile/android/app/build/outputs/apk/release/app-release.apk encima (misma clave de firma, no hay que desinstalar).
+
+# LEX - Historial sesion 06-10-2026 (v1.7.9 / v1.7.10, fix instalador + mobile APK)
+
+## Estado actual (cierre 06-10-2026)
+- **v1.7.10 PUBLICADA** (commit bc52b99..0f7565a):
+  - NSIS `oneClick: true` (antes oneClick:false) -> desde ahora las actualizaciones se instalan EN SILENCIO, cerradas automaticamente, sin el dialogo "No se puede cerrar LEX".
+  - `autoUpdater.quitAndInstall(true, true)` + `app.exit(0)` inmediato.
+  - Eliminado el sync al enfocar ventana (causaba lentitud).
+  - Background sync 60s -> 180s.
+  - Fix encoding: PowerShell corrompio acentos con Set-Content (Gestión -> Gesti?n); corregido con node readFileSync/writeFileSync UTF-8. CSS de UI en v1.7.10 en index.html desktop y mobile, update-check.js APP_VERSION='1.7.10'.
+  - GitHub release v1.7.10 con exe + apk + latest.yml.
+- **Mobile APK 1.7.10**: versionCode 5 / versionName 1.7.10, assembleRelease OK, app-release.apk subida al release, cache localStorage TTL 10s (v1.7.9) ya visible. Supabase verificado con datos (clientes) -> movil muestra datos.
+- **Lessons learned**:
+  - "No se puede cerrar LEX" ocurre si el proceso con la App sigue corriendo cuando NSIS intenta chocarla (NSIS oneClick:false pide cerrarla a mano). Solucion final: oneClick:true.
+  - PowerShell `(Get-Content -Raw) -replace | Set-Content` rompe UTF-8; siempre usar node -e con utf8 para editar archivos.
+  - El numero "v1.X" del sidebar es texto hardcodeado en index.html (no sale de package.json); actualizarlo en cada bump.
