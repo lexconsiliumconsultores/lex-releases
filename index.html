@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+Ôªø<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LEX - Sistema de GestiÛn JurÌdica</title>
+  <title>LEX - Sistema de Gesti√≥n Jur√≠dica</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,9 +12,9 @@
     <div class="login-container">
       <div class="login-card">
         <div class="login-logo">
-          <span class="login-icon">?</span>
+          <span class="login-icon">‚öñ</span>
           <h1>LEX</h1>
-          <p>Sistema de GestiÛn JurÌdica</p>
+          <p>Sistema de Gesti√≥n Jur√≠dica</p>
         </div>
         <form id="loginForm" onsubmit="handleLogin(event)">
           <div class="form-group">
@@ -22,11 +22,11 @@
             <input type="text" id="loginUsuario" placeholder="Ingresa tu usuario" required>
           </div>
           <div class="form-group">
-            <label>ContraseÒa</label>
-            <input type="password" id="loginPassword" placeholder="Ingresa tu contraseÒa" required>
+            <label>Contrase√±a</label>
+            <input type="password" id="loginPassword" placeholder="Ingresa tu contrase√±a" required>
           </div>
           <div id="loginError" class="login-error" style="display: none;"></div>
-          <button type="submit" class="btn btn-primary login-btn">Iniciar SesiÛn</button>
+          <button type="submit" class="btn btn-primary login-btn">Iniciar Sesi√≥n</button>
         </form>
 <div class="login-footer">
           <p>LexConsilium Consultores</p>
@@ -40,61 +40,61 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="logo">
-        <span class="logo-icon">?</span>
+        <span class="logo-icon">‚öñ</span>
         <div class="logo-text">
           <h1>LEX</h1>
-          <span class="logo-subtitle">GESTI”N JURÕDICA</span>
+          <span class="logo-subtitle">GESTI√ìN JUR√çDICA</span>
         </div>
       </div>
       <nav class="nav-menu">
-        <p class="menu-label">MEN⁄ PRINCIPAL</p>
+        <p class="menu-label">MEN√ö PRINCIPAL</p>
         <button class="nav-btn active" data-section="dashboard">
-          <span class="nav-icon">??</span>
+          <span class="nav-icon">üìä</span>
           Dashboard
         </button>
         <button class="nav-btn" data-section="casos">
-          <span class="nav-icon">??</span>
+          <span class="nav-icon">üìÅ</span>
           Casos
         </button>
         <button class="nav-btn" data-section="clientes">
-          <span class="nav-icon">??</span>
+          <span class="nav-icon">üë•</span>
           Clientes
         </button>
         <button class="nav-btn" data-section="documentos">
-          <span class="nav-icon">??</span>
+          <span class="nav-icon">üìÑ</span>
           Documentos
         </button>
         <button class="nav-btn" data-section="plazos">
-          <span class="nav-icon">??</span>
+          <span class="nav-icon">üìÖ</span>
           Plazos
         </button>
         <button class="nav-btn" data-section="seguimiento">
-          <span class="nav-icon">??</span>
+          <span class="nav-icon">üìù</span>
           Seguimiento
         </button>
         <button class="nav-btn" data-section="facturacion">
-          <span class="nav-icon">??</span>
+          <span class="nav-icon">üí∞</span>
           Cuentas por Cobrar
         </button>
         <button class="nav-btn" data-section="doclegales">
-          <span class="nav-icon">??</span>
+          <span class="nav-icon">üìú</span>
           Documentos Legales
         </button>
         <button class="nav-btn" data-section="plazoslegales">
-          <span class="nav-icon">?</span>
+          <span class="nav-icon">‚è≥</span>
           Plazos Legales
         </button>
         <button class="nav-btn" data-section="notificaciones">
-          <span class="nav-icon">??</span>
+          <span class="nav-icon">üí¨</span>
           Notificaciones
         </button>
         <button class="nav-btn" data-section="reportes">
-          <span class="nav-icon">??</span>
+          <span class="nav-icon">üìà</span>
           Reportes
         </button>
         <button class="nav-btn" data-section="configuracion">
-          <span class="nav-icon">??</span>
-          ConfiguraciÛn
+          <span class="nav-icon">‚öôÔ∏è</span>
+          Configuraci√≥n
         </button>
       </nav>
       <div class="sidebar-footer">
@@ -105,7 +105,7 @@
             <span class="user-role">ADMINISTRADOR</span>
           </div>
         </div>
-        <button class="btn btn-secondary logout-btn" onclick="handleLogout()" style="width: 100%; margin-top: 12px; font-size: 12px; padding: 8px;">?? Cerrar SesiÛn</button>
+        <button class="btn btn-secondary logout-btn" onclick="handleLogout()" style="width: 100%; margin-top: 12px; font-size: 12px; padding: 8px;">üö™ Cerrar Sesi√≥n</button>
         <span class="version">v1.7.10</span>
       </div>
     </aside>
@@ -121,7 +121,7 @@
         </div>
         <div class="section-header">
           <div class="header-titles">
-            <h1>P·gina Principal</h1>
+            <h1>P√°gina Principal</h1>
             <p>Resumen operativo del estudio</p>
           </div>
           <div class="header-user-actions">
@@ -138,48 +138,48 @@
           <div class="lux-card tilt">
             <div class="lux-card-glow"></div>
             <div class="lux-card-top">
-              <span class="lux-icon">??</span>
+              <span class="lux-icon">üìÅ</span>
               <span class="lux-chip">REGISTRADOS</span>
             </div>
             <span class="lux-value" id="totalCasos">0</span>
             <span class="lux-label">TOTAL CASOS</span>
             <div class="lux-bar"><span style="width: 70%"></span></div>
-            <a href="#" class="lux-link" onclick="navigateTo('casos')">VER CASOS ?</a>
+            <a href="#" class="lux-link" onclick="navigateTo('casos')">VER CASOS ‚Üí</a>
           </div>
           <div class="lux-card lux-card-emerald tilt">
             <div class="lux-card-glow"></div>
             <div class="lux-card-top">
-              <span class="lux-icon">?</span>
+              <span class="lux-icon">‚úÖ</span>
               <span class="lux-chip">EN PROCESO</span>
             </div>
             <span class="lux-value" id="casosActivos">0</span>
             <span class="lux-label">CASOS ACTIVOS</span>
             <div class="lux-bar"><span style="width: 55%"></span></div>
-            <a href="#" class="lux-link" onclick="navigateTo('casos')">VER ACTIVOS ?</a>
+            <a href="#" class="lux-link" onclick="navigateTo('casos')">VER ACTIVOS ‚Üí</a>
           </div>
           <div class="lux-card tilt">
             <div class="lux-card-glow"></div>
             <div class="lux-card-top">
-              <span class="lux-icon">??</span>
+              <span class="lux-icon">üë•</span>
               <span class="lux-chip">REGISTRADOS</span>
             </div>
             <span class="lux-value" id="totalClientes">0</span>
             <span class="lux-label">CLIENTES</span>
             <div class="lux-bar"><span style="width: 40%"></span></div>
-            <a href="#" class="lux-link" onclick="navigateTo('clientes')">VER CLIENTES ?</a>
+            <a href="#" class="lux-link" onclick="navigateTo('clientes')">VER CLIENTES ‚Üí</a>
           </div>
           <div class="lux-card lux-card-dark tilt">
             <div class="lux-card-glow"></div>
             <div class="lux-card-top">
-              <span class="lux-icon">???</span>
+              <span class="lux-icon">üèõÔ∏è</span>
             </div>
             <div class="lux-status">
               <span class="status-dot green"></span>
-              <span class="status-text green">”PTIMO</span>
+              <span class="status-text green">√ìPTIMO</span>
             </div>
             <span class="lux-label">SALUD DEL ESTUDIO</span>
             <span class="lux-subtext">RENDIMIENTO OPERATIVO</span>
-            <a href="#" class="lux-link" onclick="navigateTo('reportes')">VER ESTADÕSTICAS ?</a>
+            <a href="#" class="lux-link" onclick="navigateTo('reportes')">VER ESTAD√çSTICAS ‚Üí</a>
           </div>
         </div>
 
@@ -187,32 +187,32 @@
         <div class="lux-panel">
           <div class="lux-panel-header">
             <div>
-              <h3>? Radar de Vencimientos <span class="lux-panel-badge">48h</span></h3>
+              <h3>‚è∞ Radar de Vencimientos <span class="lux-panel-badge">48h</span></h3>
               <p>Alertas preventivas de plazos procesales</p>
             </div>
           </div>
           <div class="lux-panel-body" id="radarContent">
             <div class="radar-empty">
-              <span class="radar-icon">??</span>
+              <span class="radar-icon">üì°</span>
               <h4>Radar despejado</h4>
-              <p>No hay plazos procesales ni vencimientos pendientes para las prÛximas 48 horas.</p>
+              <p>No hay plazos procesales ni vencimientos pendientes para las pr√≥ximas 48 horas.</p>
             </div>
           </div>
         </div>
 
-        <!-- Agenda & Acciones R·pidas -->
+        <!-- Agenda & Acciones R√°pidas -->
         <div class="lux-grid-2">
           <div class="lux-panel">
             <div class="lux-panel-header">
               <div>
-                <h3>?? Agenda de Hoy</h3>
-                <p>Compromisos del dÌa (LEX + Outlook)</p>
+                <h3>üïê Agenda de Hoy</h3>
+                <p>Compromisos del d√≠a (LEX + Outlook)</p>
               </div>
               <span class="badge badge-activo" id="agendaCount">0 Eventos</span>
             </div>
             <div id="proximosPlazos" class="list-container">
               <div class="empty-state">
-                <span class="empty-state-icon">??</span>
+                <span class="empty-state-icon">üìÖ</span>
                 <h4>Sin compromisos hoy</h4>
                 <p>No hay plazos o audiencias programadas para hoy.</p>
               </div>
@@ -221,25 +221,25 @@
           <div class="lux-panel">
             <div class="lux-panel-header">
               <div>
-                <h3>? Acciones R·pidas</h3>
-                <p>Atajo directo a las tareas m·s frecuentes</p>
+                <h3>‚ö° Acciones R√°pidas</h3>
+                <p>Atajo directo a las tareas m√°s frecuentes</p>
               </div>
             </div>
             <div class="quick-actions">
               <button class="quick-action-btn" onclick="navigateTo('clientes'); setTimeout(() => openClienteModal(), 300)">
-                <span class="qa-icon">?</span>
+                <span class="qa-icon">‚ûï</span>
                 <span class="qa-text">Registrar Cliente</span>
-                <span class="qa-arrow">?</span>
+                <span class="qa-arrow">‚Üí</span>
               </button>
               <button class="quick-action-btn" onclick="navigateTo('plazos'); setTimeout(() => openPlazoModal(), 300)">
-                <span class="qa-icon">??</span>
+                <span class="qa-icon">üìÖ</span>
                 <span class="qa-text">Programar Plazo</span>
-                <span class="qa-arrow">?</span>
+                <span class="qa-arrow">‚Üí</span>
               </button>
               <button class="quick-action-btn" onclick="navigateTo('notificaciones'); setTimeout(() => openNotifModal(), 300)">
-                <span class="qa-icon">??</span>
-                <span class="qa-text">Enviar NotificaciÛn</span>
-                <span class="qa-arrow">?</span>
+                <span class="qa-icon">üìß</span>
+                <span class="qa-text">Enviar Notificaci√≥n</span>
+                <span class="qa-arrow">‚Üí</span>
               </button>
             </div>
           </div>
@@ -249,7 +249,7 @@
       <!-- Casos Section -->
       <section id="casos" class="section">
         <div class="section-header">
-          <h2>GestiÛn de Casos</h2>
+          <h2>Gesti√≥n de Casos</h2>
           <div class="header-actions">
             <input type="text" id="searchCasos" placeholder="Buscar casos..." class="search-input">
             <button class="btn btn-primary" onclick="openCasoModal()">+ Nuevo Caso</button>
@@ -259,8 +259,8 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>N∞ Caso</th>
-                <th>TÌtulo</th>
+                <th>N¬∞ Caso</th>
+                <th>T√≠tulo</th>
                 <th>Cliente</th>
                 <th>Tipo</th>
                 <th>Estado</th>
@@ -288,11 +288,11 @@
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>CÈdula/RIF</th>
-                <th>TelÈfono</th>
+                <th>C√©dula/RIF</th>
+                <th>Tel√©fono</th>
                 <th>Email</th>
-                <th>DirecciÛn</th>
-                <th>ID Tr·mite</th>
+                <th>Direcci√≥n</th>
+                <th>ID Tr√°mite</th>
                 <th>Registro</th>
                 <th>Acciones</th>
               </tr>
@@ -332,15 +332,15 @@
         </div>
         <div class="card" style="margin-bottom: 16px;">
           <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h3>?? Agenda (sincronizada con Outlook)</h3>
+            <h3>üìÖ Agenda (sincronizada con Outlook)</h3>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <button class="btn btn-secondary btn-sm" onclick="cambiarMesCalendario(-1)">?</button>
+              <button class="btn btn-secondary btn-sm" onclick="cambiarMesCalendario(-1)">‚óÄ</button>
               <span id="calendarioMesActual" class="badge badge-activo" style="min-width: 140px; text-align: center;">Cargando...</span>
-              <button class="btn btn-secondary btn-sm" onclick="cambiarMesCalendario(1)">?</button>
+              <button class="btn btn-secondary btn-sm" onclick="cambiarMesCalendario(1)">‚ñ∂</button>
             </div>
           </div>
           <div id="calendarioAgenda" class="calendario-agenda"></div>
-          <p class="setting-note" style="font-size: 12px; margin-top: 10px;">Todos los plazos creados aquÌ se sincronizan autom·ticamente con el Calendario de Outlook.</p>
+          <p class="setting-note" style="font-size: 12px; margin-top: 10px;">Todos los plazos creados aqu√≠ se sincronizan autom√°ticamente con el Calendario de Outlook.</p>
         </div>
         <div class="table-container">
           <table class="data-table">
@@ -348,7 +348,7 @@
               <tr>
                 <th>Plazo</th>
                 <th>Caso</th>
-                <th>Fecha LÌmite</th>
+                <th>Fecha L√≠mite</th>
                 <th>Hora</th>
                 <th>Estado</th>
                 <th>Notas</th>
@@ -370,9 +370,9 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>N∞ Caso</th>
-                <th>TÌtulo</th>
-                <th>⁄ltima Nota</th>
+                <th>N¬∞ Caso</th>
+                <th>T√≠tulo</th>
+                <th>√öltima Nota</th>
                 <th>Fecha</th>
                 <th>Acciones</th>
               </tr>
@@ -387,12 +387,12 @@
         <div class="section-header">
           <h2>Cuentas por Cobrar</h2>
           <div class="header-actions">
-            <button class="btn btn-secondary" onclick="openHistorialPagos()">?? Historial de Pagos</button>
+            <button class="btn btn-secondary" onclick="openHistorialPagos()">üìú Historial de Pagos</button>
             <button class="btn btn-primary" onclick="openFacturaModal()">+ Nueva Factura</button>
           </div>
         </div>
         <div class="card" style="margin-bottom: 16px;">
-          <h3>?? Resumen de Cobros</h3>
+          <h3>üí∞ Resumen de Cobros</h3>
           <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-top: 12px;">
             <div class="stat-card" style="background: rgba(59,130,246,0.1);">
               <div class="stat-info"><span class="stat-label">TOTAL FACTURADO</span><span class="stat-value" id="totalFacturado" style="font-size: 22px;">0</span></div>
@@ -409,7 +409,7 @@
           </div>
         </div>
         <div class="card" style="margin-bottom: 16px;">
-          <h3>?? Cartera por Cliente</h3>
+          <h3>üíµ Cartera por Cliente</h3>
           <div id="carteraLista"></div>
         </div>
         <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 12px;">
@@ -423,7 +423,7 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>N∞</th>
+                <th>N¬∞</th>
                 <th>Cliente</th>
                 <th>Caso</th>
                 <th>Concepto</th>
@@ -447,31 +447,31 @@
           <button class="btn btn-primary" onclick="openGeneradorModal()">+ Generar Documento</button>
         </div>
         <div class="card" style="margin-bottom: 16px;">
-          <h3>?? Tipos de Documentos</h3>
-          <p class="setting-note">Plantillas autom·ticas para redactar escritos legales con los datos del cliente y caso.</p>
+          <h3>üìú Tipos de Documentos</h3>
+          <p class="setting-note">Plantillas autom√°ticas para redactar escritos legales con los datos del cliente y caso.</p>
           <div class="type-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px;">
             <div class="type-card" onclick="openGeneradorModal('demanda')" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 16px; cursor: pointer; text-align: center;">
-              <span style="font-size: 32px;">??</span>
+              <span style="font-size: 32px;">‚öñÔ∏è</span>
               <h4 style="margin-top: 8px;">Demanda</h4>
-              <p style="font-size: 12px; color: #94a3b8;">RedacciÛn de escritos de demanda</p>
+              <p style="font-size: 12px; color: #94a3b8;">Redacci√≥n de escritos de demanda</p>
             </div>
             <div class="type-card" onclick="openGeneradorModal('poder')" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); border-radius: 12px; padding: 16px; cursor: pointer; text-align: center;">
-              <span style="font-size: 32px;">??</span>
+              <span style="font-size: 32px;">ü™™</span>
               <h4 style="margin-top: 8px;">Poder</h4>
-              <p style="font-size: 12px; color: #94a3b8;">Poder de representaciÛn legal</p>
+              <p style="font-size: 12px; color: #94a3b8;">Poder de representaci√≥n legal</p>
             </div>
             <div class="type-card" onclick="openGeneradorModal('contrato')" style="background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.3); border-radius: 12px; padding: 16px; cursor: pointer; text-align: center;">
-              <span style="font-size: 32px;">??</span>
+              <span style="font-size: 32px;">üìÑ</span>
               <h4 style="margin-top: 8px;">Contrato</h4>
               <p style="font-size: 12px; color: #94a3b8;">Contrato de servicios profesionales</p>
             </div>
             <div class="type-card" onclick="openGeneradorModal('inspeccion')" style="background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.3); border-radius: 12px; padding: 16px; cursor: pointer; text-align: center;">
-              <span style="font-size: 32px;">??</span>
-              <h4 style="margin-top: 8px;">InspecciÛn</h4>
-              <p style="font-size: 12px; color: #94a3b8;">Solicitud de inspecciÛn judicial</p>
+              <span style="font-size: 32px;">üîç</span>
+              <h4 style="margin-top: 8px;">Inspecci√≥n</h4>
+              <p style="font-size: 12px; color: #94a3b8;">Solicitud de inspecci√≥n judicial</p>
             </div>
             <div class="type-card" onclick="openGeneradorModal('testimonial')" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 16px; cursor: pointer; text-align: center;">
-              <span style="font-size: 32px;">??</span>
+              <span style="font-size: 32px;">üë•</span>
               <h4 style="margin-top: 8px;">Pruebas</h4>
               <p style="font-size: 12px; color: #94a3b8;">Solicitud de pruebas testimoniales</p>
             </div>
@@ -499,8 +499,8 @@
           <h2>Calendario de Plazos Legales</h2>
         </div>
         <div class="card" style="margin-bottom: 16px;">
-          <h3>? GuÌa de Plazos Procesales</h3>
-          <p class="setting-note">Plazos establecidos en la legislaciÛn venezolana por materia. Selecciona un plazo para agregarlo al calendario de un caso.</p>
+          <h3>‚è≥ Gu√≠a de Plazos Procesales</h3>
+          <p class="setting-note">Plazos establecidos en la legislaci√≥n venezolana por materia. Selecciona un plazo para agregarlo al calendario de un caso.</p>
           <div class="form-row" style="margin-top: 8px;">
             <div class="form-group">
               <label>Materia</label>
@@ -526,7 +526,7 @@
         <div class="section-header">
           <h2>Notificaciones por Correo</h2>
           <div class="header-actions">
-            <button class="btn btn-primary" onclick="openNotifModal()">+ Nueva NotificaciÛn</button>
+            <button class="btn btn-primary" onclick="openNotifModal()">+ Nueva Notificaci√≥n</button>
           </div>
         </div>
         <div class="table-container">
@@ -551,15 +551,15 @@
       <!-- Reportes Section -->
       <section id="reportes" class="section">
         <div class="section-header">
-          <h2>Reportes y EstadÌsticas</h2>
+          <h2>Reportes y Estad√≠sticas</h2>
         </div>
         <div class="reportes-grid">
           <div class="card">
-            <h3>DistribuciÛn por Tipo</h3>
+            <h3>Distribuci√≥n por Tipo</h3>
             <div id="reporteTipo" class="reporte-content"></div>
           </div>
           <div class="card">
-            <h3>DistribuciÛn por Estado</h3>
+            <h3>Distribuci√≥n por Estado</h3>
             <div id="reporteEstado" class="reporte-content"></div>
           </div>
           <div class="card full-width">
@@ -569,13 +569,13 @@
         </div>
       </section>
 
-      <!-- ConfiguraciÛn Section -->
+      <!-- Configuraci√≥n Section -->
       <section id="configuracion" class="section">
         <div class="section-header">
-          <h2>ConfiguraciÛn del Sistema</h2>
+          <h2>Configuraci√≥n del Sistema</h2>
         </div>
         <div id="adminUsersSection" class="card" style="max-width: 640px; margin-top: 16px;">
-          <h3>GestiÛn de Usuarios</h3>
+          <h3>Gesti√≥n de Usuarios</h3>
           <p class="setting-note">Administra los usuarios del sistema y sus permisos.</p>
           <div class="table-container" style="margin-top: 16px;">
             <table class="data-table">
@@ -596,10 +596,10 @@
           </div>
         </div>
         <div class="card" style="max-width: 640px; margin-top: 16px;">
-          <h3>Cerrar SesiÛn</h3>
-          <p class="setting-note">Cierra tu sesiÛn actual y vuelve a la pantalla de login.</p>
+          <h3>Cerrar Sesi√≥n</h3>
+          <p class="setting-note">Cierra tu sesi√≥n actual y vuelve a la pantalla de login.</p>
           <div class="form-actions" style="padding: 0; border: none;">
-            <button class="btn btn-secondary" onclick="handleLogout()">Cerrar SesiÛn</button>
+            <button class="btn btn-secondary" onclick="handleLogout()">Cerrar Sesi√≥n</button>
           </div>
         </div>
       </section>
@@ -616,11 +616,11 @@
       <form id="casoForm" onsubmit="saveCaso(event)">
         <input type="hidden" id="casoId">
         <div class="form-group">
-          <label>N˙mero de Caso (Autom·tico)</label>
+          <label>N√∫mero de Caso (Autom√°tico)</label>
           <input type="text" id="casoNumero" readonly>
         </div>
         <div class="form-group">
-          <label>TÌtulo</label>
+          <label>T√≠tulo</label>
           <input type="text" id="casoTitulo" required>
         </div>
         <div class="form-row">
@@ -660,7 +660,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label>DescripciÛn</label>
+          <label>Descripci√≥n</label>
           <textarea id="casoDescripcion" rows="3"></textarea>
         </div>
         <div class="form-actions">
@@ -682,17 +682,17 @@
         <input type="hidden" id="clienteId">
         <div class="form-row">
           <div class="form-group">
-            <label>Nombre / RazÛn Social</label>
+            <label>Nombre / Raz√≥n Social</label>
             <input type="text" id="clienteNombre" required>
           </div>
           <div class="form-group">
-            <label>CÈdula / RIF</label>
+            <label>C√©dula / RIF</label>
             <input type="text" id="clienteCedula">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>TelÈfono</label>
+            <label>Tel√©fono</label>
             <input type="text" id="clienteTelefono" placeholder="+569 12345678" onfocus="if(!this.value)this.value='+569 '" oninput="formatearTelefonoCL(this)">
           </div>
           <div class="form-group">
@@ -701,11 +701,11 @@
           </div>
         </div>
         <div class="form-group">
-          <label>DirecciÛn</label>
+          <label>Direcci√≥n</label>
           <textarea id="clienteDireccion" rows="2"></textarea>
         </div>
         <div class="form-group">
-          <label>ID de Tr·mite</label>
+          <label>ID de Tr√°mite</label>
           <input type="text" id="clienteIdTramite">
         </div>
         <div class="form-actions">
@@ -783,12 +783,12 @@
           <select id="plazoCaso" required></select>
         </div>
         <div class="form-group">
-          <label>TÌtulo del Plazo</label>
+          <label>T√≠tulo del Plazo</label>
           <input type="text" id="plazoTitulo" required>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Fecha LÌmite</label>
+            <label>Fecha L√≠mite</label>
             <input type="date" id="plazoFecha" required>
           </div>
           <div class="form-group">
@@ -812,7 +812,7 @@
         <div class="form-group">
           <label class="setting-checkbox">
             <input type="checkbox" id="plazoNotificar">
-            ?? Notificar al cliente por correo al agendar
+            üìß Notificar al cliente por correo al agendar
           </label>
         </div>
         <div class="form-actions">
@@ -823,16 +823,16 @@
     </div>
   </div>
 
-  <!-- Modal NotificaciÛn por Correo -->
+  <!-- Modal Notificaci√≥n por Correo -->
   <div id="notifModal" class="modal">
     <div class="modal-content notif-modal">
       <div class="modal-header">
-        <h3>Enviar NotificaciÛn por Correo</h3>
+        <h3>Enviar Notificaci√≥n por Correo</h3>
         <button class="modal-close" onclick="closeModal('notifModal')">&times;</button>
       </div>
       <form id="notifForm" onsubmit="sendNotificacion(event)">
         <div class="form-group">
-          <label>Tipo de NotificaciÛn</label>
+          <label>Tipo de Notificaci√≥n</label>
           <select id="notifTipo" onchange="plantillaNotificacion()">
             <option value="Personalizado">Personalizado</option>
             <option value="Agendamiento">Agendamiento / Cita</option>
@@ -868,11 +868,11 @@
     </div>
   </div>
 
-  <!-- Modal Ver NotificaciÛn -->
+  <!-- Modal Ver Notificaci√≥n -->
   <div id="verNotificacionModal" class="modal">
     <div class="modal-content" style="width: 640px; max-width: 94vw;">
       <div class="modal-header">
-        <h3 id="verNotifTitulo">NotificaciÛn</h3>
+        <h3 id="verNotifTitulo">Notificaci√≥n</h3>
         <button class="modal-close" onclick="closeModal('verNotificacionModal')">&times;</button>
       </div>
       <div id="verNotifDetalle" class="setting-note" style="margin: 16px 24px 0; padding-bottom: 10px; border-bottom: 1px solid rgba(59,130,246,0.12);"></div>
@@ -882,34 +882,34 @@
 
   <!-- Chatbot IA -->
   <div class="chatbot-float" id="chatbotFloat" onclick="toggleChat()">
-    <span class="chatbot-fab" id="chatbotFab">??</span>
+    <span class="chatbot-fab" id="chatbotFab">ü§ñ</span>
   </div>
 
   <div class="chat-window" id="chatWindow">
 <div class="chat-header">
         <div class="chat-header-info">
-          <span class="chat-avatar">??</span>
+          <span class="chat-avatar">ü§ñ</span>
           <div>
             <h3>LexAI</h3>
-            <span class="chat-status">? En lÌnea ∑ Asistente JurÌdico</span>
+            <span class="chat-status">‚óè En l√≠nea ¬∑ Asistente Jur√≠dico</span>
           </div>
         </div>
         <div class="chat-header-actions">
-          <button class="chat-header-btn" onclick="nuevaConversacion()" title="Nueva conversaciÛn">?</button>
-          <button class="chat-header-btn" onclick="abrirHistorialConversaciones()" title="Historial de conversaciones">??</button>
-          <button class="chat-header-btn" onclick="openIAConfig()" title="ConfiguraciÛn de LexAI">??</button>
-          <button class="chat-close" onclick="toggleChat()">?</button>
+          <button class="chat-header-btn" onclick="nuevaConversacion()" title="Nueva conversaci√≥n">‚ûï</button>
+          <button class="chat-header-btn" onclick="abrirHistorialConversaciones()" title="Historial de conversaciones">üìö</button>
+          <button class="chat-header-btn" onclick="openIAConfig()" title="Configuraci√≥n de LexAI">‚öôÔ∏è</button>
+          <button class="chat-close" onclick="toggleChat()">‚úï</button>
         </div>
       </div>
     <div class="chat-messages" id="chatMessages">
       <div class="chat-msg bot">
-        <span>??</span>
-        <div class="chat-bubble">°Hola! Soy LexAI, tu asistente jurÌdico. Preg˙ntame sobre derechos, plazos procesales, redacciÛn de escritos o cualquier tema legal. ??????</div>
+        <span>ü§ñ</span>
+        <div class="chat-bubble">¬°Hola! Soy LexAI, tu asistente jur√≠dico. Preg√∫ntame sobre derechos, plazos procesales, redacci√≥n de escritos o cualquier tema legal. üáªüá™‚öñÔ∏è</div>
       </div>
     </div>
     <div class="chat-input-area">
-      <input type="text" id="chatInput" placeholder="Escribe tu consulta jurÌdica..." onkeypress="if(event.key==='Enter')sendChat()">
-      <button class="chat-send" onclick="sendChat()">?</button>
+      <input type="text" id="chatInput" placeholder="Escribe tu consulta jur√≠dica..." onkeypress="if(event.key==='Enter')sendChat()">
+      <button class="chat-send" onclick="sendChat()">‚û§</button>
     </div>
   </div>
 
@@ -1001,12 +1001,12 @@
             <input type="text" id="pagoMonto" inputmode="numeric" required placeholder="$0" oninput="formatearMontoCLP(this)">
           </div>
           <div class="form-group">
-            <label>MÈtodo</label>
+            <label>M√©todo</label>
             <select id="pagoMetodo">
               <option value="Efectivo">Efectivo</option>
               <option value="Transferencia">Transferencia</option>
               <option value="Punto de Venta">Punto de Venta</option>
-              <option value="DepÛsito">DepÛsito</option>
+              <option value="Dep√≥sito">Dep√≥sito</option>
               <option value="Cheque">Cheque</option>
               <option value="Zelle">Zelle</option>
             </select>
@@ -1014,7 +1014,7 @@
         </div>
         <div class="form-group">
           <label>Referencia</label>
-          <input type="text" id="pagoReferencia" placeholder="N∞ de referencia/transacciÛn">
+          <input type="text" id="pagoReferencia" placeholder="N¬∞ de referencia/transacci√≥n">
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" onclick="closeModal('pagoModal')">Cerrar</button>
@@ -1028,7 +1028,7 @@
   <div id="historialPagosModal" class="modal">
     <div class="modal-content" style="width: 720px;">
       <div class="modal-header">
-        <h3>?? Historial Global de Pagos</h3>
+        <h3>üìú Historial Global de Pagos</h3>
         <button class="modal-close" onclick="closeModal('historialPagosModal')">&times;</button>
       </div>
       <div class="table-container" style="max-height: 60vh; overflow-y: auto;">
@@ -1038,7 +1038,7 @@
               <th>Factura</th>
               <th>Cliente</th>
               <th>Fecha</th>
-              <th>MÈtodo</th>
+              <th>M√©todo</th>
               <th>Referencia</th>
               <th>Monto</th>
             </tr>
@@ -1066,7 +1066,7 @@
               <option value="demanda">Demanda</option>
               <option value="poder">Poder</option>
               <option value="contrato">Contrato de Servicios</option>
-              <option value="inspeccion">InspecciÛn Judicial</option>
+              <option value="inspeccion">Inspecci√≥n Judicial</option>
               <option value="testimonial">Pruebas / Exhorto</option>
             </select>
           </div>
@@ -1081,8 +1081,8 @@
             <input type="text" id="genAbogado" placeholder="Nombre del abogado">
           </div>
           <div class="form-group">
-            <label>N∞ IPSA</label>
-            <input type="text" id="genIpsa" placeholder="N∞ de inscripciÛn">
+            <label>N¬∞ IPSA</label>
+            <input type="text" id="genIpsa" placeholder="N¬∞ de inscripci√≥n">
           </div>
         </div>
         <div class="form-row">
@@ -1097,7 +1097,7 @@
         </div>
         <div class="form-group">
           <label>Objeto / Asunto</label>
-          <textarea id="genObjeto" rows="2" placeholder="DescripciÛn breve del asunto"></textarea>
+          <textarea id="genObjeto" rows="2" placeholder="Descripci√≥n breve del asunto"></textarea>
         </div>
         <div class="form-group">
           <label>Documento Generado</label>
@@ -1120,30 +1120,30 @@
       </div>
       <textarea id="verDocContenido" spellcheck="false" style="flex: 1; margin: 16px 24px 0; min-height: 400px; font-family: monospace; font-size: 13px; white-space: pre-wrap; resize: none;"></textarea>
       <div class="form-actions" style="margin: 16px 24px;">
-        <button type="button" class="btn btn-secondary" onclick="imprimirDocumento()">??? Imprimir</button>
-        <button type="button" class="btn btn-secondary" onclick="copiarDocumento()">?? Copiar</button>
-        <button type="button" class="btn btn-primary" onclick="guardarDocModal()">?? Guardar</button>
+        <button type="button" class="btn btn-secondary" onclick="imprimirDocumento()">üñ®Ô∏è Imprimir</button>
+        <button type="button" class="btn btn-secondary" onclick="copiarDocumento()">üìã Copiar</button>
+        <button type="button" class="btn btn-primary" onclick="guardarDocModal()">üíæ Guardar</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal ConfiguraciÛn IA -->
+  <!-- Modal Configuraci√≥n IA -->
   <div id="iaConfigModal" class="modal">
     <div class="modal-content" style="width: 560px;">
       <div class="modal-header">
-        <h3>ConfiguraciÛn de IA (Gemini)</h3>
+        <h3>Configuraci√≥n de IA (Gemini)</h3>
         <button class="modal-close" onclick="closeModal('iaConfigModal')">&times;</button>
       </div>
       <form id="iaConfigForm" onsubmit="saveIAConfig(event)">
         <div class="form-group" style="margin-top: 20px;">
           <label>API Key de Google Gemini</label>
           <input type="password" id="iaApiKey" placeholder="AIzaSy..." required>
-          <p class="setting-note" style="font-size: 12px; margin-top: 6px;">ConsÌguela gratis en <strong>ai.google.dev</strong></p>
+          <p class="setting-note" style="font-size: 12px; margin-top: 6px;">Cons√≠guela gratis en <strong>ai.google.dev</strong></p>
         </div>
         <div class="form-group">
           <label>Modelo</label>
           <select id="iaModelo">
-            <option value="gemini-3.6-flash">Gemini 3.6 Flash (R·pido - recomendado)</option>
+            <option value="gemini-3.6-flash">Gemini 3.6 Flash (R√°pido - recomendado)</option>
             <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
             <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
             <option value="gemini-2.5-pro">Gemini 2.5 Pro (Preciso)</option>
@@ -1172,11 +1172,11 @@
         </div>
         <div class="form-group">
           <label>Nombre Completo</label>
-          <input type="text" id="usuarioNombre" required placeholder="Ej: Juan LÛpez">
+          <input type="text" id="usuarioNombre" required placeholder="Ej: Juan L√≥pez">
         </div>
         <div class="form-group">
-          <label>ContraseÒa</label>
-          <input type="password" id="usuarioPassword" placeholder="Dejar vacÌo para no cambiar">
+          <label>Contrase√±a</label>
+          <input type="password" id="usuarioPassword" placeholder="Dejar vac√≠o para no cambiar">
         </div>
         <div class="form-row">
           <div class="form-group">
