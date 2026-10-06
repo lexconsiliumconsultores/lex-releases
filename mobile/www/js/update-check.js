@@ -2,7 +2,7 @@
 // un aviso si hay una version mas nueva. Al tocar "Descargar" abre el navegador
 // del telefono con el APK mas reciente.
 (function() {
-  const APP_VERSION = '1.7.8';
+  const APP_VERSION = '1.7.10';
   const API_URL = 'https://api.github.com/repos/lexconsiliumconsultores/lex/releases/latest';
   const APK_ASSET = 'app-release.apk';
 
