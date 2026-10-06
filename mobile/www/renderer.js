@@ -813,6 +813,10 @@ async function notificarAgendamiento(plazo) {
   const mensaje = `Estimado/a ${cliente.nombre}, le informamos que se ha programado una cita/agendamiento "${plazo.titulo}" de su caso ${caso.numero_caso} - ${caso.titulo} para el ${fecha}${hora}. Atentamente, LexConsilium Consultores.`;
   const asunto = `LEX - Agendamiento - ${caso.titulo}`;
   const res = await ipcRenderer.invoke('enviarEmail', cliente.email, asunto, mensaje);
+  if (res.queued) {
+    alert('📬 Notificación en cola. El escritorio la enviará por correo en cuanto sincronice.');
+    return;
+  }
   await ipcRenderer.invoke('addNotificacion', {
     caso_id: caso.id, cliente_id: cliente.id, tipo: 'Agendamiento', mensaje,
     email: cliente.email, canal: res.success ? res.canal || 'Outlook' : '', estado: res.success ? 'Enviado' : 'Fallido'
@@ -1036,6 +1040,12 @@ async function sendNotificacion(e) {
   const asunto = caso ? `LEX - ${tipo} - ${caso.titulo}` : `LEX - ${tipo}`;
 
   const res = await ipcRenderer.invoke('enviarEmail', email, asunto, mensaje);
+  if (res.queued) {
+    closeModal('notifModal');
+    loadNotificaciones();
+    alert('📬 Notificación en cola. El escritorio la enviará por correo en cuanto sincronice.');
+    return;
+  }
   let estadoCorreo = null, canalCorreoUsado = null;
   if (res.success) {
     estadoCorreo = 'Enviado';
@@ -1067,6 +1077,7 @@ async function sendNotificacion(e) {
 async function reenviarNotificacion(id, email, asunto, mensaje) {
   const res = await ipcRenderer.invoke('enviarEmail', email, asunto, mensaje);
   if (res.success) {
+    if (res.queued) { alert('📬 En cola: el escritorio lo enviará.'); return; }
     alert('Correo reenviado.');
   } else {
     alert(`No se pudo reenviar:\n${res.error}`);
@@ -1178,6 +1189,11 @@ async function loadFacturas() {
 
 async function recordarCobro(id) {
   const res = await ipcRenderer.invoke('enviarRecordatorioCobro', id);
+  if (res.queued) {
+    await loadFacturas();
+    alert('📬 Recordatorio en cola. El escritorio lo enviará por correo en cuanto sincronice.');
+    return;
+  }
   let estado = 'Enviado';
   let canal = res.canal || '';
   if (!res.success) {

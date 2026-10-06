@@ -155,12 +155,39 @@ async function syncNow() {
       catch (e) { resumen.errores.push(`push ${t}: ${e.message}`); }
     }
     scheduleDbSave();
+    procesarNotificacionesPendientes().catch(() => {});
     console.log('[Sync] OK bajados:', resumen.bajados, 'subidos:', resumen.subidos, resumen.errores.length ? 'errores: ' + resumen.errores.join(' | ') : '');
     return { success: true, ...resumen };
   } catch (e) {
     return { success: false, error: e.message, ...resumen };
   } finally {
     syncRunning = false;
+  }
+}
+
+async function procesarNotificacionesPendientes() {
+  try {
+    const pendientes = queryAll("SELECT * FROM notificaciones WHERE estado = 'Pendiente' AND email IS NOT NULL AND email <> '' LIMIT 20");
+    if (!pendientes.length) return;
+    const tokenOutlook = await getOutlookAccessToken();
+    for (const n of pendientes) {
+      const asunto = `LEX - ${n.tipo || 'Notificación'}`;
+      let res;
+      if (tokenOutlook) {
+        res = await sendMailOutlookDirect(n.email, asunto, n.mensaje || '');
+        if (!res.success) res = await enviarPorSMTP(n.email, asunto, n.mensaje || '');
+      } else {
+        res = await enviarPorSMTP(n.email, asunto, n.mensaje || '');
+      }
+      if (res && res.success) {
+        runQuery("UPDATE notificaciones SET estado='Enviado', canal=COALESCE(canal, 'Outlook') WHERE id=?", [n.id]);
+      } else {
+        runQuery("UPDATE notificaciones SET estado='Fallido' WHERE id=?", [n.id]);
+      }
+    }
+    scheduleSyncPush();
+  } catch (e) {
+    console.error('Error procesando notificaciones pendientes:', e.message);
   }
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "lex",
-  "version": "1.7.14",
+  "version": "1.7.15",
   "description": "Sistema de Gestión de Casos Jurídicos - LexConsilium Consultores",
   "main": "main.js",
   "scripts": {

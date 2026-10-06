@@ -155,7 +155,19 @@
       const map={}; pagos?.forEach(p=>map[p.factura_id]=(map[p.factura_id]||0)+parseFloat(p.monto));
       return (facturas||[]).map(f=>{ const pagado=map[f.id]||0; const saldo=parseFloat(f.monto)-pagado; const vencida=f.fecha_vencimiento&&['Pendiente','Parcial'].includes(f.estado)&&new Date(f.fecha_vencimiento)<new Date(); return {...f,cliente_nombre:f.clientes?.nombre||null,caso_titulo:f.casos?.titulo||null,pagado,saldo,vencida:vencida?1:0}; });
     },
-    enviarRecordatorioCobro: async () => ({success:false,error:'Usa escritorio para enviar correos.'}),
+    enviarRecordatorioCobro: async (facturaId) => {
+      const {data:f}=await supabase.from('facturas').select('*, clientes(nombre,email)').eq('id',facturaId).maybeSingle();
+      if(!f) return {success:false,error:'Factura no encontrada'};
+      const email=f.clientes?.email;
+      if(!email) return {success:false,error:'El cliente no tiene correo registrado.'};
+      const {data:pagos}=await supabase.from('pagos').select('monto').eq('factura_id',facturaId);
+      const pagado=(pagos||[]).reduce((s,p)=>s+parseFloat(p.monto),0);
+      const saldo=Math.max(parseFloat(f.monto)-pagado,0);
+      const mensaje=`Estimado/a ${f.clientes?.nombre||''},\n\nLe recordamos que tiene pendiente la factura N° ${f.numero} por $ ${Number(saldo).toLocaleString('es-CL')}, con concepto "${f.concepto||''}".\n\nAgradecemos su pronta gestión.\n\nAtentamente, LexConsilium Consultores.`;
+      const {error}=await supabase.from('notificaciones').insert({caso_id:f.caso_id||null,cliente_id:f.cliente_id||null,tipo:'Recordatorio de Pago',mensaje,email,canal:'Correo',estado:'Pendiente'});
+      if(error) return {success:false,error:error.message};
+      return {success:true, canal:'Pendiente (escritorio lo enviará)', queued:true, email, mensaje, asunto:`LEX - Recordatorio de Pago - N° ${f.numero}`, caso_id:f.caso_id, cliente_id:f.cliente_id};
+    },
     generarDocumento: async (tipo,dato) => {
       const contenido=`Documento ${tipo} para ${dato.caso_titulo||''} - ${dato.cliente_nombre||''} (móvil)`;
       const {data,error}=await supabase.from('documentos_generados').insert({titulo:`${tipo} - ${dato.caso_titulo||''}`,tipo,caso_id:dato.caso_id||null,contenido}).select('id').single();
@@ -167,7 +179,11 @@
     getNotificaciones: async () => { const {data}=await supabase.from('notificaciones').select('*, casos(titulo), clientes(nombre)').neq('tipo','Respuesta de Cliente').order('fecha',{ascending:false}); return (data||[]).map(n=>({...n,caso_titulo:n.casos?.titulo||null,cliente_nombre:n.clientes?.nombre||null})); },
     addNotificacion: async (notif) => { const {data,error}=await supabase.from('notificaciones').insert({caso_id:notif.caso_id||null,cliente_id:notif.cliente_id||null,tipo:notif.tipo,mensaje:notif.mensaje,telefono:notif.telefono||null,email:notif.email||null,canal:notif.canal||null,estado:notif.estado||'Enviado'}).select('id').single(); if(error) return {success:false,error:error.message}; return {changes:1,lastId:data.id}; },
     deleteNotificacion: async (id) => { const {error}=await supabase.from('notificaciones').delete().eq('id',id); return error?{success:false,error:error.message}:{success:true}; },
-    enviarEmail: async () => ({success:false,error:'Usa escritorio.'}),
+    enviarEmail: async (email, asunto, mensaje) => {
+      const {error}=await supabase.from('notificaciones').insert({tipo:(asunto||'Notificación').replace(/^LEX - /,''), mensaje:mensaje||asunto||'', email, canal:'Correo', estado:'Pendiente'});
+      if(error) return {success:false,error:error.message};
+      return {success:true, canal:'Pendiente (escritorio lo enviará)', queued:true};
+    },
     getSMTPConfig: async () => { const {data}=await supabase.from('config').select('clave, valor').in('clave',['smtp_host','smtp_port','smtp_user','smtp_pass','smtp_from']); const map={}; data?.forEach(r=>map[r.clave]=r.valor); return {host:map.smtp_host||'',port:map.smtp_port||'587',user:map.smtp_user||'',pass:map.smtp_pass||'',from:map.smtp_from||''}; },
     saveSMTPConfig: async (cfg) => { for(const [k,v] of Object.entries({smtp_host:cfg.host,smtp_port:cfg.port,smtp_user:cfg.user,smtp_pass:cfg.pass,smtp_from:cfg.from})){ await supabase.from('config').upsert({clave:k,valor:v||''}); } return {success:true}; },
     testSMTP: async () => ({success:false,error:'Solo escritorio'}),
