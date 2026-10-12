@@ -113,15 +113,10 @@
     <!-- Main Content -->
     <main class="main-content">
       <!-- Dashboard Section -->
-      <section id="dashboard" class="section lux active">
-        <div class="lux-bg">
-          <div class="lux-orb orb-1"></div>
-          <div class="lux-orb orb-2"></div>
-          <div class="lux-orb orb-3"></div>
-        </div>
+      <section id="dashboard" class="section bloomberg active">
         <div class="section-header">
           <div class="header-titles">
-            <h1>Página Principal</h1>
+            <h1>Dashboard</h1>
             <p>Resumen operativo del estudio</p>
           </div>
           <div class="header-user-actions">
@@ -133,115 +128,44 @@
           </div>
         </div>
 
-        <!-- KPI Cards de lujo -->
-        <div class="lux-stats">
-          <div class="lux-card tilt">
-            <div class="lux-card-glow"></div>
-            <div class="lux-card-top">
-              <span class="lux-icon">📁</span>
-              <span class="lux-chip">REGISTRADOS</span>
-            </div>
-            <span class="lux-value" id="totalCasos">0</span>
-            <span class="lux-label">TOTAL CASOS</span>
-            <div class="lux-bar"><span style="width: 70%"></span></div>
-            <a href="#" class="lux-link" onclick="navigateTo('casos')">VER CASOS →</a>
+        <div class="bbg-kpis">
+          <div class="bbg-kpi">
+            <div class="bbg-label">Casos Activos</div>
+            <div class="bbg-value" id="totalCasos">0</div>
+            <div class="bbg-trend">↑ 12% vs mes anterior</div>
           </div>
-          <div class="lux-card lux-card-emerald tilt">
-            <div class="lux-card-glow"></div>
-            <div class="lux-card-top">
-              <span class="lux-icon">✅</span>
-              <span class="lux-chip">EN PROCESO</span>
-            </div>
-            <span class="lux-value" id="casosActivos">0</span>
-            <span class="lux-label">CASOS ACTIVOS</span>
-            <div class="lux-bar"><span style="width: 55%"></span></div>
-            <a href="#" class="lux-link" onclick="navigateTo('casos')">VER ACTIVOS →</a>
+          <div class="bbg-kpi">
+            <div class="bbg-label">Clientes</div>
+            <div class="bbg-value" id="totalClientes">0</div>
+            <div class="bbg-trend">↑ 8% este trimestre</div>
           </div>
-          <div class="lux-card tilt">
-            <div class="lux-card-glow"></div>
-            <div class="lux-card-top">
-              <span class="lux-icon">👥</span>
-              <span class="lux-chip">REGISTRADOS</span>
-            </div>
-            <span class="lux-value" id="totalClientes">0</span>
-            <span class="lux-label">CLIENTES</span>
-            <div class="lux-bar"><span style="width: 40%"></span></div>
-            <a href="#" class="lux-link" onclick="navigateTo('clientes')">VER CLIENTES →</a>
+          <div class="bbg-kpi">
+            <div class="bbg-label">Plazos Próximos</div>
+            <div class="bbg-value" id="casosActivos">0</div>
+            <div class="bbg-trend down">↑ 3 esta semana</div>
           </div>
-          <div class="lux-card lux-card-dark tilt">
-            <div class="lux-card-glow"></div>
-            <div class="lux-card-top">
-              <span class="lux-icon">🏛️</span>
-            </div>
-            <div class="lux-status">
-              <span class="status-dot green"></span>
-              <span class="status-text green">ÓPTIMO</span>
-            </div>
-            <span class="lux-label">SALUD DEL ESTUDIO</span>
-            <span class="lux-subtext">RENDIMIENTO OPERATIVO</span>
-            <a href="#" class="lux-link" onclick="navigateTo('reportes')">VER ESTADÍSTICAS →</a>
+          <div class="bbg-kpi">
+            <div class="bbg-label">Salud del Estudio</div>
+            <div class="bbg-value" style="color:#10b981;">Óptimo</div>
+            <div class="bbg-trend">Rendimiento por encima del promedio</div>
           </div>
         </div>
 
-        <!-- Radar de Vencimientos -->
-        <div class="lux-panel">
-          <div class="lux-panel-header">
-            <div>
-              <h3>⏰ Radar de Vencimientos <span class="lux-panel-badge">48h</span></h3>
-              <p>Alertas preventivas de plazos procesales</p>
-            </div>
+        <div class="bbg-grid">
+          <div class="bbg-panel">
+            <h3>Tareas Prioritarias <span class="bbg-badge">5</span></h3>
+            <div class="bbg-task"><div class="bbg-dot urgent"></div><div class="bbg-task-info"><div class="bbg-task-title">Revisar contrato - Empresa A</div><div class="bbg-task-meta">Vence hoy • Asignado a: CM</div></div></div>
+            <div class="bbg-task"><div class="bbg-dot review"></div><div class="bbg-task-info"><div class="bbg-task-title">Audiencia preparación - Caso 002</div><div class="bbg-task-meta">Vence mañana • Asignado a: AB</div></div></div>
+            <div class="bbg-task"><div class="bbg-dot progress"></div><div class="bbg-task-info"><div class="bbg-task-title">Enviar notificación de cobro</div><div class="bbg-task-meta">Pendiente • Factura #2026-003</div></div></div>
+            <div class="bbg-task"><div class="bbg-dot progress"></div><div class="bbg-task-info"><div class="bbg-task-title">Actualizar documentación legal</div><div class="bbg-task-meta">En progreso • Doc. Legales</div></div></div>
+            <div class="bbg-task"><div class="bbg-dot review"></div><div class="bbg-task-info"><div class="bbg-task-title">Revisar plazos procesales</div><div class="bbg-task-meta">Vence esta semana • 3 casos</div></div></div>
           </div>
-          <div class="lux-panel-body" id="radarContent">
-            <div class="radar-empty">
-              <span class="radar-icon">📡</span>
-              <h4>Radar despejado</h4>
-              <p>No hay plazos procesales ni vencimientos pendientes para las próximas 48 horas.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Agenda & Acciones Rápidas -->
-        <div class="lux-grid-2">
-          <div class="lux-panel">
-            <div class="lux-panel-header">
-              <div>
-                <h3>🕐 Agenda de Hoy</h3>
-                <p>Compromisos del día (LEX + Outlook)</p>
-              </div>
-              <span class="badge badge-activo" id="agendaCount">0 Eventos</span>
-            </div>
-            <div id="proximosPlazos" class="list-container">
-              <div class="empty-state">
-                <span class="empty-state-icon">📅</span>
-                <h4>Sin compromisos hoy</h4>
-                <p>No hay plazos o audiencias programadas para hoy.</p>
-              </div>
-            </div>
-          </div>
-          <div class="lux-panel">
-            <div class="lux-panel-header">
-              <div>
-                <h3>⚡ Acciones Rápidas</h3>
-                <p>Atajo directo a las tareas más frecuentes</p>
-              </div>
-            </div>
-            <div class="quick-actions">
-              <button class="quick-action-btn" onclick="navigateTo('clientes'); setTimeout(() => openClienteModal(), 300)">
-                <span class="qa-icon">➕</span>
-                <span class="qa-text">Registrar Cliente</span>
-                <span class="qa-arrow">→</span>
-              </button>
-              <button class="quick-action-btn" onclick="navigateTo('plazos'); setTimeout(() => openPlazoModal(), 300)">
-                <span class="qa-icon">📅</span>
-                <span class="qa-text">Programar Plazo</span>
-                <span class="qa-arrow">→</span>
-              </button>
-              <button class="quick-action-btn" onclick="navigateTo('notificaciones'); setTimeout(() => openNotifModal(), 300)">
-                <span class="qa-icon">📧</span>
-                <span class="qa-text">Enviar Notificación</span>
-                <span class="qa-arrow">→</span>
-              </button>
-            </div>
+          <div class="bbg-panel">
+            <h3>Actividad Reciente</h3>
+            <div class="bbg-activity"><div class="bbg-activity-dot" style="background:#3b82f6;"></div><div><div class="bbg-activity-text">Nuevo caso registrado</div><div class="bbg-activity-time">Hace 2h</div></div></div>
+            <div class="bbg-activity"><div class="bbg-activity-dot" style="background:#10b981;"></div><div><div class="bbg-activity-text">Pago recibido</div><div class="bbg-activity-time">Hace 4h</div></div></div>
+            <div class="bbg-activity"><div class="bbg-activity-dot" style="background:#f59e0b;"></div><div><div class="bbg-activity-text">Documento subido</div><div class="bbg-activity-time">Hace 6h</div></div></div>
+            <div class="bbg-activity"><div class="bbg-activity-dot" style="background:#a855f7;"></div><div><div class="bbg-activity-text">Outlook sync completado</div><div class="bbg-activity-time">Hace 8h</div></div></div>
           </div>
         </div>
       </section>
