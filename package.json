@@ -30,8 +30,8 @@
     "publish": {
       "provider": "github",
       "owner": "lexconsiliumconsultores",
-      "repo": "lex",
-      "private": true,
+      "repo": "lex-releases",
+      "private": false,
       "releaseType": "release"
     },
     "win": {
