@@ -1,4 +1,4 @@
-const { ipcRenderer } = require('electron');
+const ipcRenderer = window.ipcRenderer;
 
 let currentSection = 'dashboard';
 let currentUser = null;
@@ -734,7 +734,7 @@ async function loadPlazos() {
       <td class="actions">
         <button class="btn btn-secondary btn-sm" onclick="editPlazo(${p.id})" title="Editar">✏️</button>
         <button class="btn btn-secondary btn-sm" onclick="notificarPlazo(${p.id})" title="Enviar correo">✉️</button>
-        <button class="btn btn-secondary btn-sm" onclick="togglePlazoEstado(${p.id}, '${escapeHtml(p.estado)}')">✓</button>
+        <button class="btn btn-secondary btn-sm" onclick="togglePlazoEstado(${p.id}, ${JSON.stringify(escapeHtml(p.estado))})">✓</button>
         <button class="btn btn-danger btn-sm" onclick="deletePlazo(${p.id})">🗑️</button>
       </td>
     </tr>

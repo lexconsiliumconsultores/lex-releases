@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LEX - Modelos de Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overflow: hidden; height: 100vh; }
+
+    .demo-selector {
+      position: fixed; top: 0; left: 0; right: 0; height: 52px;
+      background: #1a1a2e; display: flex; align-items: center; padding: 0 20px;
+      gap: 10px; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .demo-selector span { color: #fff; font-size: 14px; font-weight: 600; margin-right: 10px; }
+    .demo-btn {
+      padding: 6px 16px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);
+      background: transparent; color: #ccc; cursor: pointer; font-size: 13px; transition: all 0.2s;
+    }
+    .demo-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .demo-btn.active { background: #635BFF; border-color: #635BFF; color: #fff; }
+
+    .app-frame { height: calc(100vh - 52px); margin-top: 52px; }
+
+    /* ========== MODELO 1: NOTION ========== */
+    .notion-layout { display: flex; height: 100%; background: #F7F7F5; }
+    .notion-sidebar {
+      width: 240px; background: #F1F1EF; border-right: 1px solid rgba(0,0,0,0.06);
+      padding: 16px 12px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .notion-sidebar .logo { padding: 8px 12px; margin-bottom: 12px; }
+    .notion-sidebar .logo h2 { font-size: 16px; font-weight: 700; color: #37352F; }
+    .notion-nav-label { font-size: 11px; color: #9B9A97; padding: 8px 12px 4px; font-weight: 500; text-transform: uppercase; }
+    .notion-nav-item {
+      display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+      border-radius: 6px; cursor: pointer; font-size: 14px; color: #37352F;
+    }
+    .notion-nav-item:hover { background: rgba(0,0,0,0.03); }
+    .notion-nav-item.active { background: rgba(0,0,0,0.05); font-weight: 500; }
+    .notion-content { flex: 1; padding: 40px; overflow-y: auto; }
+    .notion-header { margin-bottom: 32px; }
+    .notion-header h1 { font-size: 28px; font-weight: 700; color: #37352F; margin-bottom: 4px; }
+    .notion-header p { font-size: 14px; color: #9B9A97; }
+    .notion-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .notion-card {
+      background: #FFFFFF; border-radius: 8px; padding: 20px;
+      border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .notion-card .label { font-size: 12px; color: #9B9A97; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .notion-card .value { font-size: 32px; font-weight: 700; color: #37352F; margin-bottom: 12px; }
+    .notion-card .link { font-size: 13px; color: #2383E2; text-decoration: none; font-weight: 500; }
+    .notion-panel {
+      background: #FFFFFF; border-radius: 8px; padding: 24px;
+      border: 1px solid rgba(0,0,0,0.06); margin-bottom: 16px;
+    }
+    .notion-panel h3 { font-size: 16px; font-weight: 600; color: #37352F; margin-bottom: 12px; }
+
+    /* ========== MODELO 2: LINEAR ========== */
+    .linear-layout { display: flex; height: 100%; background: #08090A; }
+    .linear-sidebar {
+      width: 232px; background: #0F1011; border-right: 1px solid rgba(255,255,255,0.05);
+      padding: 12px 8px; display: flex; flex-direction: column; gap: 2px;
+    }
+    .linear-sidebar .logo { padding: 8px 12px; margin-bottom: 8px; }
+    .linear-sidebar .logo h2 { font-size: 14px; font-weight: 600; color: #F7F8F8; letter-spacing: -0.3px; }
+    .linear-nav-item {
+      display: flex; align-items: center; gap: 8px; padding: 5px 12px;
+      border-radius: 4px; cursor: pointer; font-size: 13px; color: #8A8F98;
+      font-weight: 450;
+    }
+    .linear-nav-item:hover { background: rgba(255,255,255,0.03); color: #D0D6E0; }
+    .linear-nav-item.active { background: rgba(94,106,210,0.15); color: #F7F8F8; }
+    .linear-content { flex: 1; padding: 32px; overflow-y: auto; }
+    .linear-header { margin-bottom: 24px; }
+    .linear-header h1 { font-size: 20px; font-weight: 600; color: #F7F8F8; margin-bottom: 4px; letter-spacing: -0.3px; }
+    .linear-header p { font-size: 13px; color: #8A8F98; }
+    .linear-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .linear-card {
+      background: #141516; border-radius: 6px; padding: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .linear-card .label { font-size: 11px; color: #8A8F98; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+    .linear-card .value { font-size: 28px; font-weight: 600; color: #F7F8F8; margin-bottom: 8px; }
+    .linear-card .trend { font-size: 12px; color: #27A644; }
+    .linear-panel {
+      background: #141516; border-radius: 6px; padding: 20px;
+      border: 1px solid rgba(255,255,255,0.05); margin-bottom: 12px;
+    }
+    .linear-panel h3 { font-size: 14px; font-weight: 550; color: #F7F8F8; margin-bottom: 12px; }
+    .linear-badge {
+      display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+      border-radius: 10px; font-size: 11px; font-weight: 500;
+      background: rgba(94,106,210,0.2); color: #8B9CF0;
+    }
+
+    /* ========== MODELO 3: STRIPE ========== */
+    .stripe-layout { display: flex; height: 100%; background: #F6F9FC; }
+    .stripe-sidebar {
+      width: 224px; background: #FFFFFF; border-right: 1px solid #E3E8EE;
+      padding: 16px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .stripe-sidebar .logo { padding: 8px; margin-bottom: 16px; }
+    .stripe-sidebar .logo h2 { font-size: 18px; font-weight: 700; color: #0A2540; }
+    .stripe-nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+      border-radius: 6px; cursor: pointer; font-size: 14px; color: #425466;
+    }
+    .stripe-nav-item:hover { background: #F6F9FC; }
+    .stripe-nav-item.active { background: #F0F4FF; color: #635BFF; font-weight: 500; }
+    .stripe-content { flex: 1; padding: 40px; overflow-y: auto; }
+    .stripe-header { margin-bottom: 32px; }
+    .stripe-header h1 { font-size: 24px; font-weight: 700; color: #0A2540; margin-bottom: 4px; }
+    .stripe-header p { font-size: 14px; color: #6B7C93; }
+    .stripe-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-bottom: 32px; border-bottom: 1px solid #E3E8EE; padding-bottom: 24px; }
+    .stripe-kpi { padding-right: 24px; }
+    .stripe-kpi .label { font-size: 12px; color: #6B7C93; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .stripe-kpi .value { font-size: 36px; font-weight: 700; color: #0A2540; }
+    .stripe-kpi .delta { font-size: 13px; color: #00D924; margin-top: 4px; }
+    .stripe-panel { margin-bottom: 24px; }
+    .stripe-panel h3 { font-size: 16px; font-weight: 600; color: #0A2540; margin-bottom: 16px; }
+    .stripe-table { width: 100%; border-collapse: collapse; }
+    .stripe-table th { text-align: left; font-size: 12px; color: #6B7C93; text-transform: uppercase; padding: 8px 12px; border-bottom: 1px solid #E3E8EE; }
+    .stripe-table td { padding: 12px; font-size: 14px; color: #0A2540; border-bottom: 1px solid #F0F4F8; }
+    .stripe-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+    .stripe-status.active { background: #E8F8ED; color: #00734A; }
+    .stripe-status.pending { background: #FFF8E6; color: #B25E09; }
+
+    /* ========== MODELO 4: VERCEL/GEIST ========== */
+    .vercel-layout { display: flex; height: 100%; background: #000000; }
+    .vercel-sidebar {
+      width: 240px; background: #0A0A0A; border-right: 1px solid #222222;
+      padding: 12px; display: flex; flex-direction: column; gap: 2px;
+    }
+    .vercel-sidebar .logo { padding: 8px 12px; margin-bottom: 8px; }
+    .vercel-sidebar .logo h2 { font-size: 15px; font-weight: 600; color: #FFFFFF; }
+    .vercel-nav-item {
+      display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+      border-radius: 4px; cursor: pointer; font-size: 13px; color: #666666;
+    }
+    .vercel-nav-item:hover { background: #111111; color: #AAAAAA; }
+    .vercel-nav-item.active { background: #111111; color: #FFFFFF; }
+    .vercel-content { flex: 1; padding: 32px; overflow-y: auto; }
+    .vercel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+    .vercel-header h1 { font-size: 22px; font-weight: 600; color: #FFFFFF; }
+    .vercel-tabs { display: flex; gap: 0; border-bottom: 1px solid #222222; margin-bottom: 24px; }
+    .vercel-tab {
+      padding: 8px 16px; font-size: 13px; color: #666666; cursor: pointer;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+    }
+    .vercel-tab.active { color: #FFFFFF; border-bottom-color: #FFFFFF; }
+    .vercel-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #222222; border: 1px solid #222222; border-radius: 6px; overflow: hidden; margin-bottom: 24px; }
+    .vercel-card { background: #0A0A0A; padding: 20px; }
+    .vercel-card .label { font-size: 11px; color: #666666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .vercel-card .value { font-size: 30px; font-weight: 600; color: #FFFFFF; font-family: 'SF Mono', monospace; }
+    .vercel-card .delta { font-size: 12px; margin-top: 8px; }
+    .vercel-card .delta.up { color: #0070F3; }
+    .vercel-card .delta.down { color: #FF0000; }
+
+    /* ========== MODELO 5: ATLASSIAN ========== */
+    .atlassian-layout { display: flex; height: 100%; background: #FAFBFC; }
+    .atlassian-sidebar {
+      width: 256px; background: #FFFFFF; border-right: 1px solid #DFE1E6;
+      padding: 16px; display: flex; flex-direction: column; gap: 4px;
+      box-shadow: 2px 0 4px rgba(9,30,66,0.08);
+    }
+    .atlassian-sidebar .logo { padding: 8px; margin-bottom: 12px; }
+    .atlassian-sidebar .logo h2 { font-size: 18px; font-weight: 700; color: #172B4D; }
+    .atlassian-nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+      border-radius: 4px; cursor: pointer; font-size: 14px; color: #42526E;
+    }
+    .atlassian-nav-item:hover { background: #EBECF0; }
+    .atlassian-nav-item.active { background: #DEEBFF; color: #0052CC; font-weight: 500; }
+    .atlassian-content { flex: 1; padding: 32px; overflow-y: auto; }
+    .atlassian-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .atlassian-header h1 { font-size: 22px; font-weight: 600; color: #172B4D; }
+    .atlassian-btn {
+      padding: 8px 16px; background: #0052CC; color: #fff; border: none;
+      border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer;
+    }
+    .atlassian-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .atlassian-card {
+      background: #FFFFFF; border-radius: 8px; padding: 20px;
+      box-shadow: 0 1px 3px rgba(9,30,66,0.12); border: 1px solid #DFE1E6;
+    }
+    .atlassian-card .icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 12px; }
+    .atlassian-card .label { font-size: 12px; color: #6B778C; text-transform: uppercase; margin-bottom: 4px; }
+    .atlassian-card .value { font-size: 28px; font-weight: 600; color: #172B4D; }
+    .atlassian-card .trend { font-size: 12px; margin-top: 8px; }
+    .atlassian-card .trend.up { color: #36B37E; }
+    .atlassian-card .trend.down { color: #FF5630; }
+    .atlassian-panel {
+      background: #FFFFFF; border-radius: 8px; padding: 24px;
+      box-shadow: 0 1px 3px rgba(9,30,66,0.12); border: 1px solid #DFE1E6; margin-bottom: 16px;
+    }
+    .atlassian-panel h3 { font-size: 16px; font-weight: 600; color: #172B4D; margin-bottom: 16px; }
+    .atlassian-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 3px;
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+    }
+    .atlassian-badge.active { background: #E3FCEF; color: #006644; }
+    .atlassian-badge.pending { background: #FFEBE6; color: #BF2600; }
+
+    /* ========== MODELO 6: SHADCN/UI ========== */
+    .shadcn-layout { display: flex; height: 100%; background: hsl(240 10% 3.9%); }
+    .shadcn-sidebar {
+      width: 240px; background: hsl(240 10% 7%); border-right: 1px solid hsl(240 3.7% 15.9%);
+      padding: 12px; display: flex; flex-direction: column; gap: 2px;
+    }
+    .shadcn-sidebar .logo { padding: 8px 12px; margin-bottom: 8px; }
+    .shadcn-sidebar .logo h2 { font-size: 15px; font-weight: 600; color: #FAFAFA; }
+    .shadcn-search { padding: 8px 12px; margin-bottom: 8px; }
+    .shadcn-search input {
+      width: 100%; padding: 8px 12px; border-radius: 6px;
+      border: 1px solid hsl(240 3.7% 15.9%); background: hsl(240 10% 7%);
+      color: #FAFAFA; font-size: 13px; outline: none;
+    }
+    .shadcn-search input:focus { border-color: #635BFF; }
+    .shadcn-nav-label { font-size: 11px; color: hsl(240 5% 45%); text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px 4px; font-weight: 500; }
+    .shadcn-nav-item {
+      display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+      border-radius: 6px; cursor: pointer; font-size: 13px; color: hsl(240 5% 65%);
+    }
+    .shadcn-nav-item:hover { background: hsl(240 3.7% 15.9%); color: #FAFAFA; }
+    .shadcn-nav-item.active { background: hsl(240 3.7% 15.9%); color: #FAFAFA; font-weight: 500; }
+    .shadcn-content { flex: 1; padding: 24px; overflow-y: auto; }
+    .shadcn-header { margin-bottom: 24px; }
+    .shadcn-header h1 { font-size: 20px; font-weight: 600; color: #FAFAFA; margin-bottom: 4px; }
+    .shadcn-header p { font-size: 13px; color: hsl(240 5% 45%); }
+    .shadcn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .shadcn-card {
+      background: hsl(240 10% 7%); border: 1px solid hsl(240 3.7% 15.9%);
+      border-radius: 8px; padding: 20px;
+    }
+    .shadcn-card .label { font-size: 12px; color: hsl(240 5% 45%); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .shadcn-card .value { font-size: 28px; font-weight: 600; color: #FAFAFA; margin-bottom: 8px; }
+    .shadcn-card .delta { font-size: 12px; }
+    .shadcn-card .delta.positive { color: #22C55E; }
+    .shadcn-card .delta.negative { color: #EF4444; }
+    .shadcn-panel {
+      background: hsl(240 10% 7%); border: 1px solid hsl(240 3.7% 15.9%);
+      border-radius: 8px; padding: 20px; margin-bottom: 16px;
+    }
+    .shadcn-panel h3 { font-size: 14px; font-weight: 500; color: #FAFAFA; margin-bottom: 16px; }
+    .shadcn-table { width: 100%; border-collapse: collapse; }
+    .shadcn-table th { text-align: left; font-size: 11px; color: hsl(240 5% 45%); text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; border-bottom: 1px solid hsl(240 3.7% 15.9%); }
+    .shadcn-table td { padding: 12px; font-size: 13px; color: #FAFAFA; border-bottom: 1px solid hsl(240 3.7% 12%); }
+    .shadcn-badge {
+      display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px;
+      border-radius: 12px; font-size: 12px; font-weight: 500;
+      background: rgba(34, 197, 94, 0.15); color: #22C55E;
+    }
+    .shadcn-badge.pending { background: rgba(245, 158, 11, 0.15); color: #F59E0B; }
+
+    .hidden { display: none !important; }
+
+    .sub-page { padding: 32px; }
+    .sub-page h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+    .sub-page p { font-size: 14px; margin-bottom: 24px; }
+    .sub-page .placeholder-card {
+      background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 40px; text-align: center;
+    }
+    .sub-page .placeholder-card h3 { font-size: 16px; margin-bottom: 8px; }
+    .sub-page .placeholder-card p { font-size: 13px; opacity: 0.6; margin: 0; }
+  </style>
+</head>
+<body>
+
+<div class="demo-selector">
+  <span>Modelos:</span>
+  <button class="demo-btn active" onclick="showModel('notion')">1. Notion</button>
+  <button class="demo-btn" onclick="showModel('linear')">2. Linear</button>
+  <button class="demo-btn" onclick="showModel('stripe')">3. Stripe</button>
+  <button class="demo-btn" onclick="showModel('vercel')">4. Vercel</button>
+  <button class="demo-btn" onclick="showModel('atlassian')">5. Atlassian</button>
+  <button class="demo-btn" onclick="showModel('shadcn')">6. shadcn/ui</button>
+</div>
+
+<div class="app-frame">
+
+  <!-- ========== MODELO 1: NOTION ========== -->
+  <div id="model-notion" class="app-container">
+    <div class="notion-layout">
+      <aside class="notion-sidebar">
+        <div class="logo"><h2>LEX</h2></div>
+        <div class="notion-nav-label">MENÚ PRINCIPAL</div>
+        <div class="notion-nav-item active" onclick="navSection(this, 'notion')"> Dashboard</div>
+        <div class="notion-nav-item" onclick="navSection(this, 'notion')"> Casos</div>
+        <div class="notion-nav-item" onclick="navSection(this, 'notion')"> Clientes</div>
+        <div class="notion-nav-item" onclick="navSection(this, 'notion')"> Documentos</div>
+        <div class="notion-nav-item" onclick="navSection(this, 'notion')"> Plazos</div>
+        <div class="notion-nav-item" onclick="navSection(this, 'notion')"> Seguimiento</div>
+        <div class="notion-nav-item" onclick="navSection(this, 'notion')"> Facturación</div>
+        <div class="notion-nav-label">LEGALES</div>
+        <div class="notion-nav-item" onclick="navSection(this, 'notion')"> Doc. Legales</div>
+        <div class="notion-nav-item" onclick="navSection(this, 'notion')"> Plazos Legales</div>
+        <div class="notion-nav-item" onclick="navSection(this, 'notion')"> Notificaciones</div>
+        <div class="notion-nav-label">SISTEMA</div>
+        <div class="notion-nav-item" onclick="navSection(this, 'notion')"> Reportes</div>
+        <div class="notion-nav-item" onclick="navSection(this, 'notion')"> Configuración</div>
+      </aside>
+      <main class="notion-content">
+        <div id="notion-dashboard">
+          <div class="notion-header">
+            <h1>Página Principal</h1>
+            <p>Resumen operativo del estudio</p>
+          </div>
+          <div class="notion-grid">
+            <div class="notion-card">
+              <div class="label">Registrados</div>
+              <div class="value">24</div>
+              <a href="#" class="link">Ver casos →</a>
+            </div>
+            <div class="notion-card">
+              <div class="label">En Proceso</div>
+              <div class="value">12</div>
+              <a href="#" class="link">Ver activos →</a>
+            </div>
+            <div class="notion-card">
+              <div class="label">Clientes</div>
+              <div class="value">48</div>
+              <a href="#" class="link">Ver clientes →</a>
+            </div>
+            <div class="notion-card">
+              <div class="label">Salud</div>
+              <div class="value" style="color: #00A870;">Óptimo</div>
+              <a href="#" class="link">Ver estadísticas →</a>
+            </div>
+          </div>
+          <div class="notion-panel">
+            <h3>⏰ Radar de Vencimientos</h3>
+            <p style="font-size:14px;color:#9B9A97;">No hay plazos procesales ni vencimientos pendientes para las próximas 48 horas.</p>
+          </div>
+          <div class="notion-panel">
+            <h3>🕐 Agenda de Hoy</h3>
+            <p style="font-size:14px;color:#9B9A97;">No hay plazos o audiencias programadas para hoy.</p>
+          </div>
+        </div>
+        <div id="notion-casos" class="sub-page hidden">
+          <h1>Gestión de Casos</h1><p>Administra todos los casos del estudio</p>
+          <div class="placeholder-card"><h3>Casos</h3><p>Tabla de casos con búsqueda, filtros y acciones</p></div>
+        </div>
+        <div id="notion-clientes" class="sub-page hidden">
+          <h1>Clientes</h1><p>Directorio de clientes del estudio</p>
+          <div class="placeholder-card"><h3>Clientes</h3><p>Lista de clientes con datos de contacto</p></div>
+        </div>
+        <div id="notion-documentos" class="sub-page hidden">
+          <h1>Documentos</h1><p>Gestión documental del estudio</p>
+          <div class="placeholder-card"><h3>Documentos</h3><p>Repositorio de documentos</p></div>
+        </div>
+        <div id="notion-plazos" class="sub-page hidden">
+          <h1>Plazos</h1><p>Control de plazos procesales</p>
+          <div class="placeholder-card"><h3>Plazos</h3><p>Calendario de plazos y vencimientos</p></div>
+        </div>
+        <div id="notion-seguimiento" class="sub-page hidden">
+          <h1>Seguimiento</h1><p>Seguimiento de casos y actividades</p>
+          <div class="placeholder-card"><h3>Seguimiento</h3><p>Estado de avances por caso</p></div>
+        </div>
+        <div id="notion-facturacion" class="sub-page hidden">
+          <h1>Cuentas por Cobrar</h1><p>Gestión de facturación y cobros</p>
+          <div class="placeholder-card"><h3>Facturación</h3><p>Cuentas por cobrar y pagos</p></div>
+        </div>
+        <div id="notion-doclegales" class="sub-page hidden">
+          <h1>Documentos Legales</h1><p>Documentos legales del estudio</p>
+          <div class="placeholder-card"><h3>Doc. Legales</h3><p>Biblioteca de documentos legales</p></div>
+        </div>
+        <div id="notion-plazoslegales" class="sub-page hidden">
+          <h1>Plazos Legales</h1><p>Plazos legales y vencimientos</p>
+          <div class="placeholder-card"><h3>Plazos Legales</h3><p>Control de plazos legales</p></div>
+        </div>
+        <div id="notion-notificaciones" class="sub-page hidden">
+          <h1>Notificaciones</h1><p>Centro de notificaciones y alertas</p>
+          <div class="placeholder-card"><h3>Notificaciones</h3><p>Historial de notificaciones enviadas</p></div>
+        </div>
+        <div id="notion-reportes" class="sub-page hidden">
+          <h1>Reportes</h1><p>Estadísticas y reportes del estudio</p>
+          <div class="placeholder-card"><h3>Reportes</h3><p>Gráficos y métricas de rendimiento</p></div>
+        </div>
+        <div id="notion-configuracion" class="sub-page hidden">
+          <h1>Configuración</h1><p>Ajustes del sistema</p>
+          <div class="placeholder-card"><h3>Configuración</h3><p>Preferencias y ajustes de la aplicación</p></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ========== MODELO 2: LINEAR ========== -->
+  <div id="model-linear" class="app-container hidden">
+    <div class="linear-layout">
+      <aside class="linear-sidebar">
+        <div class="logo"><h2>LEX</h2></div>
+        <div class="linear-nav-item active" onclick="navSection(this, 'linear')"> Dashboard</div>
+        <div class="linear-nav-item" onclick="navSection(this, 'linear')"> Casos</div>
+        <div class="linear-nav-item" onclick="navSection(this, 'linear')"> Clientes</div>
+        <div class="linear-nav-item" onclick="navSection(this, 'linear')"> Documentos</div>
+        <div class="linear-nav-item" onclick="navSection(this, 'linear')"> Plazos</div>
+        <div class="linear-nav-item" onclick="navSection(this, 'linear')"> Seguimiento</div>
+        <div class="linear-nav-item" onclick="navSection(this, 'linear')"> Facturación</div>
+        <div class="linear-nav-item" onclick="navSection(this, 'linear')"> Doc. Legales</div>
+        <div class="linear-nav-item" onclick="navSection(this, 'linear')"> Plazos Legales</div>
+        <div class="linear-nav-item" onclick="navSection(this, 'linear')"> Notificaciones</div>
+        <div class="linear-nav-item" onclick="navSection(this, 'linear')"> Reportes</div>
+        <div class="linear-nav-item" onclick="navSection(this, 'linear')"> Configuración</div>
+      </aside>
+      <main class="linear-content">
+        <div id="linear-dashboard">
+          <div class="linear-header">
+            <h1>Página Principal</h1>
+            <p>Resumen operativo del estudio</p>
+          </div>
+          <div class="linear-grid">
+            <div class="linear-card">
+              <div class="label">Total Casos</div>
+              <div class="value">24</div>
+              <div class="trend">+12% este mes</div>
+            </div>
+            <div class="linear-card">
+              <div class="label">Casos Activos</div>
+              <div class="value">12</div>
+              <div class="trend">+3 esta semana</div>
+            </div>
+            <div class="linear-card">
+              <div class="label">Clientes</div>
+              <div class="value">48</div>
+              <div class="trend">+8% este mes</div>
+            </div>
+            <div class="linear-card">
+              <div class="label">Salud</div>
+              <div class="value" style="color:#27A644;">Óptimo</div>
+              <span class="linear-badge">48h</span>
+            </div>
+          </div>
+          <div class="linear-panel">
+            <h3>⏰ Radar de Vencimientos <span class="linear-badge">48h</span></h3>
+            <p style="font-size:13px;color:#8A8F98;">No hay plazos procesales ni vencimientos pendientes.</p>
+          </div>
+          <div class="linear-panel">
+            <h3>🕐 Agenda de Hoy</h3>
+            <p style="font-size:13px;color:#8A8F98;">No hay plazos o audiencias programadas para hoy.</p>
+          </div>
+        </div>
+        <div id="linear-casos" class="sub-page hidden">
+          <h1 style="color:#F7F8F8">Gestión de Casos</h1><p style="color:#8A8F98">Administra todos los casos del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#F7F8F8">Casos</h3><p>Tabla de casos con búsqueda, filtros y acciones</p></div>
+        </div>
+        <div id="linear-clientes" class="sub-page hidden">
+          <h1 style="color:#F7F8F8">Clientes</h1><p style="color:#8A8F98">Directorio de clientes del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#F7F8F8">Clientes</h3><p>Lista de clientes con datos de contacto</p></div>
+        </div>
+        <div id="linear-documentos" class="sub-page hidden">
+          <h1 style="color:#F7F8F8">Documentos</h1><p style="color:#8A8F98">Gestión documental del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#F7F8F8">Documentos</h3><p>Repositorio de documentos</p></div>
+        </div>
+        <div id="linear-plazos" class="sub-page hidden">
+          <h1 style="color:#F7F8F8">Plazos</h1><p style="color:#8A8F98">Control de plazos procesales</p>
+          <div class="placeholder-card"><h3 style="color:#F7F8F8">Plazos</h3><p>Calendario de plazos y vencimientos</p></div>
+        </div>
+        <div id="linear-seguimiento" class="sub-page hidden">
+          <h1 style="color:#F7F8F8">Seguimiento</h1><p style="color:#8A8F98">Seguimiento de casos y actividades</p>
+          <div class="placeholder-card"><h3 style="color:#F7F8F8">Seguimiento</h3><p>Estado de avances por caso</p></div>
+        </div>
+        <div id="linear-facturacion" class="sub-page hidden">
+          <h1 style="color:#F7F8F8">Cuentas por Cobrar</h1><p style="color:#8A8F98">Gestión de facturación y cobros</p>
+          <div class="placeholder-card"><h3 style="color:#F7F8F8">Facturación</h3><p>Cuentas por cobrar y pagos</p></div>
+        </div>
+        <div id="linear-doclegales" class="sub-page hidden">
+          <h1 style="color:#F7F8F8">Documentos Legales</h1><p style="color:#8A8F98">Documentos legales del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#F7F8F8">Doc. Legales</h3><p>Biblioteca de documentos legales</p></div>
+        </div>
+        <div id="linear-plazoslegales" class="sub-page hidden">
+          <h1 style="color:#F7F8F8">Plazos Legales</h1><p style="color:#8A8F98">Plazos legales y vencimientos</p>
+          <div class="placeholder-card"><h3 style="color:#F7F8F8">Plazos Legales</h3><p>Control de plazos legales</p></div>
+        </div>
+        <div id="linear-notificaciones" class="sub-page hidden">
+          <h1 style="color:#F7F8F8">Notificaciones</h1><p style="color:#8A8F98">Centro de notificaciones y alertas</p>
+          <div class="placeholder-card"><h3 style="color:#F7F8F8">Notificaciones</h3><p>Historial de notificaciones enviadas</p></div>
+        </div>
+        <div id="linear-reportes" class="sub-page hidden">
+          <h1 style="color:#F7F8F8">Reportes</h1><p style="color:#8A8F98">Estadísticas y reportes del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#F7F8F8">Reportes</h3><p>Gráficos y métricas de rendimiento</p></div>
+        </div>
+        <div id="linear-configuracion" class="sub-page hidden">
+          <h1 style="color:#F7F8F8">Configuración</h1><p style="color:#8A8F98">Ajustes del sistema</p>
+          <div class="placeholder-card"><h3 style="color:#F7F8F8">Configuración</h3><p>Preferencias y ajustes de la aplicación</p></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ========== MODELO 3: STRIPE ========== -->
+  <div id="model-stripe" class="app-container hidden">
+    <div class="stripe-layout">
+      <aside class="stripe-sidebar">
+        <div class="logo"><h2>LEX</h2></div>
+        <div class="stripe-nav-item active" onclick="navSection(this, 'stripe')"> Dashboard</div>
+        <div class="stripe-nav-item" onclick="navSection(this, 'stripe')"> Casos</div>
+        <div class="stripe-nav-item" onclick="navSection(this, 'stripe')"> Clientes</div>
+        <div class="stripe-nav-item" onclick="navSection(this, 'stripe')"> Documentos</div>
+        <div class="stripe-nav-item" onclick="navSection(this, 'stripe')"> Plazos</div>
+        <div class="stripe-nav-item" onclick="navSection(this, 'stripe')"> Seguimiento</div>
+        <div class="stripe-nav-item" onclick="navSection(this, 'stripe')"> Facturación</div>
+        <div class="stripe-nav-item" onclick="navSection(this, 'stripe')"> Doc. Legales</div>
+        <div class="stripe-nav-item" onclick="navSection(this, 'stripe')"> Plazos Legales</div>
+        <div class="stripe-nav-item" onclick="navSection(this, 'stripe')"> Notificaciones</div>
+        <div class="stripe-nav-item" onclick="navSection(this, 'stripe')"> Reportes</div>
+        <div class="stripe-nav-item" onclick="navSection(this, 'stripe')"> Configuración</div>
+      </aside>
+      <main class="stripe-content">
+        <div id="stripe-dashboard">
+          <div class="stripe-header">
+            <h1>Overview</h1>
+            <p>Resumen operativo del estudio</p>
+          </div>
+          <div class="stripe-kpis">
+            <div class="stripe-kpi">
+              <div class="label">Total Casos</div>
+              <div class="value">24</div>
+              <div class="delta">↑ 12% vs mes anterior</div>
+            </div>
+            <div class="stripe-kpi">
+              <div class="label">Casos Activos</div>
+              <div class="value">12</div>
+              <div class="delta">↑ 3 esta semana</div>
+            </div>
+            <div class="stripe-kpi">
+              <div class="label">Clientes</div>
+              <div class="value">48</div>
+              <div class="delta">↑ 8% vs mes anterior</div>
+            </div>
+            <div class="stripe-kpi">
+              <div class="label">Salud del Estudio</div>
+              <div class="value" style="color:#00D924;">Óptimo</div>
+              <div class="delta">Rendimiento operativo</div>
+            </div>
+          </div>
+          <div class="stripe-panel">
+            <h3>Próximos Vencimientos</h3>
+            <table class="stripe-table">
+              <thead><tr><th>Caso</th><th>Cliente</th><th>Vencimiento</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr><td>001-2026</td><td>Empresa A</td><td>15 Oct 2026</td><td><span class="stripe-status active">Activo</span></td></tr>
+                <tr><td>002-2026</td><td>Empresa B</td><td>22 Oct 2026</td><td><span class="stripe-status pending">Pendiente</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="stripe-casos" class="sub-page hidden">
+          <h1>Gestión de Casos</h1><p>Administra todos los casos del estudio</p>
+          <div class="placeholder-card"><h3>Casos</h3><p>Tabla de casos con búsqueda, filtros y acciones</p></div>
+        </div>
+        <div id="stripe-clientes" class="sub-page hidden">
+          <h1>Clientes</h1><p>Directorio de clientes del estudio</p>
+          <div class="placeholder-card"><h3>Clientes</h3><p>Lista de clientes con datos de contacto</p></div>
+        </div>
+        <div id="stripe-documentos" class="sub-page hidden">
+          <h1>Documentos</h1><p>Gestión documental del estudio</p>
+          <div class="placeholder-card"><h3>Documentos</h3><p>Repositorio de documentos</p></div>
+        </div>
+        <div id="stripe-plazos" class="sub-page hidden">
+          <h1>Plazos</h1><p>Control de plazos procesales</p>
+          <div class="placeholder-card"><h3>Plazos</h3><p>Calendario de plazos y vencimientos</p></div>
+        </div>
+        <div id="stripe-seguimiento" class="sub-page hidden">
+          <h1>Seguimiento</h1><p>Seguimiento de casos y actividades</p>
+          <div class="placeholder-card"><h3>Seguimiento</h3><p>Estado de avances por caso</p></div>
+        </div>
+        <div id="stripe-facturacion" class="sub-page hidden">
+          <h1>Cuentas por Cobrar</h1><p>Gestión de facturación y cobros</p>
+          <div class="placeholder-card"><h3>Facturación</h3><p>Cuentas por cobrar y pagos</p></div>
+        </div>
+        <div id="stripe-doclegales" class="sub-page hidden">
+          <h1>Documentos Legales</h1><p>Documentos legales del estudio</p>
+          <div class="placeholder-card"><h3>Doc. Legales</h3><p>Biblioteca de documentos legales</p></div>
+        </div>
+        <div id="stripe-plazoslegales" class="sub-page hidden">
+          <h1>Plazos Legales</h1><p>Plazos legales y vencimientos</p>
+          <div class="placeholder-card"><h3>Plazos Legales</h3><p>Control de plazos legales</p></div>
+        </div>
+        <div id="stripe-notificaciones" class="sub-page hidden">
+          <h1>Notificaciones</h1><p>Centro de notificaciones y alertas</p>
+          <div class="placeholder-card"><h3>Notificaciones</h3><p>Historial de notificaciones enviadas</p></div>
+        </div>
+        <div id="stripe-reportes" class="sub-page hidden">
+          <h1>Reportes</h1><p>Estadísticas y reportes del estudio</p>
+          <div class="placeholder-card"><h3>Reportes</h3><p>Gráficos y métricas de rendimiento</p></div>
+        </div>
+        <div id="stripe-configuracion" class="sub-page hidden">
+          <h1>Configuración</h1><p>Ajustes del sistema</p>
+          <div class="placeholder-card"><h3>Configuración</h3><p>Preferencias y ajustes de la aplicación</p></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ========== MODELO 4: VERCEL ========== -->
+  <div id="model-vercel" class="app-container hidden">
+    <div class="vercel-layout">
+      <aside class="vercel-sidebar">
+        <div class="logo"><h2>LEX</h2></div>
+        <div class="vercel-nav-item active" onclick="navSection(this, 'vercel')"> Dashboard</div>
+        <div class="vercel-nav-item" onclick="navSection(this, 'vercel')"> Casos</div>
+        <div class="vercel-nav-item" onclick="navSection(this, 'vercel')"> Clientes</div>
+        <div class="vercel-nav-item" onclick="navSection(this, 'vercel')"> Documentos</div>
+        <div class="vercel-nav-item" onclick="navSection(this, 'vercel')"> Plazos</div>
+        <div class="vercel-nav-item" onclick="navSection(this, 'vercel')"> Seguimiento</div>
+        <div class="vercel-nav-item" onclick="navSection(this, 'vercel')"> Facturación</div>
+        <div class="vercel-nav-item" onclick="navSection(this, 'vercel')"> Doc. Legales</div>
+        <div class="vercel-nav-item" onclick="navSection(this, 'vercel')"> Plazos Legales</div>
+        <div class="vercel-nav-item" onclick="navSection(this, 'vercel')"> Notificaciones</div>
+        <div class="vercel-nav-item" onclick="navSection(this, 'vercel')"> Reportes</div>
+        <div class="vercel-nav-item" onclick="navSection(this, 'vercel')"> Configuración</div>
+      </aside>
+      <main class="vercel-content">
+        <div id="vercel-dashboard">
+          <div class="vercel-header">
+            <h1>Dashboard</h1>
+          </div>
+          <div class="vercel-tabs">
+            <div class="vercel-tab active">Resumen</div>
+            <div class="vercel-tab">Casos</div>
+            <div class="vercel-tab">Clientes</div>
+            <div class="vercel-tab">Reportes</div>
+          </div>
+          <div class="vercel-grid">
+            <div class="vercel-card">
+              <div class="label">Total Casos</div>
+              <div class="value">24</div>
+              <div class="delta up">↑ 12%</div>
+            </div>
+            <div class="vercel-card">
+              <div class="label">Casos Activos</div>
+              <div class="value">12</div>
+              <div class="delta up">↑ 3</div>
+            </div>
+            <div class="vercel-card">
+              <div class="label">Clientes</div>
+              <div class="value">48</div>
+              <div class="delta up">↑ 8%</div>
+            </div>
+            <div class="vercel-card">
+              <div class="label">Salud</div>
+              <div class="value" style="color:#0070F3;">Óptimo</div>
+              <div class="delta" style="color:#666;">Rendimiento</div>
+            </div>
+          </div>
+        </div>
+        <div id="vercel-casos" class="sub-page hidden">
+          <h1 style="color:#FFF">Gestión de Casos</h1><p style="color:#666">Administra todos los casos del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#FFF">Casos</h3><p>Tabla de casos con búsqueda, filtros y acciones</p></div>
+        </div>
+        <div id="vercel-clientes" class="sub-page hidden">
+          <h1 style="color:#FFF">Clientes</h1><p style="color:#666">Directorio de clientes del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#FFF">Clientes</h3><p>Lista de clientes con datos de contacto</p></div>
+        </div>
+        <div id="vercel-documentos" class="sub-page hidden">
+          <h1 style="color:#FFF">Documentos</h1><p style="color:#666">Gestión documental del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#FFF">Documentos</h3><p>Repositorio de documentos</p></div>
+        </div>
+        <div id="vercel-plazos" class="sub-page hidden">
+          <h1 style="color:#FFF">Plazos</h1><p style="color:#666">Control de plazos procesales</p>
+          <div class="placeholder-card"><h3 style="color:#FFF">Plazos</h3><p>Calendario de plazos y vencimientos</p></div>
+        </div>
+        <div id="vercel-seguimiento" class="sub-page hidden">
+          <h1 style="color:#FFF">Seguimiento</h1><p style="color:#666">Seguimiento de casos y actividades</p>
+          <div class="placeholder-card"><h3 style="color:#FFF">Seguimiento</h3><p>Estado de avances por caso</p></div>
+        </div>
+        <div id="vercel-facturacion" class="sub-page hidden">
+          <h1 style="color:#FFF">Cuentas por Cobrar</h1><p style="color:#666">Gestión de facturación y cobros</p>
+          <div class="placeholder-card"><h3 style="color:#FFF">Facturación</h3><p>Cuentas por cobrar y pagos</p></div>
+        </div>
+        <div id="vercel-doclegales" class="sub-page hidden">
+          <h1 style="color:#FFF">Documentos Legales</h1><p style="color:#666">Documentos legales del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#FFF">Doc. Legales</h3><p>Biblioteca de documentos legales</p></div>
+        </div>
+        <div id="vercel-plazoslegales" class="sub-page hidden">
+          <h1 style="color:#FFF">Plazos Legales</h1><p style="color:#666">Plazos legales y vencimientos</p>
+          <div class="placeholder-card"><h3 style="color:#FFF">Plazos Legales</h3><p>Control de plazos legales</p></div>
+        </div>
+        <div id="vercel-notificaciones" class="sub-page hidden">
+          <h1 style="color:#FFF">Notificaciones</h1><p style="color:#666">Centro de notificaciones y alertas</p>
+          <div class="placeholder-card"><h3 style="color:#FFF">Notificaciones</h3><p>Historial de notificaciones enviadas</p></div>
+        </div>
+        <div id="vercel-reportes" class="sub-page hidden">
+          <h1 style="color:#FFF">Reportes</h1><p style="color:#666">Estadísticas y reportes del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#FFF">Reportes</h3><p>Gráficos y métricas de rendimiento</p></div>
+        </div>
+        <div id="vercel-configuracion" class="sub-page hidden">
+          <h1 style="color:#FFF">Configuración</h1><p style="color:#666">Ajustes del sistema</p>
+          <div class="placeholder-card"><h3 style="color:#FFF">Configuración</h3><p>Preferencias y ajustes de la aplicación</p></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ========== MODELO 5: ATLASSIAN ========== -->
+  <div id="model-atlassian" class="app-container hidden">
+    <div class="atlassian-layout">
+      <aside class="atlassian-sidebar">
+        <div class="logo"><h2>LEX</h2></div>
+        <div class="atlassian-nav-item active" onclick="navSection(this, 'atlassian')"> Dashboard</div>
+        <div class="atlassian-nav-item" onclick="navSection(this, 'atlassian')"> Casos</div>
+        <div class="atlassian-nav-item" onclick="navSection(this, 'atlassian')"> Clientes</div>
+        <div class="atlassian-nav-item" onclick="navSection(this, 'atlassian')"> Documentos</div>
+        <div class="atlassian-nav-item" onclick="navSection(this, 'atlassian')"> Plazos</div>
+        <div class="atlassian-nav-item" onclick="navSection(this, 'atlassian')"> Seguimiento</div>
+        <div class="atlassian-nav-item" onclick="navSection(this, 'atlassian')"> Facturación</div>
+        <div class="atlassian-nav-item" onclick="navSection(this, 'atlassian')"> Doc. Legales</div>
+        <div class="atlassian-nav-item" onclick="navSection(this, 'atlassian')"> Plazos Legales</div>
+        <div class="atlassian-nav-item" onclick="navSection(this, 'atlassian')"> Notificaciones</div>
+        <div class="atlassian-nav-item" onclick="navSection(this, 'atlassian')"> Reportes</div>
+        <div class="atlassian-nav-item" onclick="navSection(this, 'atlassian')"> Configuración</div>
+      </aside>
+      <main class="atlassian-content">
+        <div id="atlassian-dashboard">
+          <div class="atlassian-header">
+            <h1>Dashboard</h1>
+            <button class="atlassian-btn">+ Nuevo Caso</button>
+          </div>
+          <div class="atlassian-grid">
+            <div class="atlassian-card">
+              <div class="icon" style="background:#DEEBFF;">📁</div>
+              <div class="label">Total Casos</div>
+              <div class="value">24</div>
+              <div class="trend up">↑ 12% este mes</div>
+            </div>
+            <div class="atlassian-card">
+              <div class="icon" style="background:#E3FCEF;">✅</div>
+              <div class="label">Casos Activos</div>
+              <div class="value">12</div>
+              <div class="trend up">↑ 3 esta semana</div>
+            </div>
+            <div class="atlassian-card">
+              <div class="icon" style="background:#EAE6FF;">👥</div>
+              <div class="label">Clientes</div>
+              <div class="value">48</div>
+              <div class="trend up">↑ 8% este mes</div>
+            </div>
+            <div class="atlassian-card">
+              <div class="icon" style="background:#FFEBE6;">🏛️</div>
+              <div class="label">Salud</div>
+              <div class="value" style="color:#36B37E;">Óptimo</div>
+              <div class="trend" style="color:#6B778C;">Rendimiento operativo</div>
+            </div>
+          </div>
+          <div class="atlassian-panel">
+            <h3>Próximos Vencimientos</h3>
+            <table class="stripe-table">
+              <thead><tr><th>Caso</th><th>Cliente</th><th>Vencimiento</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr><td>001-2026</td><td>Empresa A</td><td>15 Oct 2026</td><td><span class="atlassian-badge active">Activo</span></td></tr>
+                <tr><td>002-2026</td><td>Empresa B</td><td>22 Oct 2026</td><td><span class="atlassian-badge pending">Pendiente</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="atlassian-casos" class="sub-page hidden">
+          <h1>Gestión de Casos</h1><p>Administra todos los casos del estudio</p>
+          <div class="placeholder-card"><h3>Casos</h3><p>Tabla de casos con búsqueda, filtros y acciones</p></div>
+        </div>
+        <div id="atlassian-clientes" class="sub-page hidden">
+          <h1>Clientes</h1><p>Directorio de clientes del estudio</p>
+          <div class="placeholder-card"><h3>Clientes</h3><p>Lista de clientes con datos de contacto</p></div>
+        </div>
+        <div id="atlassian-documentos" class="sub-page hidden">
+          <h1>Documentos</h1><p>Gestión documental del estudio</p>
+          <div class="placeholder-card"><h3>Documentos</h3><p>Repositorio de documentos</p></div>
+        </div>
+        <div id="atlassian-plazos" class="sub-page hidden">
+          <h1>Plazos</h1><p>Control de plazos procesales</p>
+          <div class="placeholder-card"><h3>Plazos</h3><p>Calendario de plazos y vencimientos</p></div>
+        </div>
+        <div id="atlassian-seguimiento" class="sub-page hidden">
+          <h1>Seguimiento</h1><p>Seguimiento de casos y actividades</p>
+          <div class="placeholder-card"><h3>Seguimiento</h3><p>Estado de avances por caso</p></div>
+        </div>
+        <div id="atlassian-facturacion" class="sub-page hidden">
+          <h1>Cuentas por Cobrar</h1><p>Gestión de facturación y cobros</p>
+          <div class="placeholder-card"><h3>Facturación</h3><p>Cuentas por cobrar y pagos</p></div>
+        </div>
+        <div id="atlassian-doclegales" class="sub-page hidden">
+          <h1>Documentos Legales</h1><p>Documentos legales del estudio</p>
+          <div class="placeholder-card"><h3>Doc. Legales</h3><p>Biblioteca de documentos legales</p></div>
+        </div>
+        <div id="atlassian-plazoslegales" class="sub-page hidden">
+          <h1>Plazos Legales</h1><p>Plazos legales y vencimientos</p>
+          <div class="placeholder-card"><h3>Plazos Legales</h3><p>Control de plazos legales</p></div>
+        </div>
+        <div id="atlassian-notificaciones" class="sub-page hidden">
+          <h1>Notificaciones</h1><p>Centro de notificaciones y alertas</p>
+          <div class="placeholder-card"><h3>Notificaciones</h3><p>Historial de notificaciones enviadas</p></div>
+        </div>
+        <div id="atlassian-reportes" class="sub-page hidden">
+          <h1>Reportes</h1><p>Estadísticas y reportes del estudio</p>
+          <div class="placeholder-card"><h3>Reportes</h3><p>Gráficos y métricas de rendimiento</p></div>
+        </div>
+        <div id="atlassian-configuracion" class="sub-page hidden">
+          <h1>Configuración</h1><p>Ajustes del sistema</p>
+          <div class="placeholder-card"><h3>Configuración</h3><p>Preferencias y ajustes de la aplicación</p></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ========== MODELO 6: SHADCN/UI ========== -->
+  <div id="model-shadcn" class="app-container hidden">
+    <div class="shadcn-layout">
+      <aside class="shadcn-sidebar">
+        <div class="logo"><h2>LEX</h2></div>
+        <div class="shadcn-search"><input type="text" placeholder="Buscar..."></div>
+        <div class="shadcn-nav-label">MENÚ PRINCIPAL</div>
+        <div class="shadcn-nav-item active" onclick="navSection(this, 'shadcn')"> Dashboard</div>
+        <div class="shadcn-nav-item" onclick="navSection(this, 'shadcn')"> Casos</div>
+        <div class="shadcn-nav-item" onclick="navSection(this, 'shadcn')"> Clientes</div>
+        <div class="shadcn-nav-item" onclick="navSection(this, 'shadcn')"> Documentos</div>
+        <div class="shadcn-nav-item" onclick="navSection(this, 'shadcn')"> Plazos</div>
+        <div class="shadcn-nav-item" onclick="navSection(this, 'shadcn')"> Seguimiento</div>
+        <div class="shadcn-nav-item" onclick="navSection(this, 'shadcn')"> Facturación</div>
+        <div class="shadcn-nav-label">LEGALES</div>
+        <div class="shadcn-nav-item" onclick="navSection(this, 'shadcn')"> Doc. Legales</div>
+        <div class="shadcn-nav-item" onclick="navSection(this, 'shadcn')"> Plazos Legales</div>
+        <div class="shadcn-nav-item" onclick="navSection(this, 'shadcn')"> Notificaciones</div>
+        <div class="shadcn-nav-label">SISTEMA</div>
+        <div class="shadcn-nav-item" onclick="navSection(this, 'shadcn')"> Reportes</div>
+        <div class="shadcn-nav-item" onclick="navSection(this, 'shadcn')"> Configuración</div>
+      </aside>
+      <main class="shadcn-content">
+        <div id="shadcn-dashboard">
+          <div class="shadcn-header">
+            <h1>Dashboard</h1>
+            <p>Resumen operativo del estudio</p>
+          </div>
+          <div class="shadcn-grid">
+            <div class="shadcn-card">
+              <div class="label">Total Casos</div>
+              <div class="value">24</div>
+              <div class="delta positive">↑ 12% este mes</div>
+            </div>
+            <div class="shadcn-card">
+              <div class="label">Casos Activos</div>
+              <div class="value">12</div>
+              <div class="delta positive">↑ 3 esta semana</div>
+            </div>
+            <div class="shadcn-card">
+              <div class="label">Clientes</div>
+              <div class="value">48</div>
+              <div class="delta positive">↑ 8% este mes</div>
+            </div>
+            <div class="shadcn-card">
+              <div class="label">Salud</div>
+              <div class="value" style="color:#22C55E;">Óptimo</div>
+              <div class="delta" style="color:hsl(240 5% 45%);">Rendimiento operativo</div>
+            </div>
+          </div>
+          <div class="shadcn-panel">
+            <h3>Próximos Vencimientos</h3>
+            <table class="shadcn-table">
+              <thead><tr><th>Caso</th><th>Cliente</th><th>Vencimiento</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr><td>001-2026</td><td>Empresa A</td><td>15 Oct 2026</td><td><span class="shadcn-badge">Activo</span></td></tr>
+                <tr><td>002-2026</td><td>Empresa B</td><td>22 Oct 2026</td><td><span class="shadcn-badge pending">Pendiente</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="shadcn-casos" class="sub-page hidden">
+          <h1 style="color:#FAFAFA">Gestión de Casos</h1><p style="color:hsl(240 5% 45%)">Administra todos los casos del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#FAFAFA">Casos</h3><p>Tabla de casos con búsqueda, filtros y acciones</p></div>
+        </div>
+        <div id="shadcn-clientes" class="sub-page hidden">
+          <h1 style="color:#FAFAFA">Clientes</h1><p style="color:hsl(240 5% 45%)">Directorio de clientes del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#FAFAFA">Clientes</h3><p>Lista de clientes con datos de contacto</p></div>
+        </div>
+        <div id="shadcn-documentos" class="sub-page hidden">
+          <h1 style="color:#FAFAFA">Documentos</h1><p style="color:hsl(240 5% 45%)">Gestión documental del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#FAFAFA">Documentos</h3><p>Repositorio de documentos</p></div>
+        </div>
+        <div id="shadcn-plazos" class="sub-page hidden">
+          <h1 style="color:#FAFAFA">Plazos</h1><p style="color:hsl(240 5% 45%)">Control de plazos procesales</p>
+          <div class="placeholder-card"><h3 style="color:#FAFAFA">Plazos</h3><p>Calendario de plazos y vencimientos</p></div>
+        </div>
+        <div id="shadcn-seguimiento" class="sub-page hidden">
+          <h1 style="color:#FAFAFA">Seguimiento</h1><p style="color:hsl(240 5% 45%)">Seguimiento de casos y actividades</p>
+          <div class="placeholder-card"><h3 style="color:#FAFAFA">Seguimiento</h3><p>Estado de avances por caso</p></div>
+        </div>
+        <div id="shadcn-facturacion" class="sub-page hidden">
+          <h1 style="color:#FAFAFA">Cuentas por Cobrar</h1><p style="color:hsl(240 5% 45%)">Gestión de facturación y cobros</p>
+          <div class="placeholder-card"><h3 style="color:#FAFAFA">Facturación</h3><p>Cuentas por cobrar y pagos</p></div>
+        </div>
+        <div id="shadcn-doclegales" class="sub-page hidden">
+          <h1 style="color:#FAFAFA">Documentos Legales</h1><p style="color:hsl(240 5% 45%)">Documentos legales del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#FAFAFA">Doc. Legales</h3><p>Biblioteca de documentos legales</p></div>
+        </div>
+        <div id="shadcn-plazoslegales" class="sub-page hidden">
+          <h1 style="color:#FAFAFA">Plazos Legales</h1><p style="color:hsl(240 5% 45%)">Plazos legales y vencimientos</p>
+          <div class="placeholder-card"><h3 style="color:#FAFAFA">Plazos Legales</h3><p>Control de plazos legales</p></div>
+        </div>
+        <div id="shadcn-notificaciones" class="sub-page hidden">
+          <h1 style="color:#FAFAFA">Notificaciones</h1><p style="color:hsl(240 5% 45%)">Centro de notificaciones y alertas</p>
+          <div class="placeholder-card"><h3 style="color:#FAFAFA">Notificaciones</h3><p>Historial de notificaciones enviadas</p></div>
+        </div>
+        <div id="shadcn-reportes" class="sub-page hidden">
+          <h1 style="color:#FAFAFA">Reportes</h1><p style="color:hsl(240 5% 45%)">Estadísticas y reportes del estudio</p>
+          <div class="placeholder-card"><h3 style="color:#FAFAFA">Reportes</h3><p>Gráficos y métricas de rendimiento</p></div>
+        </div>
+        <div id="shadcn-configuracion" class="sub-page hidden">
+          <h1 style="color:#FAFAFA">Configuración</h1><p style="color:hsl(240 5% 45%)">Ajustes del sistema</p>
+          <div class="placeholder-card"><h3 style="color:#FAFAFA">Configuración</h3><p>Preferencias y ajustes de la aplicación</p></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function showModel(model) {
+    document.querySelectorAll('.app-container').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.demo-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('model-' + model).classList.remove('hidden');
+    event.target.classList.add('active');
+    showSection(model, 'dashboard');
+  }
+
+  function navSection(el, model) {
+    document.querySelectorAll(`#model-${model} [class*="nav-item"]`).forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    const text = el.textContent.trim().toLowerCase().replace(/\s+/g, '');
+    showSection(model, text);
+  }
+
+  function showSection(model, section) {
+    const container = document.getElementById('model-' + model);
+    const sections = ['dashboard','casos','clientes','documentos','plazos','seguimiento','facturacion','doclegales','plazoslegales','notificaciones','reportes','configuracion'];
+    sections.forEach(s => {
+      const el = container.querySelector(`#${model}-${s}`);
+      if (el) el.classList.toggle('hidden', s !== section);
+    });
+  }
+</script>
+
+</body>
+</html>

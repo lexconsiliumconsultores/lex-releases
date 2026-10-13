@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LEX - Dashboard Inspirations</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e0e0e0; min-height: 100vh; }
+
+    .selector-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,15,25,0.95); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 16px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .selector-bar h1 { font-size: 18px; font-weight: 600; margin-right: 16px; background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .demo-btn {
+      padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);
+      background: transparent; color: #a0a0a0; cursor: pointer; font-size: 13px; font-weight: 500;
+      transition: all 0.2s;
+    }
+    .demo-btn:hover { border-color: rgba(255,255,255,0.25); color: #fff; }
+    .demo-btn.active { background: linear-gradient(135deg, #6366f1, #a855f7); border-color: transparent; color: #fff; }
+
+    .page { display: none; min-height: calc(100vh - 60px); }
+    .page.active { display: flex; }
+
+    .sidebar {
+      width: 240px; background: rgba(20,20,30,0.6); border-right: 1px solid rgba(255,255,255,0.06);
+      padding: 20px 12px; display: flex; flex-direction: column; gap: 2px; flex-shrink: 0;
+    }
+    .sidebar .logo { padding: 10px 12px; margin-bottom: 12px; }
+    .sidebar .logo h2 { font-size: 16px; font-weight: 700; }
+    .nav-label { font-size: 10px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; padding: 10px 12px 4px; font-weight: 600; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+      border-radius: 6px; cursor: pointer; font-size: 13px; color: rgba(255,255,255,0.6);
+      transition: all 0.15s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.04); color: #fff; }
+    .nav-item.active { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+    .nav-item .icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+
+    .content { flex: 1; padding: 32px; overflow-y: auto; }
+
+    .header { margin-bottom: 32px; }
+    .header h1 { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+    .header p { font-size: 14px; color: rgba(255,255,255,0.45); }
+
+    /* Bloomberg Style */
+    .bloomberg-layout .sidebar { background: rgba(10,10,15,0.8); width: 220px; padding: 14px 10px; }
+    .bloomberg-layout .content { padding: 20px 24px; }
+    .bloomberg-layout .header { margin-bottom: 20px; }
+    .bloomberg-layout .header h1 { font-size: 20px; }
+    .bloomberg-layout .header p { font-size: 12px; }
+    .bloomberg-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .bloomberg-kpi {
+      background: rgba(20,20,30,0.5); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px; padding: 14px; position: relative; overflow: hidden;
+    }
+    .bloomberg-kpi::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #3b82f6, transparent);
+    }
+    .bloomberg-kpi .label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+    .bloomberg-kpi .value { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .bloomberg-kpi .trend { font-size: 11px; color: #10b981; }
+    .bloomberg-kpi .trend.down { color: #ef4444; }
+
+    .bloomberg-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+    .bloomberg-panel {
+      background: rgba(20,20,30,0.5); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px; padding: 16px;
+    }
+    .bloomberg-panel h3 { font-size: 13px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .bloomberg-panel h3 .badge {
+      font-size: 9px; padding: 2px 6px; border-radius: 8px;
+      background: rgba(59,130,246,0.15); color: #60a5fa; font-weight: 500;
+    }
+
+    .task-item {
+      display: flex; align-items: flex-start; gap: 10px; padding: 8px;
+      border-radius: 6px; transition: background 0.15s;
+    }
+    .task-item:hover { background: rgba(255,255,255,0.03); }
+    .task-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .task-dot.urgent { background: #ef4444; }
+    .task-dot.review { background: #f59e0b; }
+    .task-dot.progress { background: #3b82f6; }
+    .task-info { flex: 1; }
+    .task-info .title { font-size: 12px; font-weight: 500; margin-bottom: 2px; }
+    .task-info .meta { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+    .bloomberg-layout .activity-item { padding: 8px 0; }
+    .bloomberg-layout .activity-item .text { font-size: 12px; }
+    .bloomberg-layout .activity-item .time { font-size: 10px; }
+    .bloomberg-layout .nav-item { padding: 6px 10px; font-size: 12px; gap: 8px; }
+    .bloomberg-layout .nav-label { padding: 8px 10px 2px; font-size: 9px; }
+    .bloomberg-layout .logo { padding: 8px 10px; margin-bottom: 8px; }
+    .bloomberg-layout .logo h2 { font-size: 14px; }
+
+    /* AbacusLaw Financial Style */
+    .abacus-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .abacus-kpi {
+      background: linear-gradient(135deg, rgba(30,30,45,0.8), rgba(20,20,35,0.6));
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px;
+    }
+    .abacus-kpi .label { font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 12px; }
+    .abacus-kpi .amount { font-size: 36px; font-weight: 700; margin-bottom: 8px; }
+    .abacus-kpi .detail { font-size: 12px; color: rgba(255,255,255,0.35); }
+    .abacus-kpi .bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-top: 12px; overflow: hidden; }
+    .abacus-kpi .bar-fill { height: 100%; border-radius: 2px; }
+
+    .abacus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .abacus-panel {
+      background: rgba(20,20,30,0.5); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px; padding: 24px;
+    }
+    .abacus-panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+
+    .abacus-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .abacus-row:last-child { border-bottom: none; }
+    .abacus-row .name { font-size: 13px; }
+    .abacus-row .value { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .abacus-row .value.positive { color: #10b981; }
+    .abacus-row .value.negative { color: #ef4444; }
+
+    /* Lawmatics Role-Based */
+    .lawmatics-hero {
+      background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(168,85,247,0.05));
+      border: 1px solid rgba(99,102,241,0.2); border-radius: 16px;
+      padding: 32px; margin-bottom: 24px;
+    }
+    .lawmatics-hero h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .lawmatics-hero p { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 20px; }
+    .lawmatics-tabs { display: flex; gap: 4px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 8px; }
+    .lawmatics-tab {
+      flex: 1; padding: 10px; text-align: center; font-size: 13px; border-radius: 6px;
+      cursor: pointer; color: rgba(255,255,255,0.5); transition: all 0.2s;
+    }
+    .lawmatics-tab:hover { color: #fff; }
+    .lawmatics-tab.active { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+
+    .lawmatics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .lawmatics-card {
+      background: rgba(20,20,30,0.5); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s;
+    }
+    .lawmatics-card:hover { border-color: rgba(99,102,241,0.3); transform: translateY(-2px); }
+    .lawmatics-card .icon { font-size: 24px; margin-bottom: 12px; }
+    .lawmatics-card .title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .lawmatics-card .desc { font-size: 12px; color: rgba(255,255,255,0.4); }
+
+    .lawmatics-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .lawmatics-panel {
+      background: rgba(20,20,30,0.5); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px; padding: 24px;
+    }
+    .lawmatics-panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+
+    .activity-item { display: flex; gap: 12px; padding: 10px 0; }
+    .activity-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+    .activity-item .text { font-size: 13px; }
+    .activity-item .time { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px; }
+
+    /* Dribbble Dark Bento */
+    .bento-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .bento-item {
+      background: rgba(20,20,30,0.5); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px; padding: 24px;
+    }
+    .bento-item.large { grid-column: span 6; }
+    .bento-item.medium { grid-column: span 4; }
+    .bento-item.small { grid-column: span 3; }
+    .bento-item.tall { grid-row: span 2; }
+
+    .bento-kpi .label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 8px; }
+    .bento-kpi .value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+    .bento-kpi .change { font-size: 12px; }
+    .bento-kpi .change.up { color: #10b981; }
+    .bento-kpi .change.down { color: #ef4444; }
+
+    .bento-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; margin-top: 12px; }
+    .bento-bar { flex: 1; border-radius: 4px 4px 0 0; min-height: 8px; }
+
+    .bento-list-item {
+      display: flex; align-items: center; gap: 10px; padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .bento-list-item:last-child { border-bottom: none; }
+    .bento-avatar {
+      width: 32px; height: 32px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-size: 12px; font-weight: 600;
+    }
+    .bento-list-item .info { flex: 1; }
+    .bento-list-item .name { font-size: 13px; font-weight: 500; }
+    .bento-list-item .role { font-size: 11px; color: rgba(255,255,255,0.35); }
+    .bento-list-item .status { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+
+    .chart-line { display: flex; align-items: flex-end; gap: 2px; height: 120px; padding: 8px 0; }
+    .chart-bar { flex: 1; border-radius: 2px 2px 0 0; opacity: 0.8; transition: opacity 0.2s; }
+    .chart-bar:hover { opacity: 1; }
+
+    .bento-panel-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+    .bento-gauge { display: flex; align-items: center; gap: 16px; margin-top: 12px; }
+    .gauge-circle {
+      width: 80px; height: 80px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-size: 18px; font-weight: 700;
+      border: 4px solid;
+    }
+    .gauge-info { flex: 1; }
+    .gauge-info .label { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+    .gauge-info .value { font-size: 20px; font-weight: 600; }
+
+    .sub-page { display: none; padding: 32px; }
+    .sub-page.active { display: block; }
+    .sub-page h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .sub-page p { font-size: 14px; color: rgba(255,255,255,0.45); margin-bottom: 24px; }
+    .placeholder-card {
+      background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15);
+      border-radius: 12px; padding: 48px; text-align: center;
+    }
+    .placeholder-card h3 { font-size: 16px; margin-bottom: 8px; }
+    .placeholder-card p { font-size: 13px; color: rgba(255,255,255,0.35); margin: 0; }
+  </style>
+</head>
+<body>
+
+<div class="selector-bar">
+  <h1>LEX Inspirations</h1>
+  <button class="demo-btn active" onclick="showPage('bloomberg')">1. Bloomberg Law</button>
+  <button class="demo-btn" onclick="showPage('abacus')">2. AbacusLaw</button>
+  <button class="demo-btn" onclick="showPage('lawmatics')">3. Lawmatics</button>
+  <button class="demo-btn" onclick="showPage('bento')">4. Dribbble Bento</button>
+</div>
+
+<!-- 1. BLOOMBERG LAW STYLE -->
+<div id="page-bloomberg" class="page active bloomberg-layout">
+  <aside class="sidebar">
+    <div class="logo"><h2>LEX</h2></div>
+    <div class="nav-label">MENÚ PRINCIPAL</div>
+    <div class="nav-item active" onclick="navSec(this,'bloomberg')"><span class="icon">📊</span>Dashboard</div>
+    <div class="nav-item" onclick="navSec(this,'bloomberg')"><span class="icon">📁</span>Casos</div>
+    <div class="nav-item" onclick="navSec(this,'bloomberg')"><span class="icon">👥</span>Clientes</div>
+    <div class="nav-item" onclick="navSec(this,'bloomberg')"><span class="icon">📄</span>Documentos</div>
+    <div class="nav-item" onclick="navSec(this,'bloomberg')"><span class="icon">⏰</span>Plazos</div>
+    <div class="nav-item" onclick="navSec(this,'bloomberg')"><span class="icon">📈</span>Seguimiento</div>
+    <div class="nav-item" onclick="navSec(this,'bloomberg')"><span class="icon">💰</span>Facturación</div>
+    <div class="nav-label">LEGALES</div>
+    <div class="nav-item" onclick="navSec(this,'bloomberg')"><span class="icon">📋</span>Doc. Legales</div>
+    <div class="nav-item" onclick="navSec(this,'bloomberg')"><span class="icon">⚖️</span>Plazos Legales</div>
+    <div class="nav-item" onclick="navSec(this,'bloomberg')"><span class="icon">🔔</span>Notificaciones</div>
+    <div class="nav-label">SISTEMA</div>
+    <div class="nav-item" onclick="navSec(this,'bloomberg')"><span class="icon">📉</span>Reportes</div>
+    <div class="nav-item" onclick="navSec(this,'bloomberg')"><span class="icon">⚙️</span>Configuración</div>
+  </aside>
+  <main class="content">
+    <div id="bloomberg-dashboard">
+      <div class="header">
+        <h1>Dashboard</h1>
+        <p>Resumen operativo del estudio jurídico</p>
+      </div>
+      <div class="bloomberg-kpis">
+        <div class="bloomberg-kpi">
+          <div class="label">Casos Activos</div>
+          <div class="value">24</div>
+          <div class="trend">↑ 12% vs mes anterior</div>
+        </div>
+        <div class="bloomberg-kpi">
+          <div class="label">Clientes</div>
+          <div class="value">48</div>
+          <div class="trend">↑ 8% este trimestre</div>
+        </div>
+        <div class="bloomberg-kpi">
+          <div class="label">Plazos Próximos</div>
+          <div class="value">7</div>
+          <div class="trend down">↑ 3 esta semana</div>
+        </div>
+        <div class="bloomberg-kpi">
+          <div class="label">Salud del Estudio</div>
+          <div class="value" style="color:#10b981;">Óptimo</div>
+          <div class="trend">Rendimiento por encima del promedio</div>
+        </div>
+      </div>
+      <div class="bloomberg-grid">
+        <div class="bloomberg-panel">
+          <h3>Tareas Prioritarias <span class="badge">5</span></h3>
+          <div class="task-item"><div class="task-dot urgent"></div><div class="task-info"><div class="title">Revisar contrato - Empresa A</div><div class="meta">Vence hoy • Asignado a: CM</div></div></div>
+          <div class="task-item"><div class="task-dot review"></div><div class="task-info"><div class="title">Audiencia preparación - Caso 002</div><div class="meta">Vence mañana • Asignado a: AB</div></div></div>
+          <div class="task-item"><div class="task-dot progress"></div><div class="task-info"><div class="title">Enviar notificación de cobro</div><div class="meta">Pendiente • Factura #2026-003</div></div></div>
+          <div class="task-item"><div class="task-dot progress"></div><div class="task-info"><div class="title">Actualizar documentación legal</div><div class="meta">En progreso • Doc. Legales</div></div></div>
+          <div class="task-item"><div class="task-dot review"></div><div class="task-info"><div class="title">Revisar plazos procesales</div><div class="meta">Vence esta semana • 3 casos</div></div></div>
+        </div>
+        <div class="bloomberg-panel">
+          <h3>Actividad Reciente</h3>
+          <div class="activity-item"><div class="activity-dot" style="background:#3b82f6;"></div><div><div class="text">Nuevo caso registrado</div><div class="time">Hace 2h</div></div></div>
+          <div class="activity-item"><div class="activity-dot" style="background:#10b981;"></div><div><div class="text">Pago recibido</div><div class="time">Hace 4h</div></div></div>
+          <div class="activity-item"><div class="activity-dot" style="background:#f59e0b;"></div><div><div class="text">Documento subido</div><div class="time">Hace 6h</div></div></div>
+          <div class="activity-item"><div class="activity-dot" style="background:#a855f7;"></div><div><div class="text">Outlook sync completado</div><div class="time">Hace 8h</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div id="bloomberg-casos" class="sub-page"><h1>Gestión de Casos</h1><p>Administra todos los casos del estudio</p><div class="placeholder-card"><h3>Casos</h3><p>Tabla de casos con búsqueda, filtros y acciones</p></div></div>
+    <div id="bloomberg-clientes" class="sub-page"><h1>Clientes</h1><p>Directorio de clientes del estudio</p><div class="placeholder-card"><h3>Clientes</h3><p>Lista de clientes con datos de contacto</p></div></div>
+    <div id="bloomberg-documentos" class="sub-page"><h1>Documentos</h1><p>Gestión documental del estudio</p><div class="placeholder-card"><h3>Documentos</h3><p>Repositorio de documentos</p></div></div>
+    <div id="bloomberg-plazos" class="sub-page"><h1>Plazos</h1><p>Control de plazos procesales</p><div class="placeholder-card"><h3>Plazos</h3><p>Calendario de plazos y vencimientos</p></div></div>
+    <div id="bloomberg-seguimiento" class="sub-page"><h1>Seguimiento</h1><p>Seguimiento de casos y actividades</p><div class="placeholder-card"><h3>Seguimiento</h3><p>Estado de avances por caso</p></div></div>
+    <div id="bloomberg-facturacion" class="sub-page"><h1>Cuentas por Cobrar</h1><p>Gestión de facturación y cobros</p><div class="placeholder-card"><h3>Facturación</h3><p>Cuentas por cobrar y pagos</p></div></div>
+    <div id="bloomberg-doclegales" class="sub-page"><h1>Documentos Legales</h1><p>Documentos legales del estudio</p><div class="placeholder-card"><h3>Doc. Legales</h3><p>Biblioteca de documentos legales</p></div></div>
+    <div id="bloomberg-plazoslegales" class="sub-page"><h1>Plazos Legales</h1><p>Plazos legales y vencimientos</p><div class="placeholder-card"><h3>Plazos Legales</h3><p>Control de plazos legales</p></div></div>
+    <div id="bloomberg-notificaciones" class="sub-page"><h1>Notificaciones</h1><p>Centro de notificaciones y alertas</p><div class="placeholder-card"><h3>Notificaciones</h3><p>Historial de notificaciones enviadas</p></div></div>
+    <div id="bloomberg-reportes" class="sub-page"><h1>Reportes</h1><p>Estadísticas y reportes del estudio</p><div class="placeholder-card"><h3>Reportes</h3><p>Gráficos y métricas de rendimiento</p></div></div>
+    <div id="bloomberg-configuracion" class="sub-page"><h1>Configuración</h1><p>Ajustes del sistema</p><div class="placeholder-card"><h3>Configuración</h3><p>Preferencias y ajustes de la aplicación</p></div></div>
+  </main>
+</div>
+
+<!-- 2. ABACUSLAW STYLE -->
+<div id="page-abacus" class="page">
+  <aside class="sidebar">
+    <div class="logo"><h2>LEX</h2></div>
+    <div class="nav-label">MENÚ PRINCIPAL</div>
+    <div class="nav-item active" onclick="navSec(this,'abacus')"><span class="icon">📊</span>Dashboard</div>
+    <div class="nav-item" onclick="navSec(this,'abacus')"><span class="icon">📁</span>Casos</div>
+    <div class="nav-item" onclick="navSec(this,'abacus')"><span class="icon">👥</span>Clientes</div>
+    <div class="nav-item" onclick="navSec(this,'abacus')"><span class="icon">📄</span>Documentos</div>
+    <div class="nav-item" onclick="navSec(this,'abacus')"><span class="icon">⏰</span>Plazos</div>
+    <div class="nav-item" onclick="navSec(this,'abacus')"><span class="icon">📈</span>Seguimiento</div>
+    <div class="nav-item" onclick="navSec(this,'abacus')"><span class="icon">💰</span>Facturación</div>
+    <div class="nav-label">LEGALES</div>
+    <div class="nav-item" onclick="navSec(this,'abacus')"><span class="icon">📋</span>Doc. Legales</div>
+    <div class="nav-item" onclick="navSec(this,'abacus')"><span class="icon">⚖️</span>Plazos Legales</div>
+    <div class="nav-item" onclick="navSec(this,'abacus')"><span class="icon">🔔</span>Notificaciones</div>
+    <div class="nav-label">SISTEMA</div>
+    <div class="nav-item" onclick="navSec(this,'abacus')"><span class="icon">📉</span>Reportes</div>
+    <div class="nav-item" onclick="navSec(this,'abacus')"><span class="icon">⚙️</span>Configuración</div>
+  </aside>
+  <main class="content">
+    <div id="abacus-dashboard">
+      <div class="header">
+        <h1>Financial Overview</h1>
+        <p>Resumen financiero y contable del estudio</p>
+      </div>
+      <div class="abacus-kpis">
+        <div class="abacus-kpi">
+          <div class="label">Work in Progress (WIP)</div>
+          <div class="amount">$2.4M</div>
+          <div class="detail">42 casos en curso</div>
+          <div class="bar"><div class="bar-fill" style="width:75%;background:linear-gradient(90deg,#6366f1,#a855f7);"></div></div>
+        </div>
+        <div class="abacus-kpi">
+          <div class="label">Pagos del Mes</div>
+          <div class="amount">$890K</div>
+          <div class="detail">↑ 15% vs mes anterior</div>
+          <div class="bar"><div class="bar-fill" style="width:60%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div>
+        </div>
+        <div class="abacus-kpi">
+          <div class="label">Cuentas por Cobrar</div>
+          <div class="amount">$1.2M</div>
+          <div class="detail">28 facturas pendientes</div>
+          <div class="bar"><div class="bar-fill" style="width:45%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div></div>
+        </div>
+      </div>
+      <div class="abacus-grid">
+        <div class="abacus-panel">
+          <h3>Distribución de Ingresos por Área</h3>
+          <div class="abacus-row"><span class="name">Derecho Civil</span><span class="value positive">$420K</span></div>
+          <div class="abacus-row"><span class="name">Derecho Comercial</span><span class="value positive">$380K</span></div>
+          <div class="abacus-row"><span class="name">Derecho Laboral</span><span class="value positive">$290K</span></div>
+          <div class="abacus-row"><span class="name">Derecho Tributario</span><span class="value positive">$180K</span></div>
+          <div class="abacus-row"><span class="name">Otros</span><span class="value">$120K</span></div>
+        </div>
+        <div class="abacus-panel">
+          <h3>Métricas de Rendimiento</h3>
+          <div class="abacus-row"><span class="name">Utilización</span><span class="value positive">82%</span></div>
+          <div class="abacus-row"><span class="name">Realización</span><span class="value positive">94%</span></div>
+          <div class="abacus-row"><span class="name">Cobranza</span><span class="value positive">88%</span></div>
+          <div class="abacus-row"><span class="name">Horas/Facturado</span><span class="value">1,240h</span></div>
+          <div class="abacus-row"><span class="name">Ticket Promedio</span><span class="value">$45K</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="abacus-casos" class="sub-page"><h1>Gestión de Casos</h1><p>Administra todos los casos del estudio</p><div class="placeholder-card"><h3>Casos</h3><p>Tabla de casos con búsqueda, filtros y acciones</p></div></div>
+    <div id="abacus-clientes" class="sub-page"><h1>Clientes</h1><p>Directorio de clientes del estudio</p><div class="placeholder-card"><h3>Clientes</h3><p>Lista de clientes con datos de contacto</p></div></div>
+    <div id="abacus-documentos" class="sub-page"><h1>Documentos</h1><p>Gestión documental del estudio</p><div class="placeholder-card"><h3>Documentos</h3><p>Repositorio de documentos</p></div></div>
+    <div id="abacus-plazos" class="sub-page"><h1>Plazos</h1><p>Control de plazos procesales</p><div class="placeholder-card"><h3>Plazos</h3><p>Calendario de plazos y vencimientos</p></div></div>
+    <div id="abacus-seguimiento" class="sub-page"><h1>Seguimiento</h1><p>Seguimiento de casos y actividades</p><div class="placeholder-card"><h3>Seguimiento</h3><p>Estado de avances por caso</p></div></div>
+    <div id="abacus-facturacion" class="sub-page"><h1>Cuentas por Cobrar</h1><p>Gestión de facturación y cobros</p><div class="placeholder-card"><h3>Facturación</h3><p>Cuentas por cobrar y pagos</p></div></div>
+    <div id="abacus-doclegales" class="sub-page"><h1>Documentos Legales</h1><p>Documentos legales del estudio</p><div class="placeholder-card"><h3>Doc. Legales</h3><p>Biblioteca de documentos legales</p></div></div>
+    <div id="abacus-plazoslegales" class="sub-page"><h1>Plazos Legales</h1><p>Plazos legales y vencimientos</p><div class="placeholder-card"><h3>Plazos Legales</h3><p>Control de plazos legales</p></div></div>
+    <div id="abacus-notificaciones" class="sub-page"><h1>Notificaciones</h1><p>Centro de notificaciones y alertas</p><div class="placeholder-card"><h3>Notificaciones</h3><p>Historial de notificaciones enviadas</p></div></div>
+    <div id="abacus-reportes" class="sub-page"><h1>Reportes</h1><p>Estadísticas y reportes del estudio</p><div class="placeholder-card"><h3>Reportes</h3><p>Gráficos y métricas de rendimiento</p></div></div>
+    <div id="abacus-configuracion" class="sub-page"><h1>Configuración</h1><p>Ajustes del sistema</p><div class="placeholder-card"><h3>Configuración</h3><p>Preferencias y ajustes de la aplicación</p></div></div>
+  </main>
+</div>
+
+<!-- 3. LAWMATICS STYLE -->
+<div id="page-lawmatics" class="page">
+  <aside class="sidebar">
+    <div class="logo"><h2>LEX</h2></div>
+    <div class="nav-label">MENÚ PRINCIPAL</div>
+    <div class="nav-item active" onclick="navSec(this,'lawmatics')"><span class="icon">📊</span>Dashboard</div>
+    <div class="nav-item" onclick="navSec(this,'lawmatics')"><span class="icon">📁</span>Casos</div>
+    <div class="nav-item" onclick="navSec(this,'lawmatics')"><span class="icon">👥</span>Clientes</div>
+    <div class="nav-item" onclick="navSec(this,'lawmatics')"><span class="icon">📄</span>Documentos</div>
+    <div class="nav-item" onclick="navSec(this,'lawmatics')"><span class="icon">⏰</span>Plazos</div>
+    <div class="nav-item" onclick="navSec(this,'lawmatics')"><span class="icon">📈</span>Seguimiento</div>
+    <div class="nav-item" onclick="navSec(this,'lawmatics')"><span class="icon">💰</span>Facturación</div>
+    <div class="nav-label">LEGALES</div>
+    <div class="nav-item" onclick="navSec(this,'lawmatics')"><span class="icon">📋</span>Doc. Legales</div>
+    <div class="nav-item" onclick="navSec(this,'lawmatics')"><span class="icon">⚖️</span>Plazos Legales</div>
+    <div class="nav-item" onclick="navSec(this,'lawmatics')"><span class="icon">🔔</span>Notificaciones</div>
+    <div class="nav-label">SISTEMA</div>
+    <div class="nav-item" onclick="navSec(this,'lawmatics')"><span class="icon">📉</span>Reportes</div>
+    <div class="nav-item" onclick="navSec(this,'lawmatics')"><span class="icon">⚙️</span>Configuración</div>
+  </aside>
+  <main class="content">
+    <div id="lawmatics-dashboard">
+      <div class="lawmatics-hero">
+        <h2>Panel de Control</h2>
+        <p>Selecciona una vista según tu rol y prioridades del día</p>
+        <div class="lawmatics-tabs">
+          <div class="lawmatics-tab active">Resumen</div>
+          <div class="lawmatics-tab">Intake</div>
+          <div class="lawmatics-tab">Productividad</div>
+          <div class="lawmatics-tab">Collections</div>
+        </div>
+      </div>
+      <div class="lawmatics-grid">
+        <div class="lawmatics-card"><div class="icon">📥</div><div class="title">Intake de Clientes</div><div class="desc">12 nuevos leads esta semana</div></div>
+        <div class="lawmatics-card"><div class="icon">📅</div><div class="title">Citas Programadas</div><div class="desc">5 consultas agendadas</div></div>
+        <div class="lawmatics-card"><div class="icon">✍️</div><div class="title">E-Signatures</div><div class="desc">8 documentos pendientes de firma</div></div>
+      </div>
+      <div class="lawmatics-panels">
+        <div class="lawmatics-panel">
+          <h3>Actividad del Equipo</h3>
+          <div class="activity-item"><div class="activity-dot" style="background:#6366f1;"></div><div><div class="text">CMregistró nuevo caso</div><div class="time">Hace 30 min</div></div></div>
+          <div class="activity-item"><div class="activity-dot" style="background:#10b981;"></div><div><div class="text">AB completó tarea de revisión</div><div class="time">Hace 1h</div></div></div>
+          <div class="activity-item"><div class="activity-dot" style="background:#f59e0b;"></div><div><div class="text">JR actualizó documentos</div><div class="time">Hace 2h</div></div></div>
+          <div class="activity-item"><div class="activity-dot" style="background:#a855f7;"></div><div><div class="text">CM envió notificación de cobro</div><div class="time">Hace 3h</div></div></div>
+        </div>
+        <div class="lawmatics-panel">
+          <h3>Próximos Vencimientos</h3>
+          <div class="task-item"><div class="task-dot urgent"></div><div class="task-info"><div class="title">Presentación de prueba</div><div class="meta">Vence en 2 días</div></div></div>
+          <div class="task-item"><div class="task-dot review"></div><div class="task-info"><div class="title">Audiencia preliminar</div><div class="meta">Vence en 5 días</div></div></div>
+          <div class="task-item"><div class="task-dot progress"></div><div class="task-info"><div class="title">Entrega de informes</div><div class="meta">Vence en 1 semana</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div id="lawmatics-casos" class="sub-page"><h1>Gestión de Casos</h1><p>Administra todos los casos del estudio</p><div class="placeholder-card"><h3>Casos</h3><p>Tabla de casos con búsqueda, filtros y acciones</p></div></div>
+    <div id="lawmatics-clientes" class="sub-page"><h1>Clientes</h1><p>Directorio de clientes del estudio</p><div class="placeholder-card"><h3>Clientes</h3><p>Lista de clientes con datos de contacto</p></div></div>
+    <div id="lawmatics-documentos" class="sub-page"><h1>Documentos</h1><p>Gestión documental del estudio</p><div class="placeholder-card"><h3>Documentos</h3><p>Repositorio de documentos</p></div></div>
+    <div id="lawmatics-plazos" class="sub-page"><h1>Plazos</h1><p>Control de plazos procesales</p><div class="placeholder-card"><h3>Plazos</h3><p>Calendario de plazos y vencimientos</p></div></div>
+    <div id="lawmatics-seguimiento" class="sub-page"><h1>Seguimiento</h1><p>Seguimiento de casos y actividades</p><div class="placeholder-card"><h3>Seguimiento</h3><p>Estado de avances por caso</p></div></div>
+    <div id="lawmatics-facturacion" class="sub-page"><h1>Cuentas por Cobrar</h1><p>Gestión de facturación y cobros</p><div class="placeholder-card"><h3>Facturación</h3><p>Cuentas por cobrar y pagos</p></div></div>
+    <div id="lawmatics-doclegales" class="sub-page"><h1>Documentos Legales</h1><p>Documentos legales del estudio</p><div class="placeholder-card"><h3>Doc. Legales</h3><p>Biblioteca de documentos legales</p></div></div>
+    <div id="lawmatics-plazoslegales" class="sub-page"><h1>Plazos Legales</h1><p>Plazos legales y vencimientos</p><div class="placeholder-card"><h3>Plazos Legales</h3><p>Control de plazos legales</p></div></div>
+    <div id="lawmatics-notificaciones" class="sub-page"><h1>Notificaciones</h1><p>Centro de notificaciones y alertas</p><div class="placeholder-card"><h3>Notificaciones</h3><p>Historial de notificaciones enviadas</p></div></div>
+    <div id="lawmatics-reportes" class="sub-page"><h1>Reportes</h1><p>Estadísticas y reportes del estudio</p><div class="placeholder-card"><h3>Reportes</h3><p>Gráficos y métricas de rendimiento</p></div></div>
+    <div id="lawmatics-configuracion" class="sub-page"><h1>Configuración</h1><p>Ajustes del sistema</p><div class="placeholder-card"><h3>Configuración</h3><p>Preferencias y ajustes de la aplicación</p></div></div>
+  </main>
+</div>
+
+<!-- 4. DRIBBBLE BENTO -->
+<div id="page-bento" class="page">
+  <aside class="sidebar">
+    <div class="logo"><h2>LEX</h2></div>
+    <div class="nav-label">MENÚ PRINCIPAL</div>
+    <div class="nav-item active" onclick="navSec(this,'bento')"><span class="icon">📊</span>Dashboard</div>
+    <div class="nav-item" onclick="navSec(this,'bento')"><span class="icon">📁</span>Casos</div>
+    <div class="nav-item" onclick="navSec(this,'bento')"><span class="icon">👥</span>Clientes</div>
+    <div class="nav-item" onclick="navSec(this,'bento')"><span class="icon">📄</span>Documentos</div>
+    <div class="nav-item" onclick="navSec(this,'bento')"><span class="icon">⏰</span>Plazos</div>
+    <div class="nav-item" onclick="navSec(this,'bento')"><span class="icon">📈</span>Seguimiento</div>
+    <div class="nav-item" onclick="navSec(this,'bento')"><span class="icon">💰</span>Facturación</div>
+    <div class="nav-label">LEGALES</div>
+    <div class="nav-item" onclick="navSec(this,'bento')"><span class="icon">📋</span>Doc. Legales</div>
+    <div class="nav-item" onclick="navSec(this,'bento')"><span class="icon">⚖️</span>Plazos Legales</div>
+    <div class="nav-item" onclick="navSec(this,'bento')"><span class="icon">🔔</span>Notificaciones</div>
+    <div class="nav-label">SISTEMA</div>
+    <div class="nav-item" onclick="navSec(this,'bento')"><span class="icon">📉</span>Reportes</div>
+    <div class="nav-item" onclick="navSec(this,'bento')"><span class="icon">⚙️</span>Configuración</div>
+  </aside>
+  <main class="content">
+    <div id="bento-dashboard">
+      <div class="header">
+        <h1>Dashboard</h1>
+        <p>Vista general del estudio jurídico</p>
+      </div>
+      <div class="bento-grid">
+        <div class="bento-item small">
+          <div class="bento-kpi"><div class="label">Casos</div><div class="value">24</div><div class="change up">↑ 12%</div></div>
+        </div>
+        <div class="bento-item small">
+          <div class="bento-kpi"><div class="label">Clientes</div><div class="value">48</div><div class="change up">↑ 8%</div></div>
+        </div>
+        <div class="bento-item small">
+          <div class="bento-kpi"><div class="label">Plazos</div><div class="value">7</div><div class="change down">↑ 3</div></div>
+        </div>
+        <div class="bento-item small">
+          <div class="bento-kpi"><div class="label">Ingresos</div><div class="value">$890K</div><div class="change up">↑ 15%</div></div>
+        </div>
+        <div class="bento-item medium">
+          <div class="bento-panel-title">Ingresos Mensuales</div>
+          <div class="chart-line">
+            <div class="chart-bar" style="height:40%;background:#6366f1;"></div>
+            <div class="chart-bar" style="height:55%;background:#6366f1;"></div>
+            <div class="chart-bar" style="height:45%;background:#6366f1;"></div>
+            <div class="chart-bar" style="height:70%;background:#6366f1;"></div>
+            <div class="chart-bar" style="height:60%;background:#6366f1;"></div>
+            <div class="chart-bar" style="height:80%;background:#a855f7;"></div>
+            <div class="chart-bar" style="height:75%;background:#a855f7;"></div>
+            <div class="chart-bar" style="height:90%;background:#a855f7;"></div>
+            <div class="chart-bar" style="height:85%;background:#a855f7;"></div>
+            <div class="chart-bar" style="height:95%;background:#a855f7;"></div>
+          </div>
+        </div>
+        <div class="bento-item medium">
+          <div class="bento-panel-title">Salud del Estudio</div>
+          <div class="bento-gauge">
+            <div class="gauge-circle" style="border-color:#10b981;color:#10b981;">82%</div>
+            <div class="gauge-info"><div class="label">Utilización</div><div class="value">Óptimo</div></div>
+          </div>
+          <div style="margin-top:20px;">
+            <div class="bento-gauge">
+              <div class="gauge-circle" style="border-color:#f59e0b;color:#f59e0b;width:60px;height:60px;font-size:14px;">94%</div>
+              <div class="gauge-info"><div class="label">Realización</div><div class="value">Sobre promedio</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="bento-item large">
+          <div class="bento-panel-title">Equipo</div>
+          <div class="bento-list-item">
+            <div class="bento-avatar" style="background:rgba(99,102,241,0.2);color:#a5b4fc;">CM</div>
+            <div class="info"><div class="name">Carlos Martínez</div><div class="role">Socio Principal</div></div>
+            <span class="status" style="background:rgba(16,185,129,0.15);color:#10b981;">Activo</span>
+          </div>
+          <div class="bento-list-item">
+            <div class="bento-avatar" style="background:rgba(168,85,247,0.2);color:#c084fc;">AB</div>
+            <div class="info"><div class="name">Ana Belén</div><div class="role">Asociada</div></div>
+            <span class="status" style="background:rgba(245,158,11,0.15);color:#f59e0b;">En revisión</span>
+          </div>
+          <div class="bento-list-item">
+            <div class="bento-avatar" style="background:rgba(245,158,11,0.2);color:#fbbf24;">JR</div>
+            <div class="info"><div class="name">Juan Rodríguez</div><div class="role">Abogado Junior</div></div>
+            <span class="status" style="background:rgba(16,185,129,0.15);color:#10b981;">Activo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="bento-casos" class="sub-page"><h1>Gestión de Casos</h1><p>Administra todos los casos del estudio</p><div class="placeholder-card"><h3>Casos</h3><p>Tabla de casos con búsqueda, filtros y acciones</p></div></div>
+    <div id="bento-clientes" class="sub-page"><h1>Clientes</h1><p>Directorio de clientes del estudio</p><div class="placeholder-card"><h3>Clientes</h3><p>Lista de clientes con datos de contacto</p></div></div>
+    <div id="bento-documentos" class="sub-page"><h1>Documentos</h1><p>Gestión documental del estudio</p><div class="placeholder-card"><h3>Documentos</h3><p>Repositorio de documentos</p></div></div>
+    <div id="bento-plazos" class="sub-page"><h1>Plazos</h1><p>Control de plazos procesales</p><div class="placeholder-card"><h3>Plazos</h3><p>Calendario de plazos y vencimientos</p></div></div>
+    <div id="bento-seguimiento" class="sub-page"><h1>Seguimiento</h1><p>Seguimiento de casos y actividades</p><div class="placeholder-card"><h3>Seguimiento</h3><p>Estado de avances por caso</p></div></div>
+    <div id="bento-facturacion" class="sub-page"><h1>Cuentas por Cobrar</h1><p>Gestión de facturación y cobros</p><div class="placeholder-card"><h3>Facturación</h3><p>Cuentas por cobrar y pagos</p></div></div>
+    <div id="bento-doclegales" class="sub-page"><h1>Documentos Legales</h1><p>Documentos legales del estudio</p><div class="placeholder-card"><h3>Doc. Legales</h3><p>Biblioteca de documentos legales</p></div></div>
+    <div id="bento-plazoslegales" class="sub-page"><h1>Plazos Legales</h1><p>Plazos legales y vencimientos</p><div class="placeholder-card"><h3>Plazos Legales</h3><p>Control de plazos legales</p></div></div>
+    <div id="bento-notificaciones" class="sub-page"><h1>Notificaciones</h1><p>Centro de notificaciones y alertas</p><div class="placeholder-card"><h3>Notificaciones</h3><p>Historial de notificaciones enviadas</p></div></div>
+    <div id="bento-reportes" class="sub-page"><h1>Reportes</h1><p>Estadísticas y reportes del estudio</p><div class="placeholder-card"><h3>Reportes</h3><p>Gráficos y métricas de rendimiento</p></div></div>
+    <div id="bento-configuracion" class="sub-page"><h1>Configuración</h1><p>Ajustes del sistema</p><div class="placeholder-card"><h3>Configuración</h3><p>Preferencias y ajustes de la aplicación</p></div></div>
+  </main>
+</div>
+
+<script>
+  function showPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    event.target.classList.add('active');
+    showSection(page, 'dashboard');
+  }
+
+  function navSec(el, page) {
+    document.querySelectorAll(`#page-${page} .nav-item`).forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    const icons = el.querySelectorAll('.icon');
+    let sec = 'dashboard';
+    if (icons.length > 0) {
+      const icon = icons[0].textContent.trim();
+      const map = {'📁':'casos','👥':'clientes','📄':'documentos','⏰':'plazos','📈':'seguimiento','💰':'facturacion','📋':'doclegales','⚖️':'plazoslegales','🔔':'notificaciones','📉':'reportes','⚙️':'configuracion'};
+      sec = map[icon] || 'dashboard';
+    }
+    showSection(page, sec);
+  }
+
+  function showSection(page, section) {
+    const container = document.getElementById('page-' + page);
+    const sections = ['dashboard','casos','clientes','documentos','plazos','seguimiento','facturacion','doclegales','plazoslegales','notificaciones','reportes','configuracion'];
+    sections.forEach(s => {
+      const el = container.querySelector(`#${page}-${s}`);
+      if (el) el.classList.toggle('sub-page', s !== section);
+      if (el) el.classList.toggle('active', s === section);
+    });
+  }
+</script>
+
+</body>
+</html>

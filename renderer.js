@@ -696,7 +696,7 @@ async function loadPlazos() {
       <td class="actions">
         <button class="btn btn-secondary btn-sm" onclick="editPlazo(${p.id})" title="Editar">✏️</button>
         <button class="btn btn-secondary btn-sm" onclick="notificarPlazo(${p.id})" title="Enviar correo">✉️</button>
-        <button class="btn btn-secondary btn-sm" onclick="togglePlazoEstado(${p.id}, '${escapeHtml(p.estado)}')">✓</button>
+        <button class="btn btn-secondary btn-sm" onclick="togglePlazoEstado(${p.id}, ${JSON.stringify(escapeHtml(p.estado))})">✓</button>
         <button class="btn btn-danger btn-sm" onclick="deletePlazo(${p.id})">🗑️</button>
       </td>
     </tr>
@@ -1874,7 +1874,7 @@ function appendChatMessage(role, text) {
   const msg = document.createElement('div');
   msg.className = `chat-msg ${role}`;
   const icon = role === 'user' ? '👤' : '🤖';
-  msg.innerHTML = `<span>${icon}</span><div class="chat-bubble">${text.replace(/\n/g, '<br>')}</div>`;
+  msg.innerHTML = `<span>${icon}</span><div class="chat-bubble">${escapeHtml(text).replace(/\n/g, '<br>')}</div>`;
   container.appendChild(msg);
   container.scrollTop = container.scrollHeight;
   return msg;
@@ -1893,10 +1893,10 @@ async function sendChat() {
 
   const res = await ipcRenderer.invoke('chatIA', mensaje, chatHistorial);
   if (res.success) {
-    typing.querySelector('.chat-bubble').innerHTML = res.respuesta.replace(/\n/g, '<br>');
+    typing.querySelector('.chat-bubble').innerHTML = escapeHtml(res.respuesta).replace(/\n/g, '<br>');
     chatHistorial.push({ role: 'assistant', text: res.respuesta });
   } else {
-    typing.querySelector('.chat-bubble').innerHTML = `⚠️ ${res.error}`;
+    typing.querySelector('.chat-bubble').innerHTML = `⚠️ ${escapeHtml(res.error || 'Error desconocido')}`;
     if (res.error && res.error.includes('configurada')) {
       setTimeout(() => openIAConfig(), 1500);
     }

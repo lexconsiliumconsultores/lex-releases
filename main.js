@@ -198,8 +198,10 @@ function createWindow() {
     minWidth: 1000,
     minHeight: 700,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      preload: path.join(__dirname, 'preload.js')
     },
     title: 'LEX - Sistema de Gesti�n Jur�dica',
     backgroundColor: '#1a1a2e'

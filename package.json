@@ -1,6 +1,6 @@
 {
   "name": "lex",
-  "version": "1.7.17",
+  "version": "1.7.18",
   "description": "Sistema de Gestión de Casos Jurídicos - LexConsilium Consultores",
   "main": "main.js",
   "scripts": {
@@ -61,7 +61,14 @@
       "installerHeaderIcon": "build/icon.png",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "LEX"
+      "shortcutName": "LEX",
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": false,
+      "deleteAppDataOnUninstall": false,
+      "differentialPackage": false,
+      "runAfterFinish": true,
+      "menuCategory": false,
+      "include": "build/installer.nsh"
     }
   },
   "dependencies": {
